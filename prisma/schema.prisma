@@ -1,0 +1,137 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Profession {
+  PROF_ID          Int      @id @default(autoincrement())
+  // PROF_NAME        String?   @db.Char(50)
+  PROF_DESC        String?   @db.Char(50)
+  PROF_ACTIVE_YN   String   @db.Char(1)
+  PROF_CREATED_BY  Int
+  PROF_CREATED_DT  DateTime @default(now())
+  PROF_UPDATED_BY  Int?
+  PROF_UPDATED_DT  DateTime?
+  PeopleRegistry   PeopleRegistry[]
+
+  @@map("PROFESSION")
+}
+
+model PeopleRegistry {
+  PR_ID            Int      @id @default(autoincrement())
+  PR_UNIQUE_ID     String   @unique @default(uuid()) @db.VarChar(50)
+  PR_FULL_NAME     String   @db.VarChar(100)
+  PR_DOB           DateTime
+  PR_GENDER        String?  @db.Char(1)
+  PR_MOBILE_NO     String?  @unique @db.VarChar(15)
+  PR_PROFESSION_ID Int? 
+  Profession    Profession? @relation(fields: [PR_PROFESSION_ID], references: [PROF_ID])
+  PR_PROFESSION_DETA  String? @db.VarChar(500)
+  PR_EDUCATION     String?  @db.VarChar(20)
+  PR_EDUCATION_DESC String? @db.VarChar(500)
+  PR_ADDRESS       String?  @db.Text
+  PR_PIN_CODE      String?  
+  Pin_Code         Pincode? @relation(fields: [PR_PIN_CODE], references: [value])
+  PR_CITY_CODE     Int?
+  City             City? @relation(fields: [PR_CITY_CODE], references: [CITY_ID])
+  PR_STATE_CODE    String?   @db.Char(20)
+  PR_DISTRICT_CODE String?   @db.Char(20)      
+  PR_FAMILY_NO     String?   @db.Char(3)
+  PR_MEMBER_NO     String?   @db.Char(3)
+  PR_FATHER_ID     Int?     
+  PR_MOTHER_ID     Int?     
+  PR_SPOUSE_ID     Int?  
+  Children         Child[]   
+  PR_PHOTO_URL     String?  @db.VarChar(255)
+  PR_CREATED_BY    Int?     
+  PR_CREATED_AT    DateTime @default(now())
+  PR_UPDATED_BY    Int?     
+  PR_UPDATED_AT    DateTime?
+
+  @@unique([PR_FATHER_ID])
+  @@unique([PR_MOTHER_ID])
+  @@unique([PR_SPOUSE_ID])
+
+  @@index([PR_STATE_CODE])
+  @@index([PR_DISTRICT_CODE])
+
+  @@map("PEOPLE_REGISTRY")
+
+}
+
+
+
+model Pincode {
+    id Int @id
+    value String @db.Char(8) @unique
+    DS_Code String @db.VarChar(20)  @default("default_ds_code")
+    DS_NAME String @db.VarChar(20)  @default("default_ds_name")
+    ST_CODE String @db.VarChar(20)  @default("default_st_code")
+    ST_NAME String @db.VarChar(20)  @default("default_st_name")
+
+    PeopleRegistry PeopleRegistry []  
+}
+
+
+
+model City {
+    CITY_ID         Int     @id @default(autoincrement()) 
+    CITY_PIN_CODE String?   @db.Char(8)
+    CITY_CODE  Int?     @default(0)  // This will be referenced in PeopleRegistry
+    CITY_NAME  String?  @db.VarChar(20)
+    CITY_DS_CODE String?  @db.VarChar(20) @default("default_ds_code")
+    CITY_DS_NAME String?  @db.VarChar(20) @default("default_ds_name")
+    CITY_ST_CODE String?  @db.VarChar(20) @default("default_st_code")
+    CITY_ST_NAME String?  @db.VarChar(20) @default("default_st_name")
+    CITY_CREATED_BY Int?
+    CITY_CREATED_AT DateTime @default(now())
+    CITY_UPDATED_BY Int?
+    CITY_UPDATED_AT  DateTime?
+
+    // Relationship with PeopleRegistry
+    PeopleRegistry PeopleRegistry[]
+
+    @@unique([CITY_ID])
+}
+
+
+
+model Child {
+  id       String   @id @default(uuid())
+  name     String
+  dob      DateTime
+  PeopleRegistry PeopleRegistry @relation(fields: [userId], references: [PR_ID])
+  userId   Int
+}
+
+model Otp {
+  id           String  @id @default(uuid())
+  PR_MOBILE_NO String  @unique
+  otp          String
+  expiresAt    DateTime
+}
+
+model Contact {
+  CON_ID          Int      @id @default(autoincrement())
+  CON_TYPE        String   @db.Char(10) // Enum for 'FEEDBACK' or 'CONTACT'
+  CON_NAME        String   @db.Char(50) // Required name field
+  CON_MOBILE_NO   String   @db.VarChar(20) // Required mobile number
+  CON_ATTACHMENT  String?  @db.Char(250) // Optional attachment
+  CON_MORE_DETAIL String  @db.VarChar(500) // Optional more details
+  CON_RATING      Int?     // Optional rating
+  CON_ACTIVE_YN   String   @db.Char(1) // Active flag ('Y' or 'N')
+  CON_CREATED_BY  Int      // User ID for the creator
+  CON_CREATED_DT  DateTime @default(now()) // Creation date
+  CON_UPDATED_BY  Int?     // User ID for the updater (optional)
+  CON_UPDATED_DT  DateTime? // Updated date (optional)
+
+  @@map("CONTACT")
+}
+
+
+
+//Database Architecure hei
