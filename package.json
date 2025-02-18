@@ -1,9 +1,9 @@
 {
   "name": "rangrez-backend",
   "version": "1.0.0",
-  "main": "src/server.js",
+  "main": "src/index.js",
   "scripts": {
-    "start": "node src/server.js"
+    "start": "node src/index.js"
   },
   "type": "module",
   "keywords": [],
