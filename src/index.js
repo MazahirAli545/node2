@@ -10,7 +10,7 @@ const app = express();
 app.use(express.json());
 dotenv.config()
 
-app.get("/", (req, res) => {
+app.get("/pincode", (req, res) => {
     res.json({ message: "hello world "})
 })
 
