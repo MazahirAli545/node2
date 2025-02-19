@@ -41,7 +41,7 @@ export const generateotp = async(req, res) => {
 
 
 
-    const otp = otpGenerator.generate(4, { digits: true, specialChars: false, upperCaseAlphabets: false, lowerCaseAlphabets: false });
+    // const otp = otpGenerator.generate(4, { digits: true, specialChars: false, upperCaseAlphabets: false, lowerCaseAlphabets: false });
 
   
 
@@ -51,22 +51,26 @@ export const generateotp = async(req, res) => {
    
 
 
-    console.log(`OTP for ${PR_MOBILE_NO}: ${otp}`); // You should replace this with an SMS service
+    // console.log(`OTP for ${PR_MOBILE_NO}: ${otp}`);
     
-    try {
-    await twilioClient.messages.create({
-      body: `Your Rangrez App Verification Otp is : ${otp}. It is valid for 2 minutes.`,
-      from: twillo_Phone_Number,
-      to: `+91${PR_MOBILE_NO}`, // Assuming Indian numbers, modify as needed
-    });
+  //   try {
+  //   await twilioClient.messages.create({
+  //     body: `Your Rangrez App Verification Otp is : ${otp}. It is valid for 2 minutes.`,
+  //     from: twillo_Phone_Number,
+  //     to: `+91${PR_MOBILE_NO}`, // Assuming Indian numbers, modify as needed
+  //   });
 
-    console.log(`OTP for ${PR_MOBILE_NO}: ${otp}`);
-  }catch (twilioError) {
-    console.error("Twilio error:", twilioError);
-    console.log("Falling back to static OTP: 1234");
-    otp = "1234"; // Use static OTP in case of Twilio failure
-  }
-    // return res.status(200).json({ message: "OTP sent successfully", success: true });
+  //   console.log(`OTP for ${PR_MOBILE_NO}: ${otp}`);
+  // }catch (twilioError) {
+  //   console.error("Twilio error:", twilioError);
+  //   console.log("Falling back to static OTP: 1234");
+  //   otp = "1234"; // Use static OTP in case of Twilio failure
+  // }
+   
+  const otp = "1234";
+
+  console.log(`Static OTP for ${PR_MOBILE_NO}: ${otp}`);
+
 
     await prisma.otp.upsert({
       where: { PR_MOBILE_NO },
@@ -117,11 +121,11 @@ try {
    return false
   }
 
-  if (new Date() > otpRecord.expiresAt) {
-    console.log('hell2');
+  // if (new Date() > otpRecord.expiresAt) {
+  //   console.log('hell2');
     
-      return false
-  }
+  //     return false
+  // }
 
   if (otp !== otpRecord.otp && otp !== "1234") {
     console.log(`Incorrect OTP entered for ${PR_MOBILE_NO}`);
