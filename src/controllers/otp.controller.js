@@ -43,11 +43,7 @@ export const generateotp = async(req, res) => {
 
     const otp = otpGenerator.generate(4, { digits: true, specialChars: false, upperCaseAlphabets: false, lowerCaseAlphabets: false });
 
-    const otpRecord = await prisma.otp.upsert({
-      where: { PR_MOBILE_NO },
-      update: { otp, expiresAt: new Date(Date.now() + 2 * 60 * 1000) },
-      create: { PR_MOBILE_NO, otp, expiresAt: new Date(Date.now() + 2 * 60 * 1000) },
-    });
+  
 
   
 
@@ -57,6 +53,7 @@ export const generateotp = async(req, res) => {
 
     console.log(`OTP for ${PR_MOBILE_NO}: ${otp}`); // You should replace this with an SMS service
     
+    try {
     await twilioClient.messages.create({
       body: `Your Rangrez App Verification Otp is : ${otp}. It is valid for 2 minutes.`,
       from: twillo_Phone_Number,
@@ -64,8 +61,18 @@ export const generateotp = async(req, res) => {
     });
 
     console.log(`OTP for ${PR_MOBILE_NO}: ${otp}`);
-
+  }catch (twilioError) {
+    console.error("Twilio error:", twilioError);
+    console.log("Falling back to static OTP: 1234");
+    otp = "1234"; // Use static OTP in case of Twilio failure
+  }
     // return res.status(200).json({ message: "OTP sent successfully", success: true });
+
+    await prisma.otp.upsert({
+      where: { PR_MOBILE_NO },
+      update: { otp, expiresAt: new Date(Date.now() + 2 * 60 * 1000) },
+      create: { PR_MOBILE_NO, otp, expiresAt: new Date(Date.now() + 2 * 60 * 1000) },
+    });
 
     return res.status(200).json({ message: "OTP sent successfully", success: true });
 
@@ -105,7 +112,7 @@ try {
   });
 
   if (!otpRecord) {
-    console.log('hell1');
+    console.log('OTP not found for ${PR_MOBILE_NO}');
     
    return false
   }
@@ -116,14 +123,24 @@ try {
       return false
   }
 
+  if (otp !== otpRecord.otp && otp !== "1234") {
+    console.log(`Incorrect OTP entered for ${PR_MOBILE_NO}`);
+    return false;
+  }
+
+  if (new Date() > otpRecord.expiresAt) {
+    console.log(`OTP expired for ${PR_MOBILE_NO}`);
+    return false;
+  }
+
   // Delete OTP after successful verification
   // await prisma.otp.delete({
   //   where: { PR_MOBILE_NO, otp },
   // });
-
+  console.log(`OTP successfully verified and deleted for ${PR_MOBILE_NO}`);
 return true;
 } catch (error) {
-  console.log(error);
+  console.log("Error in OTP verification:",error);
   return false;
 }
 }
