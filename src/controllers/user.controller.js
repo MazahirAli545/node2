@@ -51,23 +51,21 @@ export const registerUser = async (req, res) => {
       PR_SPOUSE_NAME,
       PR_PHOTO_URL,
       // otp,
-      otp = "1234", 
+      otp = "1234",
       Children,
     } = req.body;
-console.log("333eqeqweqwd",req.body)
 
+    console.log("-------reqbody------", req.body);
 
     const existingmobile = await prisma.peopleRegistry.findFirst({
       where: { PR_MOBILE_NO },
     });
 
     if (existingmobile) {
-      return res
-        .status(400)
-        .json({
-          message: "this mobile Number is already registered",
-          success: false,
-        });
+      return res.status(400).json({
+        message: "this mobile Number is already registered",
+        success: false,
+      });
     }
 
     const mobileNumberSchema = z
@@ -85,12 +83,10 @@ console.log("333eqeqweqwd",req.body)
     const isMobileVerified = await checkMobileVerified(PR_MOBILE_NO, otp);
     console.log(PR_MOBILE_NO, otp);
     if (!isMobileVerified) {
-      return res
-        .status(400)
-        .json({
-          message: "Please verify your mobile number first",
-          success: false,
-        });
+      return res.status(400).json({
+        message: "Please verify your mobile number first",
+        success: false,
+      });
     }
 
     // let pincodeRecord = null;
@@ -112,20 +108,20 @@ console.log("333eqeqweqwd",req.body)
       data: {
         CITY_PIN_CODE: PR_PIN_CODE,
         CITY_NAME: PR_CITY_NAME,
-        CITY_DS_CODE:  PR_DISTRICT_CODE,
+        CITY_DS_CODE: PR_DISTRICT_CODE,
         CITY_DS_NAME: PR_DISTRICT_NAME,
-        CITY_ST_CODE : PR_STATE_CODE,
-        CITY_ST_NAME : PR_STATE_NAME,
+        CITY_ST_CODE: PR_STATE_CODE,
+        CITY_ST_NAME: PR_STATE_NAME,
         // CITY_CODE : Number(PR_CITY_CODE)
-      }
-    })
-
-    await prisma.city.update({
-      where: { CITY_ID : city.CITY_ID },
-      data: { CITY_CODE: city.CITY_ID}, // Ensure CITY_CODE is a string
+      },
     });
 
-    console.log("rrrr",city);
+    await prisma.city.update({
+      where: { CITY_ID: city.CITY_ID },
+      data: { CITY_CODE: city.CITY_ID }, // Ensure CITY_CODE is a string
+    });
+
+    console.log("rrrr", city);
 
     const newUser = await prisma.peopleRegistry.create({
       data: {
@@ -140,7 +136,7 @@ console.log("333eqeqweqwd",req.body)
         PR_EDUCATION_DESC,
         PR_ADDRESS,
         PR_PIN_CODE,
-        PR_CITY_CODE : city.CITY_ID,
+        PR_CITY_CODE: city.CITY_ID,
         PR_STATE_CODE,
         PR_DISTRICT_CODE,
         PR_FATHER_ID,
@@ -192,9 +188,6 @@ console.log("333eqeqweqwd",req.body)
   }
 };
 
-
-
-
 export const LoginUser = async (req, res) => {
   try {
     const { PR_MOBILE_NO } = req.body;
@@ -204,12 +197,10 @@ export const LoginUser = async (req, res) => {
     });
 
     if (!existingUser) {
-      return res
-        .status(400)
-        .json({
-          message: "This mobile number is not registered",
-          success: false,
-        });
+      return res.status(400).json({
+        message: "This mobile number is not registered",
+        success: false,
+      });
     }
 
     // Generate OTP
