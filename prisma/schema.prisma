@@ -85,11 +85,11 @@ model City {
     CITY_ID         Int     @id @default(autoincrement()) 
     CITY_PIN_CODE String?   @db.Char(8)
     CITY_CODE  Int?     @default(0)  // This will be referenced in PeopleRegistry
-    CITY_NAME  String?  @db.VarChar(20)
+    CITY_NAME  String?  @db.VarChar(150)
     CITY_DS_CODE String?  @db.VarChar(20) @default("default_ds_code")
-    CITY_DS_NAME String?  @db.VarChar(20) @default("default_ds_name")
+    CITY_DS_NAME String?  @db.VarChar(100) @default("default_ds_name")
     CITY_ST_CODE String?  @db.VarChar(20) @default("default_st_code")
-    CITY_ST_NAME String?  @db.VarChar(20) @default("default_st_name")
+    CITY_ST_NAME String?  @db.VarChar(100) @default("default_st_name")
     CITY_CREATED_BY Int?
     CITY_CREATED_AT DateTime @default(now())
     CITY_UPDATED_BY Int?

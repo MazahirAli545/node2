@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE `City` MODIFY `CITY_DS_NAME` VARCHAR(100) NULL DEFAULT 'default_ds_name',
+    MODIFY `CITY_ST_NAME` VARCHAR(100) NULL DEFAULT 'default_st_name';
