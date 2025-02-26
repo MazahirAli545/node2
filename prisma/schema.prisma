@@ -44,7 +44,10 @@ model PeopleRegistry {
   PR_MEMBER_NO     String?   @db.Char(3)
   PR_FATHER_ID     Int?     
   PR_MOTHER_ID     Int?     
-  PR_SPOUSE_ID     Int?  
+  PR_SPOUSE_ID     Int? 
+  PR_FATHER_NAME     String?   @db.VarChar(100) 
+  PR_MOTHER_NAME     String?   @db.VarChar(100)
+  PR_SPOUSE_NAME     String?   @db.VarChar(100)
   Children         Child[]   
   PR_PHOTO_URL     String?  @db.VarChar(255)
   PR_CREATED_BY    Int?     

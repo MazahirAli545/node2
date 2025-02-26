@@ -46,10 +46,16 @@ export const registerUser = async (req, res) => {
       PR_FATHER_ID,
       PR_MOTHER_ID,
       PR_SPOUSE_ID,
+      PR_FATHER_NAME,
+      PR_MOTHER_NAME,
+      PR_SPOUSE_NAME,
       PR_PHOTO_URL,
-      otp,
+      // otp,
+      otp = "1234", 
       Children,
     } = req.body;
+
+
 
     const existingmobile = await prisma.peopleRegistry.findFirst({
       where: { PR_MOBILE_NO },
@@ -111,9 +117,6 @@ export const registerUser = async (req, res) => {
         CITY_ST_CODE : PR_STATE_CODE,
         CITY_ST_NAME : PR_STATE_NAME,
         // CITY_CODE : Number(PR_CITY_CODE)
-
-
-
       }
     })
 
@@ -143,6 +146,9 @@ export const registerUser = async (req, res) => {
         PR_FATHER_ID,
         PR_MOTHER_ID,
         PR_SPOUSE_ID,
+        PR_FATHER_NAME,
+        PR_MOTHER_NAME,
+        PR_SPOUSE_NAME,
         PR_PHOTO_URL,
       },
     });
@@ -185,6 +191,9 @@ export const registerUser = async (req, res) => {
     });
   }
 };
+
+
+
 
 export const LoginUser = async (req, res) => {
   try {
