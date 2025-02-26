@@ -26,6 +26,7 @@ const checkMobileVerified = async (PR_MOBILE_NO, otp) => {
 export const registerUser = async (req, res) => {
   try {
     const {
+      PR_UNIQUE_ID,
       PR_FULL_NAME,
       PR_DOB,
       PR_GENDER,
@@ -125,6 +126,9 @@ export const registerUser = async (req, res) => {
 
     const newUser = await prisma.peopleRegistry.create({
       data: {
+        PR_UNIQUE_ID: `${PR_STATE_CODE}${PR_DISTRICT_CODE}-${
+          city.CITY_ID
+        }-${"001"}-${"001"}`,
         PR_FULL_NAME,
         PR_DOB: new Date(PR_DOB),
         PR_MOBILE_NO,
