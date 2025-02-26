@@ -116,7 +116,6 @@ console.log("333eqeqweqwd",req.body)
         CITY_DS_NAME: PR_DISTRICT_NAME,
         CITY_ST_CODE : PR_STATE_CODE,
         CITY_ST_NAME : PR_STATE_NAME,
-        CITY_CODE: PR_CITY_CODE || undefined, 
         // CITY_CODE : Number(PR_CITY_CODE)
       }
     })
