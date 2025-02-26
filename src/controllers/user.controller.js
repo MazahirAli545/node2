@@ -149,7 +149,7 @@ export const registerUser = async (req, res) => {
       },
     });
 
-    if (Children && Children.length > 0) {
+    if (Array.isArray(Children) && Children.length > 0) {
       const childPromises = Children.filter(
         (child) => child.name && child.dob
       ).map(async (child) => {
