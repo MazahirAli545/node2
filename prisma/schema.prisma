@@ -86,8 +86,7 @@ model PeopleRegistry {
 model Pincode {
   id      Int    @id
   value   String @db.Char(8) @unique
-  city    City? @relation(fields: [cityId], references: [CITY_ID])
-  cityId  Int? 
+  cities  City[] 
   DS_Code String @db.VarChar(20)  @default("default_ds_code")
   DS_NAME String @db.VarChar(20)  @default("default_ds_name")
   ST_CODE String @db.VarChar(20)  @default("default_st_code")
@@ -120,7 +119,9 @@ model Pincode {
 model City {
   CITY_ID         Int      @id @default(autoincrement()) 
   CITY_NAME       String?  @db.VarChar(150)
-  pincodes        Pincode[] // Each City has multiple Pincodes
+  pincode         String?  @db.VarChar(20)
+  pincodeId       Int?
+  pincodeRel      Pincode? @relation(fields: [pincodeId], references: [id]) 
   CITY_DS_CODE String?  @db.VarChar(20) @default("default_ds_code")
   CITY_DS_NAME String?  @db.VarChar(100) @default("default_ds_name")
   CITY_ST_CODE String?  @db.VarChar(20) @default("default_st_code")
