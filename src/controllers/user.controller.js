@@ -90,39 +90,53 @@ export const registerUser = async (req, res) => {
       });
     }
 
-    // let pincodeRecord = null;
-    // if (PR_PIN_CODE) {
-    //   pincodeRecord = await prisma.pincode.findFirst({
-    //     where: { value: String(PR_PIN_CODE) },
-    //   });
-    // }
+    // const city = await prisma.city.create({
+    //   data: {
+    //     CITY_PIN_CODE: PR_PIN_CODE,
+    //     CITY_NAME: PR_CITY_NAME,
+    //     CITY_DS_CODE: PR_DISTRICT_CODE,
+    //     CITY_DS_NAME: PR_DISTRICT_NAME,
+    //     CITY_ST_CODE: PR_STATE_CODE,
+    //     CITY_ST_NAME: PR_STATE_NAME,
 
-    // let pincodeRecord = null;
+    //   },
+    // });
 
-    // if(PR_PIN_CODE){
+    // await prisma.city.update({
+    //   where: { CITY_ID: city.CITY_ID },
+    //   data: { CITY_CODE: city.CITY_ID },
+    // });
 
-    //   pincodeRecord = await prisma.pincode.findFirst({
-    //     where: {value: String(PR_PIN_CODE) },
-    // })
-    // }
-    const city = await prisma.city.create({
-      data: {
-        CITY_PIN_CODE: PR_PIN_CODE,
+    // console.log("rrrr", city);
+
+    let city = await prisma.city.findFirst({
+      where: {
         CITY_NAME: PR_CITY_NAME,
         CITY_DS_CODE: PR_DISTRICT_CODE,
-        CITY_DS_NAME: PR_DISTRICT_NAME,
         CITY_ST_CODE: PR_STATE_CODE,
-        CITY_ST_NAME: PR_STATE_NAME,
-        // CITY_CODE : Number(PR_CITY_CODE)
       },
     });
 
-    await prisma.city.update({
-      where: { CITY_ID: city.CITY_ID },
-      data: { CITY_CODE: city.CITY_ID }, // Ensure CITY_CODE is a string
-    });
+    if (!city) {
+      city = await prisma.city.create({
+        data: {
+          CITY_PIN_CODE: PR_PIN_CODE,
+          CITY_NAME: PR_CITY_NAME,
+          CITY_DS_CODE: PR_DISTRICT_CODE,
+          CITY_DS_NAME: PR_DISTRICT_NAME,
+          CITY_ST_CODE: PR_STATE_CODE,
+          CITY_ST_NAME: PR_STATE_NAME,
+          areas: JSON.stringify(areas), // Store areas as a JSON string
+        },
+      });
 
-    console.log("rrrr", city);
+      await prisma.city.update({
+        where: { CITY_ID: city.CITY_ID },
+        data: { CITY_CODE: city.CITY_ID },
+      });
+    }
+
+    console.log("City Created/Fetched: ", city);
 
     const newUser = await prisma.peopleRegistry.create({
       data: {
