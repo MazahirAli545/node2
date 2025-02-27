@@ -8,7 +8,15 @@ async function cityController(req, res) {
   try {
     const cities = await prisma.city.findMany({
       include: {
-        pincode: true, // Include related Pincode data
+        pincodes: {
+          select: {
+            id: true,
+            value: true,
+            city: {
+              select: { CITY_NAME: true }, // Fetch only the related CITY_NAME
+            },
+          },
+        },
       },
     });
 
