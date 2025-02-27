@@ -9,7 +9,7 @@ datasource db {
 
 model Profession {
   PROF_ID          Int      @id @default(autoincrement())
-  // PROF_NAME        String?   @db.Char(50)
+  PROF_NAME        String?   @db.Char(50)
   PROF_DESC        String?   @db.Char(50)
   PROF_ACTIVE_YN   String   @db.Char(1)
   PROF_CREATED_BY  Int
