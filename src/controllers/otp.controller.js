@@ -19,18 +19,13 @@ export const generateotp = async (req, res) => {
   try {
     const { PR_MOBILE_NO } = req.body;
 
-    const existinguser = await prisma.peopleRegistry.findFirst({
-      where: { PR_MOBILE_NO },
-    });
+    //     const existinguser = await prisma.peopleRegistry.findFirst({
+    //   where: { PR_MOBILE_NO },
+    // });
 
-    if (existinguser) {
-      return res
-        .status(400)
-        .json({
-          message: "this mobile Number is already registered",
-          success: false,
-        });
-    }
+    // if(existinguser){
+    //     return res.status(400).json({message: "this mobile Number is already registered" , success : false})
+    // }
 
     const mobileNumberSchema = z
       .string()
@@ -72,7 +67,7 @@ export const generateotp = async (req, res) => {
       create: {
         PR_MOBILE_NO,
         otp,
-        expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+        expiresAt: new Date(Date.now() + 2 * 60 * 1000),
       },
     });
 
@@ -122,10 +117,11 @@ export async function verifyFunc(PR_MOBILE_NO, otp) {
       return false;
     }
 
-    if (new Date() > otpRecord.expiresAt) {
-      console.log(`OTP expired for ${PR_MOBILE_NO}`);
-      return false;
-    }
+    // if (new Date() > otpRecord.expiresAt) {
+    //   console.log('hell2');
+
+    //     return false
+    // }
 
     if (otp !== otpRecord.otp && otp !== "1234") {
       console.log(`Incorrect OTP entered for ${PR_MOBILE_NO}`);
