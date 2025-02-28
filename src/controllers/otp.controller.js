@@ -67,7 +67,7 @@ export const generateotp = async (req, res) => {
       create: {
         PR_MOBILE_NO,
         otp,
-        expiresAt: new Date(Date.now() + 2 * 60 * 1000),
+        expiresAt: new Date(Date.now() + 5 * 60 * 1000),
       },
     });
 
