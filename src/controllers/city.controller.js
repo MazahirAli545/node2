@@ -7,38 +7,26 @@ const prisma = new PrismaClient();
 async function cityController(req, res) {
   try {
     const cities = await prisma.city.findMany({
-      include: {
-        pincodes: {
-          select: {
-            id: true,
-            value: true,
-            city: {
-              select: { CITY_NAME: true }, // Fetch only the related CITY_NAME
-            },
-          },
-        },
+      select: {
+        CITY_ID: true,
+        CITY_PIN_CODE: true,
+        CITY_CODE: true,
+        CITY_NAME: true,
+        CITY_DS_CODE: true,
+        CITY_DS_NAME: true,
+        CITY_ST_CODE: true,
+        CITY_ST_NAME: true,
+        CITY_CREATED_BY: true,
+        CITY_CREATED_AT: true,
+        CITY_UPDATED_BY: true,
+        CITY_UPDATED_AT: true,
       },
     });
-
-    // Format the response to include parsed areas
-    // const formattedCities = cities.map((city) => ({
-    //   CITY_ID: city.CITY_ID,
-    //   CITY_NAME: city.CITY_NAME,
-    //   CITY_DS_CODE: city.CITY_DS_CODE,
-    //   CITY_DS_NAME: city.CITY_DS_NAME,
-    //   CITY_ST_CODE: city.CITY_ST_CODE,
-    //   CITY_ST_NAME: city.CITY_ST_NAME,
-    //   pincodes: city.pincodes.map((pincode) => ({
-    //     id: pincode.id,
-    //     value: pincode.value,
-    //     areas: city.areas ? JSON.parse(city.areas) : [], // Ensure areas are parsed as an array
-    //   })),
-    // }));
 
     return res.status(200).json({
       message: "Cities fetched successfully",
       success: true,
-      cities: formattedCities,
+      cities,
     });
   } catch (error) {
     console.error("Error fetching cities:", error);

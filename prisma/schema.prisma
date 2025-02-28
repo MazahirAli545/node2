@@ -34,14 +34,10 @@ model PeopleRegistry {
   PR_EDUCATION     String?  @db.VarChar(20)
   PR_EDUCATION_DESC String? @db.VarChar(500)
   PR_ADDRESS       String?  @db.Text
-
-
   PR_PIN_CODE      String?  
-  pin_Code         Pincode? @relation(fields: [PR_PIN_CODE], references: [value])
-  // PR_AREA_NAME     String?  @db.VarChar(100)
-
+  PR_AREA_NAME     String?  @db.VarChar(100)
   PR_CITY_CODE     Int?
-  City             City? @relation(fields: [PR_CITY_CODE], references: [CITY_ID])
+  City             City? @relation(fields: [PR_CITY_CODE], references: [CITY_ID], onDelete: SetNull)
   PR_STATE_CODE    String?   @db.Char(20)
   PR_DISTRICT_CODE String?   @db.Char(20)      
   PR_FAMILY_NO     String?   @db.Char(3)
@@ -72,66 +68,25 @@ model PeopleRegistry {
 
 
 
-// model Pincode {
-//     id Int @id
-//     value String @db.Char(8) @unique
-//     DS_Code String @db.VarChar(20)  @default("default_ds_code")
-//     DS_NAME String @db.VarChar(20)  @default("default_ds_name")
-//     ST_CODE String @db.VarChar(20)  @default("default_st_code")
-//     ST_NAME String @db.VarChar(20)  @default("default_st_name")
-
-//     PeopleRegistry PeopleRegistry []  
-// }
-
-model Pincode {
-  id      Int    @id
-  value   String @db.Char(8) @unique
-  cities  City[] 
-  DS_Code String @db.VarChar(20)  @default("default_ds_code")
-  DS_NAME String @db.VarChar(20)  @default("default_ds_name")
-  ST_CODE String @db.VarChar(20)  @default("default_st_code")
-  ST_NAME String @db.VarChar(20)  @default("default_st_name")
-
-  PeopleRegistry PeopleRegistry[]
-}
-
-
-// model City {
-//     CITY_ID         Int     @id @default(autoincrement()) 
-//     CITY_PIN_CODE String?   @db.Char(8)
-//     CITY_CODE  Int?     @default(0)  // This will be referenced in PeopleRegistry
-//     CITY_NAME  String?  @db.VarChar(150)
-//     CITY_DS_CODE String?  @db.VarChar(20) @default("default_ds_code")
-//     CITY_DS_NAME String?  @db.VarChar(100) @default("default_ds_name")
-//     CITY_ST_CODE String?  @db.VarChar(20) @default("default_st_code")
-//     CITY_ST_NAME String?  @db.VarChar(100) @default("default_st_name")
-//     CITY_CREATED_BY Int?
-//     CITY_CREATED_AT DateTime @default(now())
-//     CITY_UPDATED_BY Int?
-//     CITY_UPDATED_AT  DateTime?
-
-//     // Relationship with PeopleRegistry
-//     PeopleRegistry PeopleRegistry[]
-
-//     @@unique([CITY_ID])
-// }
 
 model City {
   CITY_ID         Int      @id @default(autoincrement()) 
+  CITY_PIN_CODE   String?  @db.VarChar(20)  // Renamed from `pincode` @unique @unique @unique
+  CITY_CODE       Int?                      // Added for mapping with `CITY_CODE`
   CITY_NAME       String?  @db.VarChar(150)
-  pincode         String?  @db.VarChar(20)
-  pincodeId       Int?
-  pincodeRel      Pincode? @relation(fields: [pincodeId], references: [id]) 
-  CITY_DS_CODE String?  @db.VarChar(20) @default("default_ds_code")
-  CITY_DS_NAME String?  @db.VarChar(100) @default("default_ds_name")
-  CITY_ST_CODE String?  @db.VarChar(20) @default("default_st_code")
-  CITY_ST_NAME String?  @db.VarChar(100) @default("default_st_name")
+  CITY_DS_CODE    String?  @db.VarChar(20)  @default("default_ds_code")
+  CITY_DS_NAME    String?  @db.VarChar(100) @default("default_ds_name")
+  CITY_ST_CODE    String?  @db.VarChar(20)  @default("default_st_code")
+  CITY_ST_NAME    String?  @db.VarChar(100) @default("default_st_name")
   CITY_CREATED_BY Int?
   CITY_CREATED_AT DateTime @default(now())
   CITY_UPDATED_BY Int?
   CITY_UPDATED_AT DateTime?
 
+
+
   @@map("CITY")
+
   PeopleRegistry PeopleRegistry[]
 }
 
