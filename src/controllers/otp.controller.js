@@ -19,13 +19,18 @@ export const generateotp = async (req, res) => {
   try {
     const { PR_MOBILE_NO } = req.body;
 
-    //     const existinguser = await prisma.peopleRegistry.findFirst({
-    //   where: { PR_MOBILE_NO },
-    // });
+    const existinguser = await prisma.peopleRegistry.findFirst({
+      where: { PR_MOBILE_NO },
+    });
 
-    // if(existinguser){
-    //     return res.status(400).json({message: "this mobile Number is already registered" , success : false})
-    // }
+    if (existinguser) {
+      return res
+        .status(400)
+        .json({
+          message: "this mobile Number is already registered",
+          success: false,
+        });
+    }
 
     const mobileNumberSchema = z
       .string()
