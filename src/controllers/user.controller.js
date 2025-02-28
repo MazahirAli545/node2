@@ -126,7 +126,7 @@ export const registerUser = async (req, res) => {
           CITY_DS_NAME: PR_DISTRICT_NAME,
           CITY_ST_CODE: PR_STATE_CODE,
           CITY_ST_NAME: PR_STATE_NAME,
-          areas: JSON.stringify(areas), // Store areas as a JSON string
+          // areas: JSON.stringify(areas), // Store areas as a JSON string
         },
       });
 
