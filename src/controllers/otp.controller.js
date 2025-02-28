@@ -117,11 +117,10 @@ export async function verifyFunc(PR_MOBILE_NO, otp) {
       return false;
     }
 
-    // if (new Date() > otpRecord.expiresAt) {
-    //   console.log('hell2');
-
-    //     return false
-    // }
+    if (new Date() > otpRecord.expiresAt) {
+      console.log(`OTP expired for ${PR_MOBILE_NO}`);
+      return false;
+    }
 
     if (otp !== otpRecord.otp && otp !== "1234") {
       console.log(`Incorrect OTP entered for ${PR_MOBILE_NO}`);
