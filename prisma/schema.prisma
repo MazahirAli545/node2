@@ -25,7 +25,7 @@ model PeopleRegistry {
   PR_ID            Int      @id @default(autoincrement())
   PR_UNIQUE_ID     String   @unique @default(uuid()) @db.VarChar(50)
   PR_FULL_NAME     String   @db.VarChar(100)
-  PR_DOB           DateTime
+  PR_DOB           String
   PR_GENDER        String?  @db.Char(1)
   PR_MOBILE_NO     String?  @unique @db.VarChar(15)
   PR_PROFESSION_ID Int? 
