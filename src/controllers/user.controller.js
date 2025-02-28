@@ -147,7 +147,7 @@ export const registerUser = async (req, res) => {
         PR_DOB: new Date(PR_DOB).toLocaleDateString(),
         PR_MOBILE_NO,
         PR_GENDER,
-        PR_PROFESSION_ID: PRP,
+        PR_PROFESSION_ID,
         PR_PROFESSION,
         PR_PROFESSION_DETA,
         PR_EDUCATION,
