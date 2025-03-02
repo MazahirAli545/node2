@@ -58,16 +58,16 @@ export const registerUser = async (req, res) => {
 
     console.log("-------reqbody------", req.body);
 
-    // const existingmobile = await prisma.peopleRegistry.findFirst({
-    //   where: { PR_MOBILE_NO },
-    // });
+    const existingmobile = await prisma.peopleRegistry.findFirst({
+      where: { PR_MOBILE_NO },
+    });
 
-    // if (existingmobile) {
-    //   return res.status(400).json({
-    //     message: "this mobile Number is already registered",
-    //     success: false,
-    //   });
-    // }
+    if (existingmobile) {
+      return res.status(400).json({
+        message: "this mobile Number is already registered",
+        success: false,
+      });
+    }
 
     const mobileNumberSchema = z
       .string()
