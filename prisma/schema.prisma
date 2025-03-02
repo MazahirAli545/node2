@@ -27,15 +27,15 @@ model PeopleRegistry {
   PR_FULL_NAME     String   @db.VarChar(100)
   PR_DOB           String
   PR_GENDER        String?  @db.Char(1)
-  PR_MOBILE_NO     String?  @unique @db.VarChar(15)
+  PR_MOBILE_NO     String  @unique @db.VarChar(15)
   PR_PROFESSION_ID Int? 
   Profession    Profession? @relation(fields: [PR_PROFESSION_ID], references: [PROF_ID])
   PR_PROFESSION_DETA  String? @db.VarChar(500)
   PR_EDUCATION     String?  @db.VarChar(20)
   PR_EDUCATION_DESC String? @db.VarChar(500)
-  PR_ADDRESS       String?  @db.Text
-  PR_PIN_CODE      String?  
-  PR_AREA_NAME     String?  @db.VarChar(100)
+  PR_ADDRESS       String  @db.Text
+  PR_PIN_CODE      String  
+  PR_AREA_NAME     String  @db.VarChar(100)
   PR_CITY_CODE     Int?
   City             City? @relation(fields: [PR_CITY_CODE], references: [CITY_ID], onDelete: SetNull)
   PR_STATE_CODE    String?   @db.Char(20)
