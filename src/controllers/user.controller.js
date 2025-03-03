@@ -224,12 +224,14 @@ export const LoginUser = async (req, res) => {
     }
 
     // Generate OTP
-    const otp = otpGenerator.generate(4, {
-      digits: true,
-      specialChars: false,
-      upperCaseAlphabets: false,
-      lowerCaseAlphabets: false,
-    });
+    // const otp = otpGenerator.generate(4, {
+    //   digits: true,
+    //   specialChars: false,
+    //   upperCaseAlphabets: false,
+    //   lowerCaseAlphabets: false,
+    // });
+
+    const otp = "1234";
 
     // Store OTP in the database
     await prisma.otp.upsert({
@@ -243,13 +245,13 @@ export const LoginUser = async (req, res) => {
     });
 
     // Send OTP via SMS using Twilio
-    await twilioClient.messages.create({
-      body: `Your Rangrez App Verification OTP is: ${otp}. It is valid for 2 minutes.`,
-      from: twillo_Phone_Number,
-      to: `+91${PR_MOBILE_NO}`,
-    });
+    // await twilioClient.messages.create({
+    //   body: `Your Rangrez App Verification OTP is: ${otp}. It is valid for 2 minutes.`,
+    //   from: twillo_Phone_Number,
+    //   to: `+91${PR_MOBILE_NO}`,
+    // });
 
-    console.log(`OTP sent to ${PR_MOBILE_NO}: ${otp}`);
+    // console.log(`OTP sent to ${PR_MOBILE_NO}: ${otp}`);
 
     const token = generateToken(existingUser);
 
