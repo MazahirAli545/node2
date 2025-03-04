@@ -139,6 +139,9 @@ export const registerUser = async (req, res) => {
 
     console.log("City Created/Fetched: ", city);
 
+    const professionId =
+      PR_PROFESSION_ID && PR_PROFESSION_ID !== 0 ? PR_PROFESSION_ID : null;
+
     const newUser = await prisma.peopleRegistry.create({
       data: {
         PR_UNIQUE_ID: `${PR_STATE_CODE}${PR_DISTRICT_CODE}-${
@@ -148,7 +151,7 @@ export const registerUser = async (req, res) => {
         PR_DOB: new Date(PR_DOB).toLocaleDateString(),
         PR_MOBILE_NO,
         PR_GENDER,
-        PR_PROFESSION_ID,
+        PR_PROFESSION_ID: professionId,
         PR_PROFESSION,
         PR_PROFESSION_DETA,
         PR_EDUCATION,
