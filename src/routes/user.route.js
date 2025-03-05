@@ -8,6 +8,7 @@ import profession from "../controllers/professionSeed.js";
 import { contactForm } from "../controllers/contactUs.controller.js";
 import pincodeController from "../controllers/pincode.controller.js";
 import cityController from "../controllers/city.controller.js";
+import getEvents from "../controllers/events.contoller.js";
 
 import { Router } from "express";
 
@@ -22,5 +23,6 @@ userRouter.get("/profession", profession);
 userRouter.post("/contactUs", contactForm);
 userRouter.get("/pincode", pincodeController);
 userRouter.get("/city", cityController);
+userRouter.get("/events", getEvents);
 
 export default userRouter;
