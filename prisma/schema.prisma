@@ -125,5 +125,43 @@ model Contact {
 }
 
 
+model Category {
+  CATE_ID        Int     @id @default(autoincrement())
+  CATE_CATE_ID   Int?    
+  CATE_DESC      String  @db.VarChar(50)
+  CATE_ACTIVE_YN String  @db.Char(1)
+  CATE_CREATED_BY Int
+  CATE_CREATED_DT DateTime @default(now())
+  CATE_UPDATED_BY Int?
+  CATE_UPDATED_DT DateTime?
+
+  Events      Events[]  // ✅ One-to-Many Relationship (Category has multiple Events)
+}
+
+model Events {
+  ENVT_ID            Int     @id @default(autoincrement())
+  ENVT_CATE_ID       Int
+  ENVT_CATE_CATE_ID  Int?
+  ENVT_DESC          String  @db.VarChar(50)
+  ENVT_EXCERPT       String  @db.VarChar(250)
+  ENVT_DETAIL        String  @db.VarChar(4000)
+  ENVT_BANNER_IMAGE  String  @db.VarChar(250)
+  ENVT_GALLERY_IMAGES String @db.VarChar(500)
+  ENVT_CONTACT_NO    String  @db.VarChar(20)
+  ENVT_ADDRESS       String  @db.VarChar(500)
+  ENVT_CITY          String  @db.VarChar(50)
+  EVNT_FROM_DT       String  @db.VarChar(20)
+  EVNT_UPTO_DT       String  @db.VarChar(20)
+  EVET_ACTIVE_YN     String  @db.Char(1)
+  EVET_CREATED_BY    Int
+  EVET_CREATED_DT    DateTime @default(now())
+  EVET_UPDATED_BY    Int?
+  EVET_UPDATED_DT    DateTime?
+
+  Category          Category @relation(fields: [ENVT_CATE_ID], references: [CATE_ID]) // ✅ Correct One-to-Many
+}
+
+
+
 
 //Database Architecure hei
