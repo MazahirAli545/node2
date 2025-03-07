@@ -107,6 +107,11 @@ model Otp {
   otp          String
   expiresAt    DateTime
 }
+enum ContactType {
+  FEEDBACK
+  CONTACT
+}
+
 
 model Contact {
   CON_ID          Int      @id @default(autoincrement())
@@ -118,13 +123,13 @@ model Contact {
   CON_RATING      Int?     // Optional rating
   CON_ACTIVE_YN   String   @db.Char(1) // Active flag ('Y' or 'N')
   CON_CREATED_BY  Int      // User ID for the creator
-  PeopleRegistry PeopleRegistry @relation(fields: [CON_CREATED_BY], references: [PR_ID])
-
-   CON_CREATED_DT  DateTime @default(now()) // Creation date
+  PeopleRegistry PeopleRegistry? @relation(fields: [CON_CREATED_BY], references: [PR_ID])
+  CON_CREATED_DT  DateTime @default(now()) // Creation date
   CON_UPDATED_BY  Int?     // User ID for the updater (optional)
   CON_UPDATED_DT  DateTime? // Updated date (optional)
 
   @@map("CONTACT")
+
 }
 
 
