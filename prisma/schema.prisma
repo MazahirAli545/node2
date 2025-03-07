@@ -64,6 +64,7 @@ model PeopleRegistry {
 
   @@map("PEOPLE_REGISTRY")
 
+  Contact Contact[]
 }
 
 
@@ -117,7 +118,9 @@ model Contact {
   CON_RATING      Int?     // Optional rating
   CON_ACTIVE_YN   String   @db.Char(1) // Active flag ('Y' or 'N')
   CON_CREATED_BY  Int      // User ID for the creator
-  CON_CREATED_DT  DateTime @default(now()) // Creation date
+  PeopleRegistry PeopleRegistry @relation(fields: [CON_CREATED_BY], references: [PR_ID])
+
+   CON_CREATED_DT  DateTime @default(now()) // Creation date
   CON_UPDATED_BY  Int?     // User ID for the updater (optional)
   CON_UPDATED_DT  DateTime? // Updated date (optional)
 
@@ -151,7 +154,7 @@ model Events {
   ENVT_ADDRESS       String  @db.VarChar(500)
   ENVT_CITY          String  @db.VarChar(50)
   EVNT_FROM_DT       String  @db.VarChar(20)
-  EVNT_UPTO_DT       String  @db.VarChar(20)
+  EVNT_UPTO_DT       String  @db.VarChar(20)  
   EVET_ACTIVE_YN     String  @db.Char(1)
   EVET_CREATED_BY    Int
   EVET_CREATED_DT    DateTime @default(now())
