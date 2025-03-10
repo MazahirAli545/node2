@@ -135,7 +135,7 @@ model Contact {
 
 model Category {
   CATE_ID        Int     @id @default(autoincrement())
-  CATE_CATE_ID   Int?     @unique
+  CATE_CATE_ID   Int     @unique
   CATE_DESC      String  @db.VarChar(50)
   CATE_ACTIVE_YN String  @db.Char(1)
   CATE_CREATED_BY Int
