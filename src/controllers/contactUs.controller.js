@@ -3,7 +3,6 @@ import prisma from "../db/prismaClient.js";
 import { z } from "zod";
 import dotenv from "dotenv";
 import { generateToken } from "../middlewares/jwt.js";
-import { verifyToken } from "../middlewares/jwt.js";
 
 export const contactForm = async (req, res) => {
   try {
@@ -15,7 +14,6 @@ export const contactForm = async (req, res) => {
       CON_MORE_DETAIL,
       CON_RATING,
       CON_ACTIVE_YN,
-      CON_CREATED_BY,
       CON_UPDATED_BY,
       CON_UPDATED_DT,
     } = req.body;
@@ -61,7 +59,7 @@ export const contactForm = async (req, res) => {
         CON_MORE_DETAIL,
         CON_RATING,
         CON_ACTIVE_YN,
-        CON_CREATED_BY,
+        CON_CREATED_BY: req.userId,
         CON_UPDATED_BY,
         CON_UPDATED_DT,
       },

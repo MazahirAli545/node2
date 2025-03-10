@@ -14,7 +14,7 @@ export const generateToken = (user) => {
 };
 
 export const verifyToken = (req, res, next) => {
-  const token = req.headers("Authorization");
+  const token = req.header("Authorization");
   console.log("TOKENNNNN", token);
 
   if (!token) {
@@ -25,7 +25,8 @@ export const verifyToken = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded; // Attach user data to request
+
+    req.userId = decoded.PR_ID; // Attach user data to request
     next();
   } catch (error) {
     return res.status(403).json({ message: "Invalid token", success: false });
