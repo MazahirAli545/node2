@@ -9,6 +9,7 @@ import { contactForm } from "../controllers/contactUs.controller.js";
 import pincodeController from "../controllers/pincode.controller.js";
 import cityController from "../controllers/city.controller.js";
 import getEvents from "../controllers/events.contoller.js";
+import DirectoryController from "../controllers/Directory.controller.js";
 
 import { Router } from "express";
 
@@ -24,5 +25,6 @@ userRouter.post("/contactUs", contactForm);
 userRouter.get("/pincode", pincodeController);
 userRouter.get("/city", cityController);
 userRouter.get("/events", getEvents);
+userRouter.get("/directory", DirectoryController);
 
 export default userRouter;
