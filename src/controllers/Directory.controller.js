@@ -9,7 +9,9 @@ async function DirectoryController(req, res) {
     const directory = await prisma.peopleRegistry.findMany({});
 
     const Directory = directory.map((item) => {
-      return item.PR_UNIQUE_ID.split("-")[3] === "001";
+      if (item.PR_UNIQUE_ID.split("-")[3] === "001") {
+        return item;
+      }
     });
 
     return res.status(200).json({
