@@ -8,10 +8,15 @@ async function DirectoryController(req, res) {
   try {
     const directory = await prisma.peopleRegistry.findMany({});
 
-    const Directory = directory.map((item) => {
-      if (item.PR_UNIQUE_ID.split("-")[3] === "001") {
-        if (item.PR_GENDER === "M") return item;
-      }
+    // const Directory = directory.map((item) => {
+    //   if (item.PR_UNIQUE_ID.split("-")[3] === "001") {
+    //     if (item.PR_GENDER === "M") return item;
+    //   }
+    // });
+    const Directory = directory.filter((item) => {
+      return (
+        item.PR_UNIQUE_ID.split("-")[3] === "001" && item.PR_GENDER === "M"
+      );
     });
 
     return res.status(200).json({
