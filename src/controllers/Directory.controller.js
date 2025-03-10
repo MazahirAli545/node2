@@ -10,7 +10,7 @@ async function DirectoryController(req, res) {
 
     const Directory = directory.map((item) => {
       if (item.PR_UNIQUE_ID.split("-")[3] === "001") {
-        return item;
+        if (item.PR_GENDER === "M") return item;
       }
     });
 
