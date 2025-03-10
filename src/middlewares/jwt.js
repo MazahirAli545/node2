@@ -14,7 +14,7 @@ export const generateToken = (user) => {
 };
 
 export const verifyToken = (req, res, next) => {
-  const token = req.header("Authorization");
+  const token = req.headers("Authorization");
   console.log("TOKENNNNN", token);
 
   if (!token) {
