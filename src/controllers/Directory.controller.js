@@ -14,7 +14,9 @@ async function DirectoryController(req, res) {
     //   }
     // });
     const Directory = directory.filter((item) => {
-      return item.PR_UNIQUE_ID.split("-")[3] === "001";
+      return (
+        item.PR_UNIQUE_ID.split("-")[3] === "001" && item.PR_GENDER === "M"
+      );
     });
 
     return res.status(200).json({
