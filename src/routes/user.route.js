@@ -23,7 +23,7 @@ userRouter.post("/verify-otp", verifyotp);
 userRouter.get("/profession", profession);
 userRouter.post(
   "/contactUs",
-  upload.single("CON_ATTACHMENT"),
+  uploads.single("CON_ATTACHMENT"),
   verifyToken,
   contactForm
 );
