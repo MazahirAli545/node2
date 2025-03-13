@@ -10,6 +10,7 @@ import pincodeController from "../controllers/pincode.controller.js";
 import cityController from "../controllers/city.controller.js";
 import getEvents from "../controllers/events.contoller.js";
 import DirectoryController from "../controllers/Directory.controller.js";
+import upload from "../middlewares/upload.js";
 
 import { Router } from "express";
 
@@ -23,7 +24,7 @@ userRouter.post("/verify-otp", verifyotp);
 userRouter.get("/profession", profession);
 userRouter.post(
   "/contactUs",
-  uploads.single("CON_ATTACHMENT"),
+  upload.single("CON_ATTACHMENT"),
   verifyToken,
   contactForm
 );
