@@ -45,6 +45,7 @@ export const contactForm = async (req, res) => {
     if (!CON_NAME) {
       return res.status(400).json({ message: "Name is Required" });
     }
+    console.log("ttttttt", CON_NAME);
 
     if (!CON_MORE_DETAIL) {
       return res.status(400).json({ message: "Enter Some Description" });
