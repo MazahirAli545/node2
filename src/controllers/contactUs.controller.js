@@ -49,6 +49,7 @@ export const contactForm = async (req, res) => {
     if (!CON_MORE_DETAIL) {
       return res.status(400).json({ message: "Enter Some Description" });
     }
+    console.log("ttttttt", CON_MORE_DETAIL);
 
     const newContact = await prisma.contact.create({
       data: {
@@ -64,6 +65,8 @@ export const contactForm = async (req, res) => {
         CON_UPDATED_DT,
       },
     });
+
+    console.log("2q3q2we", newContact);
 
     const contact = await prisma.contact.findUnique({
       where: { CON_ID: newContact.CON_ID },
