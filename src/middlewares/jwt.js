@@ -17,9 +17,9 @@ export const verifyToken = (req, res, next) => {
   console.log("Hhhhhjhjbjb", req.header);
 
   const tokenHeader = req.header("Authorization");
-  console.log("TOKENNNNN", token);
 
   const token = tokenHeader.split(" ")[1];
+  console.log("TOKENNNNN", token);
 
   if (!token) {
     console.log("2122w", token);
