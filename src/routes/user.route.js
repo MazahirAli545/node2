@@ -21,7 +21,12 @@ userRouter.post("/login", LoginUser);
 userRouter.post("/generate-otp", generateotp);
 userRouter.post("/verify-otp", verifyotp);
 userRouter.get("/profession", profession);
-userRouter.post("/contactUs", verifyToken, contactForm);
+userRouter.post(
+  "/contactUs",
+  upload.single("CON_ATTACHMENT"),
+  verifyToken,
+  contactForm
+);
 userRouter.get("/pincode", pincodeController);
 userRouter.get("/city", cityController);
 userRouter.get("/events", getEvents);

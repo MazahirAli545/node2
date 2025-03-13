@@ -10,7 +10,7 @@ export const contactForm = async (req, res) => {
       CON_TYPE,
       CON_NAME,
       CON_MOBILE_NO,
-      CON_ATTACHMENT,
+
       CON_MORE_DETAIL,
       CON_RATING,
       CON_ACTIVE_YN,
@@ -45,12 +45,15 @@ export const contactForm = async (req, res) => {
     if (!CON_NAME) {
       return res.status(400).json({ message: "Name is Required" });
     }
-    console.log("ttttttt", CON_NAME);
 
     if (!CON_MORE_DETAIL) {
       return res.status(400).json({ message: "Enter Some Description" });
     }
-    console.log("ttttttt", CON_MORE_DETAIL);
+
+    let CON_ATTACHMENT = null;
+    if (req.file) {
+      CON_ATTACHMENT = `/uploads/${req.file.filename}`; // Store file path
+    }
 
     const newContact = await prisma.contact.create({
       data: {
