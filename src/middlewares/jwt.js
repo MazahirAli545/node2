@@ -25,8 +25,11 @@ export const verifyToken = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
+    console.log("TTTTDJHDEKU", decoded);
 
     req.userId = decoded.PR_ID; // Attach user data to request
+    console.log("OOOOO", req.userId);
+
     next();
   } catch (error) {
     return res.status(403).json({ message: "Invalid token", success: false });
