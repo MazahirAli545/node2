@@ -14,18 +14,8 @@ export const generateToken = (user) => {
 };
 
 export const verifyToken = (req, res, next) => {
-  // const token = req.header("Authorization");
-  // console.log("TOKENNNNN", token);
-  console.log("🔹 Request Headers:", req.headers); // Debugging
-  const authHeader = req.header("Authorization"); // ✅ Retrieve the Authorization header
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res
-      .status(401)
-      .json({ message: "Access denied, no token provided", success: false });
-  }
-
-  const token = authHeader.split(" ")[1]; // ✅ Extract token after "Bearer"
-  console.log("🔹 Extracted Token:", token); // Debugging
+  const token = req.header("Authorization");
+  console.log("TOKENNNNN", token);
 
   if (!token) {
     console.log("2122w", token);
