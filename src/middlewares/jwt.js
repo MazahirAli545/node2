@@ -14,6 +14,8 @@ export const generateToken = (user) => {
 };
 
 export const verifyToken = (req, res, next) => {
+  console.log("Hhhhhjhjbjb", req.header);
+
   const token = req.header("Authorization");
   console.log("TOKENNNNN", token);
 
