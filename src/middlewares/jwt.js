@@ -18,6 +18,8 @@ export const verifyToken = (req, res, next) => {
   console.log("TOKENNNNN", token);
 
   if (!token) {
+    console.log("2122w", token);
+
     return res
       .status(401)
       .json({ message: "Access denied, no token provided", success: false });
