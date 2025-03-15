@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client/extension";
 import { verifyFunc, verifyotp, generateotp } from "./otp.controller.js";
 import prisma from "../db/prismaClient.js";
+// import { z } from "zod";
 import { z } from "zod";
 import twilio from "twilio";
 import dotenv from "dotenv";
