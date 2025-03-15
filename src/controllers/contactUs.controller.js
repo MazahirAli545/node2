@@ -66,37 +66,42 @@ export const contactForm = async (req, res) => {
     // }
     let CON_ATTACHMENT = null;
 
-    if (req.file) {
-      const formData = new FormData();
-      formData.append("image", req.file.buffer, {
-        filename: req.file.originalname, // Using original filename
-        contentType: req.file.mimetype, // Adding content type
-      });
+    if (!req.file) {
+      return res
+        .status(400)
+        .json({ message: "No file uploaded", success: false });
+    }
 
-      try {
-        const uploadResponse = await axios.post(
-          process.env.HOSTINGER_UPLOAD_API_URL, // Ensure correct .env variable
-          formData,
-          {
-            headers: {
-              ...formData.getHeaders(),
-              // "Content-Type": `multipart/form-data; boundary=${formData._boundary}`,
-            },
-          }
-        );
+    console.log("File received:", req.file);
 
-        if (uploadResponse.data && uploadResponse.data.fileUrl) {
-          CON_ATTACHMENT = uploadResponse.data.fileUrl;
-        } else {
-          throw new Error("Invalid response from Hostinger API");
+    const formData = new FormData();
+    formData.append("image", req.file.buffer, {
+      filename: req.file.originalname,
+      contentType: req.file.mimetype,
+    });
+
+    try {
+      const uploadResponse = await axios.post(
+        process.env.HOSTINGER_UPLOAD_API_URL,
+        formData,
+        {
+          headers: {
+            ...formData.getHeaders(),
+          },
         }
-      } catch (uploadError) {
-        console.error("File upload error:", uploadError);
-        return res.status(500).json({
-          message: "File upload failed",
-          success: false,
-        });
+      );
+
+      if (uploadResponse.data && uploadResponse.data.fileUrl) {
+        CON_ATTACHMENT = uploadResponse.data.fileUrl;
+      } else {
+        throw new Error("Invalid response from Hostinger API");
       }
+    } catch (uploadError) {
+      console.error("File upload error:", uploadError);
+      return res.status(500).json({
+        message: "File upload failed",
+        success: false,
+      });
     }
 
     const newContact = await prisma.contact.create({
