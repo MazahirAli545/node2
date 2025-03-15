@@ -67,21 +67,21 @@ export const contactForm = async (req, res) => {
     //   const uploadResult = await cloudinary.uploader.upload(req.file.path);
     //   CON_ATTACHMENT = uploadResult.secure_url;
     // }
-    if (!req.userId)
-      return res
-        .status(400)
-        .json({ message: "User ID is missing", success: false });
+    // if (!req.userId)
+    //   return res
+    //     .status(400)
+    //     .json({ message: "User ID is missing", success: false });
 
-    // ✅ Check if `CON_CREATED_BY` Exists in PeopleRegistry
-    const userExists = await prisma.peopleRegistry.findUnique({
-      where: { PR_ID: req.userId },
-    });
+    // // ✅ Check if `CON_CREATED_BY` Exists in PeopleRegistry
+    // const userExists = await prisma.peopleRegistry.findUnique({
+    //   where: { PR_ID: req.userId },
+    // });
 
-    if (!userExists) {
-      return res
-        .status(400)
-        .json({ message: "Invalid user ID", success: false });
-    }
+    // if (!userExists) {
+    //   return res
+    //     .status(400)
+    //     .json({ message: "Invalid user ID", success: false });
+    // }
 
     // ✅ Handle File Attachment (Cloudinary Upload)
     let CON_ATTACHMENT = null;
