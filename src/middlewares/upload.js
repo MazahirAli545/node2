@@ -26,9 +26,10 @@
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+// import uploads from "../uploads"
 
 // Ensure the uploads directory exists
-const uploadDir = "../src/uploads";
+const uploadDir = "src/uploads";
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
