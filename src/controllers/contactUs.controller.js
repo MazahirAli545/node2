@@ -80,12 +80,12 @@ export const contactForm = async (req, res) => {
           {
             headers: {
               ...formData.getHeaders(),
-              "Content-Type": `multipart/form-data; boundary=${formData._boundary}`,
+              // "Content-Type": `multipart/form-data; boundary=${formData._boundary}`,
             },
           }
         );
 
-        if (uploadResponse.data?.fileUrl) {
+        if (uploadResponse.data && uploadResponse.data.fileUrl) {
           CON_ATTACHMENT = uploadResponse.data.fileUrl;
         } else {
           throw new Error("Invalid response from Hostinger API");
@@ -95,7 +95,6 @@ export const contactForm = async (req, res) => {
         return res.status(500).json({
           message: "File upload failed",
           success: false,
-          error: uploadError?.message || "Unknown error",
         });
       }
     }
