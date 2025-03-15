@@ -28,7 +28,7 @@ import path from "path";
 import fs from "fs";
 
 // Ensure the uploads directory exists
-const uploadDir = "src/uploads";
+const uploadDir = "../src/uploads";
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
