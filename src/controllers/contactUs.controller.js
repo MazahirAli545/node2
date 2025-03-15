@@ -69,7 +69,7 @@ export const contactForm = async (req, res) => {
     if (req.file) {
       const formData = new FormData();
       formData.append("image", req.file.buffer, {
-        filename: req.file.originalname, // Use original name of file
+        filename: req.file.filename, // Use original name of file
         contentType: req.file.mimetype, // Include MIME type
       });
 
