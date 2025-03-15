@@ -32,31 +32,36 @@ export const contactForm = async (req, res) => {
     //   .regex(/^[6-9]\d{9}$/, "Invalid mobile number");
     const mobileNumberSchema = Joi.string()
       .pattern(/^[6-9]\d{9}$/)
+      .required()
       .messages({ "string.pattern.base": "Invalid mobile number" });
 
-    const validateResult = mobileNumberSchema.safeParse(CON_MOBILE_NO);
+    // const { CON_MOBILE_NO, CON_NAME, CON_MORE_DETAIL } = req.body;
 
-    if (!validateResult.success) {
+    // Validate mobile number
+    const { error } = mobileNumberSchema.validate(CON_MOBILE_NO);
+    if (error) {
       return res
         .status(400)
-        .json({ message: "Invalid Mobile Number", success: false });
+        .json({ message: error.details[0].message, success: false });
     }
 
-    if (!validateResult) {
-      return res.status(400).json({ message: "Mobile Number is Required" });
-    }
-
+    // Check required fields
     if (!CON_NAME) {
-      return res.status(400).json({ message: "Name is Required" });
+      return res
+        .status(400)
+        .json({ message: "Name is Required", success: false });
     }
 
     if (!CON_MORE_DETAIL) {
-      return res.status(400).json({ message: "Enter Some Description" });
+      return res
+        .status(400)
+        .json({ message: "Enter Some Description", success: false });
     }
 
+    // Handle file attachment
     let CON_ATTACHMENT = null;
     if (req.file) {
-      CON_ATTACHMENT = `/uploads/${req.file.filename}`; // Store file path
+      CON_ATTACHMENT = `/uploads/${req.file.filename}`;
     }
 
     const newContact = await prisma.contact.create({

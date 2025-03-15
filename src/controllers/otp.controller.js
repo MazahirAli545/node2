@@ -31,16 +31,27 @@ export const generateotp = async (req, res) => {
     // const mobileNumberSchema = z
     //   .string()
     //   .regex(/^[6-9]\d{9}$/, "Invalid mobile number");
+    // const mobileNumberSchema = Joi.string()
+    //   .pattern(/^[6-9]\d{9}$/)
+    //   .messages({ "string.pattern.base": "Invalid mobile number" });
+
+    // const validateResult = mobileNumberSchema.safeParse(PR_MOBILE_NO);
+
+    // if (!validateResult.success) {
+    //   return res
+    //     .status(400)
+    //     .json({ message: "Invalid Mobile Number", success: false });
+    // }
     const mobileNumberSchema = Joi.string()
       .pattern(/^[6-9]\d{9}$/)
+      .required()
       .messages({ "string.pattern.base": "Invalid mobile number" });
 
-    const validateResult = mobileNumberSchema.safeParse(PR_MOBILE_NO);
-
-    if (!validateResult.success) {
+    const { error } = mobileNumberSchema.validate(PR_MOBILE_NO);
+    if (error) {
       return res
         .status(400)
-        .json({ message: "Invalid Mobile Number", success: false });
+        .json({ message: error.details[0].message, success: false });
     }
 
     // const otp = otpGenerator.generate(4, { digits: true, specialChars: false, upperCaseAlphabets: false, lowerCaseAlphabets: false });
