@@ -61,6 +61,23 @@ export const contactForm = async (req, res) => {
         .json({ message: "Enter Some Description", success: false });
     }
 
+    const userId = parseInt(req.userId, 10); // Convert to integer
+    if (!userId) {
+      return res
+        .status(400)
+        .json({ message: "Invalid User ID", success: false });
+    }
+
+    const userExists = await prisma.peopleRegistry.findUnique({
+      where: { PR_ID: userId },
+    });
+
+    if (!userExists) {
+      return res
+        .status(400)
+        .json({ message: "User does not exist", success: false });
+    }
+
     // Handle file attachment
     let CON_ATTACHMENT = null;
     if (req.file) {
@@ -77,7 +94,7 @@ export const contactForm = async (req, res) => {
         CON_MORE_DETAIL,
         CON_RATING,
         CON_ACTIVE_YN,
-        CON_CREATED_BY: req.userId,
+        CON_CREATED_BY: userId,
         CON_UPDATED_BY,
         CON_UPDATED_DT,
       },
@@ -85,9 +102,9 @@ export const contactForm = async (req, res) => {
 
     console.log("2q3q2we", newContact);
 
-    const contact = await prisma.contact.findUnique({
-      where: { CON_ID: newContact.CON_ID },
-    });
+    // const contact = await prisma.contact.findUnique({
+    //   where: { CON_ID: newContact.CON_ID },
+    // });
 
     return res.status(201).json({
       message: "Contact form has been successfully submitted",
