@@ -64,6 +64,7 @@ export const contactForm = async (req, res) => {
     // if (req.file) {
     //   CON_ATTACHMENT = `/uploads/${req.file.filename}`;
     // }
+
     let CON_ATTACHMENT = null;
 
     if (!req.file) {
@@ -74,10 +75,14 @@ export const contactForm = async (req, res) => {
 
     console.log("File received:", req.file);
 
+    // Read file from disk
+    const filePath = req.file.path;
+    const fileBuffer = fs.readFileSync(filePath);
+
     const formData = new FormData();
-    formData.append("image", req.file.buffer, {
-      filename: req.file.originalname,
-      contentType: req.file.mimetype,
+    formData.append("image", fileBuffer, {
+      filename: req.file.originalname, // Use original filename
+      contentType: req.file.mimetype, // Include MIME type
     });
 
     try {
