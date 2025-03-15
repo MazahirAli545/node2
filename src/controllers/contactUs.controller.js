@@ -83,6 +83,7 @@ export const contactForm = async (req, res) => {
 
     const formData = new FormData();
     formData.append("image", fileBuffer);
+    console.log("FORMDATA", formData);
 
     try {
       const uploadResponse = await axios.post(
