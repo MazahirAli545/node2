@@ -102,16 +102,16 @@ export const contactForm = async (req, res) => {
 
     const newContact = await prisma.contact.create({
       data: {
-        CON_TYPE: CON_TYPE || "CONTACT",
+        CON_TYPE,
         CON_NAME,
         CON_MOBILE_NO,
-        CON_ATTACHMENT: CON_ATTACHMENT || null,
-        CON_MORE_DETAIL: CON_MORE_DETAIL || "No details provided",
-        CON_RATING: CON_RATING ?? null,
-        CON_ACTIVE_YN: CON_ACTIVE_YN === "N" ? "N" : "Y",
+        CON_ATTACHMENT,
+        CON_MORE_DETAIL,
+        CON_RATING,
+        CON_ACTIVE_YN,
         CON_CREATED_BY: req.userId,
-        CON_UPDATED_BY: CON_UPDATED_BY || req.userId,
-        CON_UPDATED_DT: updatedDate,
+        CON_UPDATED_BY,
+        CON_UPDATED_DT,
       },
     });
 
