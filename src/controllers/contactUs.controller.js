@@ -92,6 +92,7 @@ export const contactForm = async (req, res) => {
     return res.status(201).json({
       message: "Contact form has been successfully submitted",
       success: true,
+      data: newContact,
     });
   } catch (error) {
     console.log("Error for contact form submission:", error);
