@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import { generateToken } from "../middlewares/jwt.js";
 import FormData from "form-data";
 import fs from "fs";
+import axios from "axios";
 
 export const contactForm = async (req, res) => {
   try {
