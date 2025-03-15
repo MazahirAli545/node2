@@ -4,6 +4,9 @@ import prisma from "../db/prismaClient.js";
 import Joi from "joi";
 import dotenv from "dotenv";
 import { generateToken } from "../middlewares/jwt.js";
+import { cloudinary } from "../utils/cloudinary.js";
+
+dotenv.config();
 
 export const contactForm = async (req, res) => {
   try {
@@ -61,7 +64,8 @@ export const contactForm = async (req, res) => {
     // Handle file attachment
     let CON_ATTACHMENT = null;
     if (req.file) {
-      CON_ATTACHMENT = `/uploads/${req.file.filename}`;
+      const uploadResult = await cloudinary.uploader.upload(req.file.path);
+      CON_ATTACHMENT = uploadResult.secure_url;
     }
 
     const newContact = await prisma.contact.create({

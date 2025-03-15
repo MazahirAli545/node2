@@ -10,7 +10,8 @@ import pincodeController from "../controllers/pincode.controller.js";
 import cityController from "../controllers/city.controller.js";
 import getEvents from "../controllers/events.contoller.js";
 import DirectoryController from "../controllers/Directory.controller.js";
-import upload from "../middlewares/upload.js";
+// import upload from "../middlewares/upload.js";
+import { upload } from "../utils/cloudinary.js";
 
 import { Router } from "express";
 
@@ -24,8 +25,8 @@ userRouter.post("/verify-otp", verifyotp);
 userRouter.get("/profession", profession);
 userRouter.post(
   "/contactUs",
-  upload.single("CON_ATTACHMENT"),
-  verifyToken,
+  upload.single("file"),
+  // verifyToken,
   contactForm
 );
 userRouter.get("/pincode", pincodeController);
