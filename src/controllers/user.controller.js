@@ -2,7 +2,8 @@ import { PrismaClient } from "@prisma/client/extension";
 import { verifyFunc, verifyotp, generateotp } from "./otp.controller.js";
 import prisma from "../db/prismaClient.js";
 // import { z } from "zod";
-import { z } from require("zod");
+// import { z } from require("zod");
+import Joi from "joi";
 import twilio from "twilio";
 import dotenv from "dotenv";
 import otpGenerator from "otp-generator";
@@ -71,9 +72,12 @@ export const registerUser = async (req, res) => {
       });
     }
 
-    const mobileNumberSchema = z
-      .string()
-      .regex(/^[6-9]\d{9}$/, "Invalid mobile number");
+    // const mobileNumberSchema = z
+    //   .string()
+    //   .regex(/^[6-9]\d{9}$/, "Invalid mobile number");
+    const mobileNumberSchema = Joi.string()
+      .pattern(/^[6-9]\d{9}$/)
+      .messages({ "string.pattern.base": "Invalid mobile number" });
 
     const validateResult = mobileNumberSchema.safeParse(PR_MOBILE_NO);
 
