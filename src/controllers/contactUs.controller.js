@@ -119,9 +119,9 @@ export const contactForm = async (req, res) => {
 
     console.log("2q3q2we", newContact);
 
-    const contact = await prisma.contact.findUnique({
-      where: { CON_ID: newContact.CON_ID },
-    });
+    // const contact = await prisma.contact.findUnique({
+    //   where: { CON_ID: newContact.CON_ID },
+    // });
 
     return res.status(201).json({
       message: "Contact form has been successfully submitted",
