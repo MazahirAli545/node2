@@ -62,43 +62,11 @@ export const contactForm = async (req, res) => {
     }
 
     // Handle file attachment
-    // let CON_ATTACHMENT = null;
-    // if (req.file) {
-    //   const uploadResult = await cloudinary.uploader.upload(req.file.path);
-    //   CON_ATTACHMENT = uploadResult.secure_url;
-    // }
-    if (!req.userId)
-      return res
-        .status(400)
-        .json({ message: "User ID is missing", success: false });
-
-    // ✅ Check if `CON_CREATED_BY` Exists in PeopleRegistry
-    const userExists = await prisma.peopleRegistry.findUnique({
-      where: { PR_ID: req.userId },
-    });
-
-    if (!userExists) {
-      return res
-        .status(400)
-        .json({ message: "Invalid user ID", success: false });
-    }
-
-    // ✅ Handle File Attachment (Cloudinary Upload)
     let CON_ATTACHMENT = null;
     if (req.file) {
-      try {
-        const uploadResult = await cloudinary.uploader.upload(req.file.path);
-        CON_ATTACHMENT = uploadResult.secure_url;
-      } catch (uploadError) {
-        console.error("Cloudinary upload error:", uploadError);
-        return res
-          .status(500)
-          .json({ message: "File upload failed", success: false });
-      }
+      const uploadResult = await cloudinary.uploader.upload(req.file.path);
+      CON_ATTACHMENT = uploadResult.secure_url;
     }
-
-    // ✅ Convert `CON_UPDATED_DT` to a Valid Date
-    const updatedDate = CON_UPDATED_DT ? new Date(CON_UPDATED_DT) : null;
 
     const newContact = await prisma.contact.create({
       data: {
@@ -109,37 +77,27 @@ export const contactForm = async (req, res) => {
         CON_MORE_DETAIL,
         CON_RATING,
         CON_ACTIVE_YN,
-        CON_CREATED_BY: req.userId || 1, // Set a default valid ID (Ensure ID=1 exists)
-        CON_UPDATED_BY: CON_UPDATED_BY || req.userId || 1,
-        CON_UPDATED_DT: CON_UPDATED_DT ? new Date(CON_UPDATED_DT) : new Date(),
+        CON_CREATED_BY: req.userId,
+        CON_UPDATED_BY,
+        CON_UPDATED_DT,
       },
     });
 
     console.log("2q3q2we", newContact);
 
-    // const contact = await prisma.contact.findUnique({
-    //   where: { CON_ID: newContact.CON_ID },
-    // });
+    const contact = await prisma.contact.findUnique({
+      where: { CON_ID: newContact.CON_ID },
+    });
 
     return res.status(201).json({
       message: "Contact form has been successfully submitted",
       success: true,
-      contact: newContact,
     });
   } catch (error) {
     console.log("Error for contact form submission:", error);
-
-    if (error instanceof prisma.PrismaClientKnownRequestError) {
-      return res.status(400).json({
-        message: "Database error: " + error.message,
-        success: false,
-      });
-    }
-
     return res.status(500).json({
       message: "Something went wrong",
       success: false,
-      error: error.message,
     });
   }
 };
