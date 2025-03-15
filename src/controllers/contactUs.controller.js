@@ -4,9 +4,6 @@ import prisma from "../db/prismaClient.js";
 import Joi from "joi";
 import dotenv from "dotenv";
 import { generateToken } from "../middlewares/jwt.js";
-import { cloudinary } from "../utils/cloudinary.js";
-
-dotenv.config();
 
 export const contactForm = async (req, res) => {
   try {
@@ -61,28 +58,10 @@ export const contactForm = async (req, res) => {
         .json({ message: "Enter Some Description", success: false });
     }
 
-    const userId = parseInt(req.userId, 10); // Convert to integer
-    if (!userId) {
-      return res
-        .status(400)
-        .json({ message: "Invalid User ID", success: false });
-    }
-
-    const userExists = await prisma.peopleRegistry.findUnique({
-      where: { PR_ID: userId },
-    });
-
-    if (!userExists) {
-      return res
-        .status(400)
-        .json({ message: "User does not exist", success: false });
-    }
-
     // Handle file attachment
     let CON_ATTACHMENT = null;
     if (req.file) {
-      const uploadResult = await cloudinary.uploader.upload(req.file.path);
-      CON_ATTACHMENT = uploadResult.secure_url;
+      CON_ATTACHMENT = `/uploads/${req.file.filename}`;
     }
 
     const newContact = await prisma.contact.create({
@@ -94,7 +73,7 @@ export const contactForm = async (req, res) => {
         CON_MORE_DETAIL,
         CON_RATING,
         CON_ACTIVE_YN,
-        CON_CREATED_BY: userId,
+        CON_CREATED_BY: req.userId,
         CON_UPDATED_BY,
         CON_UPDATED_DT,
       },
@@ -102,14 +81,13 @@ export const contactForm = async (req, res) => {
 
     console.log("2q3q2we", newContact);
 
-    // const contact = await prisma.contact.findUnique({
-    //   where: { CON_ID: newContact.CON_ID },
-    // });
+    const contact = await prisma.contact.findUnique({
+      where: { CON_ID: newContact.CON_ID },
+    });
 
     return res.status(201).json({
       message: "Contact form has been successfully submitted",
       success: true,
-      data: newContact,
     });
   } catch (error) {
     console.log("Error for contact form submission:", error);
