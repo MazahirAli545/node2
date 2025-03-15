@@ -4,6 +4,7 @@ import prisma from "../db/prismaClient.js";
 import Joi from "joi";
 import dotenv from "dotenv";
 import { generateToken } from "../middlewares/jwt.js";
+import FormData from "form-data";
 
 export const contactForm = async (req, res) => {
   try {
@@ -59,9 +60,35 @@ export const contactForm = async (req, res) => {
     }
 
     // Handle file attachment
+    // let CON_ATTACHMENT = null;
+    // if (req.file) {
+    //   CON_ATTACHMENT = `/uploads/${req.file.filename}`;
+    // }
+
     let CON_ATTACHMENT = null;
     if (req.file) {
-      CON_ATTACHMENT = `/uploads/${req.file.filename}`;
+      const formData = new FormData();
+      formData.append("file", req.file.buffer, req.file.originalname);
+
+      try {
+        const uploadResponse = await axios.post(
+          process.env.HOSTINGER_UPLOAD_API_URL, // Use the correct URL from .env
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+              Authorization: `Bearer ${process.env.HOSTINGER_UPLOAD_API_UR}`, // Ensure HOSTINGER_API_KEY is set in .env
+            },
+          }
+        );
+        CON_ATTACHMENT = uploadResponse.data.fileUrl;
+      } catch (uploadError) {
+        console.error("File upload error:", uploadError);
+        return res.status(500).json({
+          message: "File upload failed",
+          success: false,
+        });
+      }
     }
 
     const newContact = await prisma.contact.create({
