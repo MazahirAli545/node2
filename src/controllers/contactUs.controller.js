@@ -79,13 +79,10 @@ export const contactForm = async (req, res) => {
 
     // Read file from disk
     const filePath = req.file.path;
-    const fileBuffer = fs.readFileSync(filePath);
+    const fileBuffer = fs.createReadStream(filePath);
 
     const formData = new FormData();
-    formData.append("image", fileBuffer, {
-      filename: req.file.originalname, // Use original filename
-      contentType: req.file.mimetype, // Include MIME type
-    });
+    formData.append("image", fileBuffer);
 
     try {
       const uploadResponse = await axios.post(
