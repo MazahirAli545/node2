@@ -27,11 +27,24 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 
-// Ensure the uploads directory exists
-const uploadDir = path.join("src", "uploads"); // ✅ Cross-platform
+// Determine upload directory
+const uploadDir =
+  process.env.NODE_ENV === "production"
+    ? "/tmp/uploads"
+    : path.join(process.cwd(), "src", "uploads");
 
+// Debug logs
+console.log("Current working directory:", process.cwd());
+console.log("Upload directory path:", uploadDir);
+
+// Ensure the uploads directory exists
 if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+  try {
+    fs.mkdirSync(uploadDir, { recursive: true });
+    console.log("Uploads directory created successfully.");
+  } catch (error) {
+    console.error("Error creating uploads directory:", error);
+  }
 }
 
 const storage = multer.diskStorage({
