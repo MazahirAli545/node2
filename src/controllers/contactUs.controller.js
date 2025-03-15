@@ -121,16 +121,13 @@ export const contactForm = async (req, res) => {
 
     console.log("File received:", req.file);
 
-    // Convert file to buffer
-    const fileBuffer = fs.readFileSync(req.file.path);
-
+    // Read file from disk as a stream
+    const filePath = req.file.path;
     const formData = new FormData();
-    formData.append("image", fileBuffer, {
+    formData.append("image", fs.createReadStream(filePath), {
       filename: req.file.originalname, // Preserve original filename
       contentType: req.file.mimetype, // Include MIME type
     });
-
-    console.log("FORMDATA", formData);
 
     try {
       const uploadResponse = await axios.post(
@@ -143,17 +140,22 @@ export const contactForm = async (req, res) => {
         }
       );
 
-      console.log("Hostinger API Response:", uploadResponse.data); // Debug response
+      console.log("📤 Upload API Response:", uploadResponse.data); // Debug response
 
-      if (uploadResponse.data && uploadResponse.data.fileUrl) {
-        CON_ATTACHMENT = uploadResponse.data.fileUrl;
+      // ✅ Check if API response contains 'status: success'
+      if (uploadResponse.data && uploadResponse.data.status === "success") {
+        CON_ATTACHMENT = `https://yourdomain.com/${uploadResponse.data.url}`;
+        console.log("✅ File uploaded successfully! 📂", CON_ATTACHMENT);
       } else {
-        console.error("Unexpected API response:", uploadResponse.data);
+        console.error(
+          "❌ Unexpected response from Hostinger API:",
+          uploadResponse.data
+        );
         throw new Error("Invalid response from Hostinger API");
       }
     } catch (uploadError) {
       console.error(
-        "File upload error:",
+        "❌ File upload error:",
         uploadError.response?.data || uploadError.message
       );
       return res.status(500).json({
