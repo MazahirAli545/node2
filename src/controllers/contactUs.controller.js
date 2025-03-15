@@ -144,7 +144,7 @@ export const contactForm = async (req, res) => {
 
       // ✅ Check if API response contains 'status: success'
       if (uploadResponse.data && uploadResponse.data.status === "success") {
-        CON_ATTACHMENT = `https://yourdomain.com/${uploadResponse.data.url}`;
+        CON_ATTACHMENT = ` process.env.HOSTINGER_UPLOAD_API_URL${uploadResponse.data.url}`;
         console.log("✅ File uploaded successfully! 📂", CON_ATTACHMENT);
       } else {
         console.error(
