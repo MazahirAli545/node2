@@ -64,27 +64,28 @@ export const contactForm = async (req, res) => {
     // if (req.file) {
     //   CON_ATTACHMENT = `/uploads/${req.file.filename}`;
     // }
-
     let CON_ATTACHMENT = null;
+
     if (req.file) {
       const formData = new FormData();
       formData.append("image", req.file.buffer, {
-        filename: req.file.filename, // Use original name of file
-        contentType: req.file.mimetype, // Include MIME type
+        filename: req.file.originalname, // Using original filename
+        contentType: req.file.mimetype, // Adding content type
       });
 
       try {
         const uploadResponse = await axios.post(
-          process.env.HOSTINGER_UPLOAD_API_URL, // Ensure correct env variable
+          process.env.HOSTINGER_UPLOAD_API_URL, // Ensure correct .env variable
           formData,
           {
             headers: {
               ...formData.getHeaders(),
+              "Content-Type": `multipart/form-data; boundary=${formData._boundary}`,
             },
           }
         );
 
-        if (uploadResponse.data && uploadResponse.data.fileUrl) {
+        if (uploadResponse.data?.fileUrl) {
           CON_ATTACHMENT = uploadResponse.data.fileUrl;
         } else {
           throw new Error("Invalid response from Hostinger API");
@@ -94,6 +95,7 @@ export const contactForm = async (req, res) => {
         return res.status(500).json({
           message: "File upload failed",
           success: false,
+          error: uploadError?.message || "Unknown error",
         });
       }
     }
