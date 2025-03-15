@@ -68,19 +68,21 @@ export const contactForm = async (req, res) => {
     let CON_ATTACHMENT = null;
     if (req.file) {
       const formData = new FormData();
-      formData.append("file", req.file.buffer, req.file.originalname);
+      formData.append("image", req.file.buffer, {
+        filename: req.file.filename,
+      });
 
       try {
         const uploadResponse = await axios.post(
-          process.env.HOSTINGER_UPLOAD_API_URL, // Use the correct URL from .env
+          process.env.HOSTINGER_UPLOAD_API_URL,
           formData,
           {
             headers: {
-              "Content-Type": "multipart/form-data",
-              Authorization: `Bearer ${process.env.HOSTINGER_UPLOAD_API_UR}`, // Ensure HOSTINGER_API_KEY is set in .env
+              ...formData.getHeaders(),
             },
           }
         );
+
         CON_ATTACHMENT = uploadResponse.data.fileUrl;
       } catch (uploadError) {
         console.error("File upload error:", uploadError);
