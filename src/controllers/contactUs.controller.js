@@ -22,25 +22,11 @@ export const contactForm = async (req, res) => {
       CON_UPDATED_DT,
     } = req.body;
 
-    //   const existingmobile = await prisma.peopleRegistry.findFirst({
-    //     where: { CON_MOBILE_NO },
-    //   });
-
-    //   if(existingmobile){
-    //       return res.status(400).json({message: "this mobile Number is already registered" , success : false})
-    //   }
-
-    // const mobileNumberSchema = z
-    //   .string()
-    //   .regex(/^[6-9]\d{9}$/, "Invalid mobile number");
     const mobileNumberSchema = Joi.string()
       .pattern(/^[6-9]\d{9}$/)
       .required()
       .messages({ "string.pattern.base": "Invalid mobile number" });
 
-    // const { CON_MOBILE_NO, CON_NAME, CON_MORE_DETAIL } = req.body;
-
-    // Validate mobile number
     const { error } = mobileNumberSchema.validate(CON_MOBILE_NO);
     if (error) {
       return res
@@ -61,56 +47,6 @@ export const contactForm = async (req, res) => {
         .json({ message: "Enter Some Description", success: false });
     }
 
-    // Handle file attachment
-    // let CON_ATTACHMENT = null;
-    // if (req.file) {
-    //   CON_ATTACHMENT = `/uploads/${req.file.filename}`;
-    // }
-
-    // let CON_ATTACHMENT = null;
-
-    // if (!req.file) {
-    //   return res
-    //     .status(400)
-    //     .json({ message: "No file uploaded", success: false });
-    // }
-
-    // console.log("File received:", req.file);
-
-    // // Read file from disk
-    // const filePath = req.file.path;
-    // const fileBuffer = fs.readFileSync(filePath);
-
-    // const formData = new FormData();
-    // formData.append("image", fileBuffer, {
-    //   filename: req.file.originalname,
-    //   contentType: req.file.mimetype,
-    // });
-
-    // try {
-    //   const uploadResponse = await axios.post(
-    //     process.env.HOSTINGER_UPLOAD_API_URL,
-    //     formData,
-    //     {
-    //       headers: {
-    //         ...formData.getHeaders(),
-    //       },
-    //     }
-    //   );
-
-    //   if (uploadResponse.data && uploadResponse.data.fileUrl) {
-    //     CON_ATTACHMENT = uploadResponse.data.fileUrl;
-    //   } else {
-    //     throw new Error("Invalid response from Hostinger API");
-    //   }
-    // } catch (uploadError) {
-    //   console.error("File upload error:", uploadError);
-    //   return res.status(500).json({
-    //     message: "File upload failed",
-    //     success: false,
-    //   });
-    // }
-
     let CON_ATTACHMENT = null;
 
     if (!req.file) {
@@ -125,8 +61,8 @@ export const contactForm = async (req, res) => {
     const filePath = req.file.path;
     const formData = new FormData();
     formData.append("image", fs.createReadStream(filePath), {
-      filename: req.file.originalname, // Preserve original filename
-      contentType: req.file.mimetype, // Include MIME type
+      filename: req.file.originalname,
+      contentType: req.file.mimetype,
     });
 
     try {
@@ -182,9 +118,9 @@ export const contactForm = async (req, res) => {
 
     console.log("2q3q2we", newContact);
 
-    const contact = await prisma.contact.findUnique({
-      where: { CON_ID: newContact.CON_ID },
-    });
+    // const contact = await prisma.contact.findUnique({
+    //   where: { CON_ID: newContact.CON_ID },
+    // });
 
     return res.status(201).json({
       message: "Contact form has been successfully submitted",
