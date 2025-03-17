@@ -32,6 +32,6 @@ userRouter.get("/pincode", pincodeController);
 userRouter.get("/city", cityController);
 userRouter.get("/events", getEvents);
 userRouter.get("/directory", DirectoryController);
-userRouter.get("/profile", getUserProfile);
+userRouter.get("/profile", verifyToken, getUserProfile);
 
 export default userRouter;
