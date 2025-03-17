@@ -8,7 +8,8 @@ const JWT_SECRET = process.env.JWT_SECRET || "your_default_secret";
 export const generateToken = (user) => {
   return jwt.sign(
     { PR_ID: user.PR_ID, PR_MOBILE_NO: user.PR_MOBILE_NO }, // Payload (User Data)
-    JWT_SECRET
+    JWT_SECRET,
+    { expiresIn: "7d" }
     // Token expiration (7 days)
   );
 };

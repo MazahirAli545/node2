@@ -11,7 +11,7 @@ import cityController from "../controllers/city.controller.js";
 import getEvents from "../controllers/events.contoller.js";
 import DirectoryController from "../controllers/Directory.controller.js";
 import upload from "../middlewares/upload.js";
-
+import getUserProfile from "../controllers/profile.controller.js";
 import { Router } from "express";
 
 const userRouter = Router();
@@ -32,5 +32,6 @@ userRouter.get("/pincode", pincodeController);
 userRouter.get("/city", cityController);
 userRouter.get("/events", getEvents);
 userRouter.get("/directory", DirectoryController);
+userRouter.get("/profile", getUserProfile);
 
 export default userRouter;
