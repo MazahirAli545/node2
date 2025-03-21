@@ -6,7 +6,7 @@ import { verifyToken } from "../middlewares/jwt.js";
 import profession from "../controllers/professionSeed.js";
 // import contact from '../controllers/contactUs.controller.js'
 import { contactForm } from "../controllers/contactUs.controller.js";
-import pincodeController from "../controllers/pincode.controller.js";
+// import pincodeController from "../controllers/pincode.controller.js";
 import cityController from "../controllers/city.controller.js";
 import getEvents from "../controllers/events.contoller.js";
 import DirectoryController from "../controllers/Directory.controller.js";
@@ -29,7 +29,7 @@ userRouter.post(
   verifyToken,
   contactForm
 );
-userRouter.get("/pincode", pincodeController);
+// userRouter.get("/pincode", pincodeController);
 userRouter.get("/city", cityController);
 userRouter.get("/events", getEvents);
 userRouter.get("/directory", DirectoryController);
