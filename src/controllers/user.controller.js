@@ -54,6 +54,7 @@ export const registerUser = async (req, res) => {
       PR_MOTHER_NAME,
       PR_SPOUSE_NAME,
       PR_PHOTO_URL,
+
       PR_BUSS_INTER,
       PR_BUSS_STREAM,
       PR_BUSS_TYPE,
@@ -123,25 +124,6 @@ export const registerUser = async (req, res) => {
       });
     }
 
-    // const city = await prisma.city.create({
-    //   data: {
-    //     CITY_PIN_CODE: PR_PIN_CODE,
-    //     CITY_NAME: PR_CITY_NAME,
-    //     CITY_DS_CODE: PR_DISTRICT_CODE,
-    //     CITY_DS_NAME: PR_DISTRICT_NAME,
-    //     CITY_ST_CODE: PR_STATE_CODE,
-    //     CITY_ST_NAME: PR_STATE_NAME,
-
-    //   },
-    // });
-
-    // await prisma.city.update({
-    //   where: { CITY_ID: city.CITY_ID },
-    //   data: { CITY_CODE: city.CITY_ID },
-    // });
-
-    // console.log("rrrr", city);
-
     let city = await prisma.city.findFirst({
       where: {
         CITY_NAME: PR_CITY_NAME,
@@ -170,6 +152,28 @@ export const registerUser = async (req, res) => {
     }
 
     console.log("City Created/Fetched: ", city);
+
+    let business = await prisma.bUSSINESS.findFirst({
+      where: {
+        BUSS_STREM: PR_BUSS_STREAM,
+        BUSS_TYPE: PR_BUSS_TYPE,
+      },
+    });
+
+    if (!business) {
+      business = await prisma.bUSSINESS.create({
+        data: {
+          BUSS_STREM: PR_BUSS_STREAM,
+          BUSS_TYPE: PR_BUSS_TYPE,
+          CITY_CREATED_BY: 1, // Replace this with the actual user ID
+        },
+      });
+
+      await prisma.bUSSINESS.update({
+        where: { BUSS_ID: business.BUSS_ID },
+        data: { BUSS_ID: business.BUSS_ID }, // Ensuring ID is properly set
+      });
+    }
 
     const professionId =
       PR_PROFESSION_ID && PR_PROFESSION_ID !== 0 ? PR_PROFESSION_ID : null;
@@ -201,6 +205,7 @@ export const registerUser = async (req, res) => {
         PR_MOTHER_NAME,
         PR_SPOUSE_NAME,
         PR_PHOTO_URL,
+        PR_BUSS_CODE: business.BUSS_ID,
         PR_BUSS_INTER,
         PR_BUSS_STREAM,
         PR_BUSS_TYPE,
