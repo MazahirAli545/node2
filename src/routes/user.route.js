@@ -12,6 +12,7 @@ import getEvents from "../controllers/events.contoller.js";
 import DirectoryController from "../controllers/Directory.controller.js";
 import upload from "../middlewares/upload.js";
 import getUserProfile from "../controllers/profile.controller.js";
+import BusinessController from "../controllers/Bussiness.controller.js";
 import { Router } from "express";
 
 const userRouter = Router();
@@ -33,5 +34,6 @@ userRouter.get("/city", cityController);
 userRouter.get("/events", getEvents);
 userRouter.get("/directory", DirectoryController);
 userRouter.get("/profile", verifyToken, getUserProfile);
+userRouter.get("/business", BusinessController);
 
 export default userRouter;

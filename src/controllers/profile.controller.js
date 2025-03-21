@@ -6,10 +6,8 @@ const prisma = new PrismaClient();
 
 async function getUserProfile(req, res) {
   try {
-    // console.log("Request User ID:", req.userId);
-    const userId = req.userId; // Extract user ID from token
+    const userId = req.userId;
 
-    // console.log("Request User ID22:", userId);
     const user = await prisma.peopleRegistry.findUnique({
       where: { PR_ID: userId },
       include: {

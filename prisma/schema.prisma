@@ -49,6 +49,13 @@ model PeopleRegistry {
   PR_MOTHER_NAME     String?   @db.VarChar(100)
   PR_SPOUSE_NAME     String?   @db.VarChar(100)
   Children         Child[]   
+  PR_BUSS_CODE     Int?
+  BUSSINESS        BUSSINESS? @relation(fields: [PR_BUSS_CODE], references: [BUSS_ID], onDelete: SetNull)
+  PR_BUSS_INTER    String? @db.Char(1)
+  PR_BUSS_STREAM   String? @db.VarChar(20)
+  PR_BUSS_TYPE     String? @db.VarChar(20)
+
+  
   PR_PHOTO_URL     String?  @db.VarChar(255)
   PR_CREATED_BY    Int?     
   PR_CREATED_AT    DateTime @default(now())
@@ -87,6 +94,23 @@ model City {
 
 
   @@map("CITY")
+
+  PeopleRegistry PeopleRegistry[]
+}
+
+model BUSSINESS {
+  BUSS_ID         Int      @id @default(autoincrement()) 
+  BUSS_STREM   String?  @db.VarChar(20)
+  BUSS_TYPE   String?  @db.VarChar(20)                
+  // BUSS_INTER       String?  @db.Char(1)
+  CITY_CREATED_BY Int?
+  CITY_CREATED_AT DateTime @default(now())
+  CITY_UPDATED_BY Int?
+  CITY_UPDATED_AT DateTime?
+
+
+
+  @@map("BUSSINESS")
 
   PeopleRegistry PeopleRegistry[]
 }
