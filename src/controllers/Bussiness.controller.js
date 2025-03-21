@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 
 async function BusinessController(req, res) {
   try {
-    const cities = await prisma.bUSSINESS.findMany({
+    const Business = await prisma.bUSSINESS.findMany({
       select: {
         BUSS_ID: true,
         BUSS_STREM: true,
@@ -21,7 +21,7 @@ async function BusinessController(req, res) {
     return res.status(200).json({
       message: "Cities fetched successfully",
       success: true,
-      cities,
+      Business,
     });
   } catch (error) {
     console.error("Error fetching cities:", error);
