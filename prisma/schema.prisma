@@ -61,6 +61,7 @@ model PeopleRegistry {
   PR_CREATED_AT    DateTime @default(now())
   PR_UPDATED_BY    Int?     
   PR_UPDATED_AT    DateTime?
+  Hobbies PR_Hobbies[]  
 
   @@unique([PR_FATHER_ID])
   @@unique([PR_MOTHER_ID])
@@ -74,6 +75,27 @@ model PeopleRegistry {
   Contact Contact[]
 }
 
+model Hobbies {
+  HOBBY_ID   Int    @id @default(autoincrement())
+  HOBBY_NAME String @unique @db.VarChar(100)
+  HOBBY_IMAGE_URL String? @db.VarChar(255)
+   CITY_CREATED_BY Int?
+  CITY_CREATED_AT DateTime @default(now())
+  CITY_UPDATED_BY Int?
+  CITY_UPDATED_AT DateTime?
+
+  PR_Hobbies PR_Hobbies[] 
+}
+
+model PR_Hobbies {
+  PR_ID     Int
+  HOBBY_ID  Int
+
+  PeopleRegistry PeopleRegistry @relation(fields: [PR_ID], references: [PR_ID], onDelete: Cascade)
+  Hobbies        Hobbies        @relation(fields: [HOBBY_ID], references: [HOBBY_ID], onDelete: Cascade)
+
+  @@id([PR_ID, HOBBY_ID])
+}
 
 
 
