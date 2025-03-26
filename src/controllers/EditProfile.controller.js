@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 
 async function EditProfile(req, res) {
   try {
-    const { PR_ID, ...updateData } = req.body;
+    const PR_ID = req.headers.pr_id;
     if (!PR_ID) {
       return res.status(404).json({
         message: "PR_ID is required for updating profile",
