@@ -37,7 +37,7 @@ async function EditProfile(req, res) {
   try {
     const PR_ID = req.headers.pr_id;
     if (!PR_ID) {
-      return res.status(404).json({
+      return res.status(400).json({
         message: "PR_ID is required for updating profile",
         success: false,
       });
@@ -56,12 +56,6 @@ async function EditProfile(req, res) {
         .json({ message: "Profile not found", success: false });
     }
 
-    if (JSON.stringify(existingProfile) === JSON.stringify(req.body)) {
-      return res
-        .status(400)
-        .json({ message: "No changes detected", success: false });
-    }
-
     const updatedProfile = await prisma.peopleRegistry.update({
       where: { PR_ID: Number(PR_ID) },
       data: {
@@ -71,16 +65,29 @@ async function EditProfile(req, res) {
       },
     });
 
-    console.log("Updated Profile:", updatedProfile);
+    const refreshedProfile = await prisma.peopleRegistry.findUnique({
+      where: { PR_ID: Number(PR_ID) },
+    });
+
+    console.log("Updated Profile:", refreshedProfile);
 
     return res.status(200).json({
       message: "Profile updated successfully",
-      updatedProfile,
+      updatedProfile: refreshedProfile,
     });
   } catch (error) {
-    console.error("Error Updating Profile", error);
-    return res.status(500).json({ error: "Internal server error" });
+    console.error("Updation Error:", error);
+
+    if (error.code === "P2025") {
+      return res.status(404).json({ error: "Profile not found for update" });
+    }
+
+    return res
+      .status(500)
+      .json({ error: error.message || "Internal server error" });
   }
 }
 
 export default EditProfile;
+
+// export default EditProfile;
