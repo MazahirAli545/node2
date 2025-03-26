@@ -61,7 +61,7 @@ async function EditProfile(req, res) {
       data: {
         ...req.body,
         PR_UPDATED_AT: new Date(),
-        PR_UPDATED_BY: "System",
+        // PR_UPDATED_BY: "System",
       },
     });
 
