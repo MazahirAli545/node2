@@ -49,15 +49,14 @@ async function EditProfile(req, res) {
     console.log("Received PR_ID:", PR_ID);
     console.log("Request Body:", req.body);
 
-    // Check if request body is empty
+    // Allow empty requests but return success without updating DB
     if (!Object.keys(req.body).length) {
-      return res.status(400).json({
-        message: "No data provided for update",
-        success: false,
+      return res.status(200).json({
+        message: "No changes detected. Profile remains unchanged.",
+        success: true,
       });
     }
 
-    // Find existing profile
     const existingProfile = await prisma.peopleRegistry.findUnique({
       where: { PR_ID },
     });
@@ -69,7 +68,6 @@ async function EditProfile(req, res) {
       });
     }
 
-    // Update the profile
     const updatedProfile = await prisma.peopleRegistry.update({
       where: { PR_ID },
       data: {
@@ -98,5 +96,3 @@ async function EditProfile(req, res) {
 }
 
 export default EditProfile;
-
-// export default EditProfile;
