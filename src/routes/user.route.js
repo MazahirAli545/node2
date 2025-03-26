@@ -14,6 +14,7 @@ import upload from "../middlewares/upload.js";
 import getUserProfile from "../controllers/profile.controller.js";
 import BusinessController from "../controllers/Bussiness.controller.js";
 import HobbiesController from "../controllers/Hobbies.controller.js";
+import EditProfile from "../controllers/EditProfile.controller.js";
 import { Router } from "express";
 
 const userRouter = Router();
@@ -37,5 +38,6 @@ userRouter.get("/directory", DirectoryController);
 userRouter.get("/profile", verifyToken, getUserProfile);
 userRouter.get("/business", BusinessController);
 userRouter.get("/hobbies", HobbiesController);
+userRouter.post("/edit-profile", EditProfile);
 
 export default userRouter;
