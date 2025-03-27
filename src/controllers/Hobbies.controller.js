@@ -11,10 +11,10 @@ async function HobbiesController(req, res) {
         HOBBY_ID: true,
         HOBBY_NAME: true,
         HOBBY_IMAGE_URL: true,
-        CITY_CREATED_BY: true,
-        CITY_CREATED_AT: true,
-        CITY_UPDATED_BY: true,
-        CITY_UPDATED_AT: true,
+        HOBBY_IMAGE_URL_CREATED_BY: true,
+        HOBBY_CREATED_AT: true,
+        HOBBY_UPDATED_BY: true,
+        HOBBY_UPDATED_AT: true,
       },
     });
 
