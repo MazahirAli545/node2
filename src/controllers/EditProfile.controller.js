@@ -38,8 +38,6 @@ async function EditProfile(req, res) {
       });
     }
 
-    let PR_PHOTO_URL = exis;
-
     const updatedProfile = await prisma.peopleRegistry.update({
       where: { PR_ID: Number(PR_ID) },
       data: {
