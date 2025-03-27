@@ -164,47 +164,6 @@ export const registerUser = async (req, res) => {
     const professionId =
       PR_PROFESSION_ID && PR_PROFESSION_ID !== 0 ? PR_PROFESSION_ID : null;
 
-    let uploadedPhotoUrl = PR_PHOTO_URL; // Keep same if no update
-
-    // ✅ Handle Image Upload if PR_PHOTO_URL is Base64
-    if (PR_PHOTO_URL && PR_PHOTO_URL.startsWith("data:image/")) {
-      console.log("📸 Uploading Base64 Image to Hostinger...");
-
-      try {
-        const uploadResponse = await axios.post(
-          process.env.HOSTINGER_UPLOAD_API_URL,
-          {
-            image: PR_PHOTO_URL, // Base64 string
-          }
-        );
-
-        console.log("📤 Upload API Response:", uploadResponse.data);
-
-        if (uploadResponse.data && uploadResponse.data.status === "success") {
-          uploadedPhotoUrl = `${process.env.HOSTINGER_UPLOAD_API_URL}${uploadResponse.data.url}`;
-          console.log("✅ Image uploaded successfully! 📂", uploadedPhotoUrl);
-        } else {
-          console.error(
-            "❌ Unexpected response from Hostinger API:",
-            uploadResponse.data
-          );
-          throw new Error("Invalid response from Hostinger API");
-        }
-      } catch (uploadError) {
-        console.error(
-          "❌ File upload error:",
-          uploadError.response?.data || uploadError.message
-        );
-        return res.status(500).json({
-          message: "File upload failed",
-          success: false,
-          error: uploadError.response?.data || uploadError.message,
-        });
-      }
-    } else {
-      console.log("ℹ️ No image uploaded, proceeding with existing URL.");
-    }
-
     const newUser = await prisma.peopleRegistry.create({
       data: {
         PR_UNIQUE_ID: `${PR_STATE_CODE}${PR_DISTRICT_CODE}-${
@@ -232,7 +191,7 @@ export const registerUser = async (req, res) => {
         PR_FATHER_NAME,
         PR_MOTHER_NAME,
         PR_SPOUSE_NAME,
-        PR_PHOTO_URL: uploadedPhotoUrl,
+        PR_PHOTO_URL,
         PR_BUSS_CODE: business.BUSS_ID,
         PR_BUSS_INTER,
         PR_BUSS_STREAM,
