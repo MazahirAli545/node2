@@ -38,7 +38,7 @@ async function EditProfile(req, res) {
       });
     }
 
-    var Children = req?.body?.CHILDRENN;
+    var Children = req?.body?.Children;
 
     if (Array.isArray(Children) && Children.length > 0) {
       const childPromises = Children.filter(
@@ -75,6 +75,8 @@ async function EditProfile(req, res) {
 
       await Promise.all(childPromises);
     }
+
+    req.body.Children = null;
 
     const updatedProfile = await prisma.peopleRegistry.update({
       where: { PR_ID: Number(PR_ID) },
