@@ -59,6 +59,7 @@ export const registerUser = async (req, res) => {
       PR_BUSS_INTER,
       PR_BUSS_STREAM,
       PR_BUSS_TYPE,
+      PR_HOBBY,
       // otp,
       otp = "1234",
       Children,
@@ -196,6 +197,7 @@ export const registerUser = async (req, res) => {
         PR_BUSS_INTER,
         PR_BUSS_STREAM,
         PR_BUSS_TYPE,
+        PR_HOBBY,
       },
     });
 

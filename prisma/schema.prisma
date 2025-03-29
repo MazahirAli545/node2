@@ -55,6 +55,7 @@ model PeopleRegistry {
   PR_BUSS_INTER    String? @db.Char(1)
   PR_BUSS_STREAM   String? @db.VarChar(20)
   PR_BUSS_TYPE     String? @db.VarChar(20)
+   PR_HOBBY        String? @db.VarChar(200)
 
   
   PR_PHOTO_URL     String?  @db.VarChar(255)
@@ -62,7 +63,8 @@ model PeopleRegistry {
   PR_CREATED_AT    DateTime @default(now())
   PR_UPDATED_BY    Int?     
   PR_UPDATED_AT    DateTime?
-  Hobbies PR_Hobbies[]  
+  // Hobbies PR_Hobbies[]  
+ 
 
   @@unique([PR_FATHER_ID])
   @@unique([PR_MOTHER_ID])
@@ -85,18 +87,18 @@ model Hobbies {
   CITY_UPDATED_BY Int?
   CITY_UPDATED_AT DateTime?
 
-  PR_Hobbies PR_Hobbies[] 
+  // PR_Hobbies PR_Hobbies[] 
 }
 
-model PR_Hobbies {
-  PR_ID     Int
-  HOBBY_ID  Int
+// model PR_Hobbies {
+//   PR_ID     Int
+//   HOBBY_ID  Int
 
-  PeopleRegistry PeopleRegistry @relation(fields: [PR_ID], references: [PR_ID], onDelete: Cascade)
-  Hobbies        Hobbies        @relation(fields: [HOBBY_ID], references: [HOBBY_ID], onDelete: Cascade)
+//   PeopleRegistry PeopleRegistry @relation(fields: [PR_ID], references: [PR_ID], onDelete: Cascade)
+//   Hobbies        Hobbies        @relation(fields: [HOBBY_ID], references: [HOBBY_ID], onDelete: Cascade)
 
-  @@id([PR_ID, HOBBY_ID])
-}
+//   @@id([PR_ID, HOBBY_ID])
+// }
 
 
 
