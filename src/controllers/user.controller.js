@@ -201,21 +201,85 @@ export const registerUser = async (req, res) => {
       },
     });
 
+    // if (Array.isArray(Children) && Children.length > 0) {
+    //   const childPromises = Children.filter(
+    //     (child) => child.name && child.dob
+    //   ).map(async (child) => {
+    //     return prisma.child.create({
+    //       data: {
+    //         name: child.name,
+    //         dob: new Date(child.dob),
+    //         userId: newUser.PR_ID,
+    //       },
+    //     });
+    //   });
+    //   // console.log("Childrennsssssss", Children)
+    //   await Promise.all(childPromises);
+    // }
+
     if (Array.isArray(Children) && Children.length > 0) {
       const childPromises = Children.filter(
         (child) => child.name && child.dob
       ).map(async (child) => {
-        return prisma.child.create({
-          data: {
+        const existingChild = await prisma.child.findFirst({
+          where: {
             name: child.name,
             dob: new Date(child.dob),
             userId: newUser.PR_ID,
           },
         });
+
+        if (existingChild) {
+          // Update the existing child
+          return prisma.child.update({
+            where: { id: existingChild.id },
+            data: {
+              name: child.name,
+              dob: new Date(child.dob),
+            },
+          });
+        } else {
+          // Insert a new child record
+          return prisma.child.create({
+            data: {
+              name: child.name,
+              dob: new Date(child.dob),
+              userId: newUser.PR_ID,
+            },
+          });
+        }
       });
-      // console.log("Childrennsssssss", Children)
+
       await Promise.all(childPromises);
     }
+
+    // if (Array.isArray(Children) && Children.length > 0) {
+    //   const childPromises = Children.filter(
+    //     (child) => child.name && child.dob
+    //   ).map(async (child) => {
+    //     if (child.id != ) {
+    //       // Update existing child
+    //       return prisma.child.update({
+    //         where: { id: child.id }, // Assuming "id" is the primary key of the child table
+    //         data: {
+    //           name: child.name,
+    //           dob: new Date(child.dob),
+    //         },
+    //       });
+    //     } else {
+    //       // Insert new child
+    //       return prisma.child.create({
+    //         data: {
+    //           name: child.name,
+    //           dob: new Date(child.dob),
+    //           userId: newUser.PR_ID,
+    //         },
+    //       });
+    //     }
+    //   });
+
+    //   await Promise.all(childPromises);
+    // }
 
     const childrens = await prisma.child.findMany();
 
