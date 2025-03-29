@@ -67,7 +67,7 @@ async function EditProfile(req, res) {
             data: {
               name: child.name,
               dob: new Date(child.dob),
-              userId: PR_ID,
+              userId: Number(PR_ID),
             },
           });
         }
