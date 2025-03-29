@@ -254,34 +254,6 @@ export const registerUser = async (req, res) => {
     //   await Promise.all(childPromises);
     // }
 
-    // if (Array.isArray(Children) && Children.length > 0) {
-    //   const childPromises = Children.filter(
-    //     (child) => child.name && child.dob
-    //   ).map(async (child) => {
-    //     if (child.id != ) {
-    //       // Update existing child
-    //       return prisma.child.update({
-    //         where: { id: child.id }, // Assuming "id" is the primary key of the child table
-    //         data: {
-    //           name: child.name,
-    //           dob: new Date(child.dob),
-    //         },
-    //       });
-    //     } else {
-    //       // Insert new child
-    //       return prisma.child.create({
-    //         data: {
-    //           name: child.name,
-    //           dob: new Date(child.dob),
-    //           userId: newUser.PR_ID,
-    //         },
-    //       });
-    //     }
-    //   });
-
-    //   await Promise.all(childPromises);
-    // }
-
     const childrens = await prisma.child.findMany();
 
     console.log(childrens);

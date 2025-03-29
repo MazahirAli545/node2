@@ -76,7 +76,7 @@ async function EditProfile(req, res) {
       await Promise.all(childPromises);
     }
 
-    req.body.Children = null;
+    req.body.Children = { create: [] };
 
     const updatedProfile = await prisma.peopleRegistry.update({
       where: { PR_ID: Number(PR_ID) },
