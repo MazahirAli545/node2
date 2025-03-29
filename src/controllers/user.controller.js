@@ -223,9 +223,7 @@ export const registerUser = async (req, res) => {
       ).map(async (child) => {
         const existingChild = await prisma.child.findFirst({
           where: {
-            name: child.name,
-            dob: new Date(child.dob),
-            userId: newUser.PR_ID,
+            id: child.id,
           },
         });
 
