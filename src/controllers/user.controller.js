@@ -29,7 +29,7 @@ const checkMobileVerified = async (PR_MOBILE_NO, otp) => {
 export const registerUser = async (req, res) => {
   try {
     const {
-      PR_UNIQUE_ID,
+      PR_ID,
       PR_FULL_NAME,
       PR_DOB,
       PR_GENDER,
@@ -245,7 +245,7 @@ export const registerUser = async (req, res) => {
             data: {
               name: child.name,
               dob: new Date(child.dob),
-              userId: newUser.PR_ID,
+              userId: PR_ID || newUser.PR_ID,
             },
           });
         }
