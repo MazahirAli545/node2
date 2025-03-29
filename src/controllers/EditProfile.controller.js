@@ -38,7 +38,7 @@ async function EditProfile(req, res) {
       });
     }
 
-    Children = req.body.Children;
+    Children = req?.body?.CHILDRENN;
 
     if (Array.isArray(Children) && Children.length > 0) {
       const childPromises = Children.filter(
