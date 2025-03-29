@@ -8,6 +8,7 @@ import twilio from "twilio";
 import dotenv from "dotenv";
 import otpGenerator from "otp-generator";
 import { generateToken } from "../middlewares/jwt.js";
+import { log } from "console";
 
 dotenv.config();
 
@@ -226,6 +227,8 @@ export const registerUser = async (req, res) => {
             id: child.id,
           },
         });
+
+        console.log("existing child: ", existingChild);
 
         if (existingChild) {
           // Update the existing child
