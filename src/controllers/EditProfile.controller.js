@@ -1,6 +1,10 @@
 import { PrismaClient } from "@prisma/client";
 import { error } from "console";
 import express from "express";
+import multer from "multer";
+import fs from "fs";
+import axios from "axios";
+import FormData from "form-data";
 
 const app = express();
 const prisma = new PrismaClient();
@@ -36,6 +40,47 @@ async function EditProfile(req, res) {
         message: "Profile not found",
         success: false,
       });
+    }
+
+    let PR_PHOTO_URL = existingProfile.PR_PHOTO_URL;
+    if (req.file) {
+      console.log("File received:", req.file);
+      const filePath = req.file.path;
+      const formData = new FormData();
+      formData.append("image", fs.createReadStream(filePath), {
+        filename: req.file.originalname,
+        contentType: req.file.mimetype,
+      });
+
+      try {
+        const uploadResponse = await axios.post(
+          process.env.HOSTINGER_UPLOAD_API_URL,
+          formData,
+          { headers: { ...formData.getHeaders() } }
+        );
+
+        console.log("📤 Upload API Response:", uploadResponse.data);
+
+        if (uploadResponse.data && uploadResponse.data.status === "success") {
+          PR_PHOTO_URL = `${process.env.HOSTINGER_UPLOAD_API_URL}${uploadResponse.data.url}`;
+          console.log("✅ File uploaded successfully! 📂", PR_PHOTO_URL);
+        } else {
+          console.error(
+            "❌ Unexpected response from Hostinger API:",
+            uploadResponse.data
+          );
+          throw new Error("Invalid response from Hostinger API");
+        }
+      } catch (uploadError) {
+        console.error("❌ File upload error:", uploadError.message);
+        return res.status(500).json({
+          message: "File upload failed",
+          success: false,
+          error: uploadError.message,
+        });
+      }
+    } else {
+      console.log("ℹ️ No file uploaded, proceeding with existing photo.");
     }
 
     var Children = req?.body?.Children;
