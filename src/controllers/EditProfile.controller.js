@@ -154,7 +154,7 @@ async function EditProfile(req, res) {
         PR_BUSS_STREAM: req?.body?.PR_BUSS_STREAM,
         PR_BUSS_TYPE: req?.body?.PR_BUSS_TYPE,
         PR_HOBBY: req?.body?.PR_HOBBY,
-        PROFESSION_ID: req?.body?.PROFESSION_ID,
+        PR_PROFESSION_ID: req?.body?.PR_PROFESSION_ID,
         PR_UPDATED_AT: new Date(),
         Children: {
           create: req.body.Children,
