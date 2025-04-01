@@ -127,7 +127,7 @@ async function EditProfile(req, res) {
       where: { PR_ID: Number(PR_ID) },
       data: {
         ...req.body,
-        PR_ID: Number(req?.body.PR_ID),
+        // PR_ID: Number(req?.body.PR_ID),
         PR_UPDATED_AT: new Date(),
       },
     });
