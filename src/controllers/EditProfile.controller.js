@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { error } from "console";
+import { error, log } from "console";
 import express from "express";
 import multer from "multer";
 import fs from "fs";
@@ -122,6 +122,11 @@ async function EditProfile(req, res) {
     }
 
     req.body.Children = { create: [] };
+
+    // const dattaa = { ...req.body };
+    // console.log("DATATA", dattaa);
+    console.log("MAMAMAMAM");
+    console.log("DARARAR", req.body);
 
     const updatedProfile = await prisma.peopleRegistry.update({
       where: { PR_ID: Number(PR_ID) },
