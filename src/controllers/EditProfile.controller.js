@@ -13,6 +13,7 @@ app.use(express.json());
 
 async function EditProfile(req, res) {
   try {
+    req?.body?.PR_ID = Number(req?.body?.PR_ID);
     const PR_ID = req.headers.pr_id;
     if (!PR_ID) {
       return res.status(400).json({
