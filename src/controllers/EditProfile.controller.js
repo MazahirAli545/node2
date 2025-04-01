@@ -133,7 +133,7 @@ async function EditProfile(req, res) {
       data: {
         // ...req.body,
         // PR_ID: Number(req?.body.PR_ID),
-        PR_ID: req?.body?.PR_ID,
+        // PR_ID: (req?.body?.PR_ID),
         PR_FULL_NAME: req?.body?.PR_FULL_NAME,
         PR_DOB: req?.body?.PR_DOB,
         PR_MOBILE_NO: req?.body?.PR_MOBILE_NO,
