@@ -156,9 +156,7 @@ async function EditProfile(req, res) {
         PR_HOBBY: req?.body?.PR_HOBBY,
         PR_PROFESSION_ID: req?.body?.PR_PROFESSION_ID,
         PR_UPDATED_AT: new Date(),
-        Children: {
-          create: req.body.Children,
-        },
+        Children: req.body.Children,
         PR_PHOTO_URL: PR_PHOTO_URL,
       },
     });
