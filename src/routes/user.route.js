@@ -38,6 +38,6 @@ userRouter.get("/directory", DirectoryController);
 userRouter.get("/profile", verifyToken, getUserProfile);
 userRouter.get("/business", BusinessController);
 userRouter.get("/hobbies", HobbiesController);
-userRouter.post("/edit-profile", EditProfile);
+userRouter.post("/edit-profile", upload.single("PR_PHOTO_URL"), EditProfile);
 
 export default userRouter;
