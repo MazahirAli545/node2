@@ -9,7 +9,7 @@ import {
   createProfession,
   updateProfession,
   deleteProfession,
-} from "../controllers/profession.controller.js";
+} from "../controllers/professionSeed.js";
 // import contact from '../controllers/contactUs.controller.js'
 import { contactForm } from "../controllers/contactUs.controller.js";
 import pincodeController from "../controllers/pincode.controller.js";
