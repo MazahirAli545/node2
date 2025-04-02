@@ -25,7 +25,13 @@ import DirectoryController from "../controllers/Directory.controller.js";
 import upload from "../middlewares/upload.js";
 import getUserProfile from "../controllers/profile.controller.js";
 import BusinessController from "../controllers/Bussiness.controller.js";
-import HobbiesController from "../controllers/Hobbies.controller.js";
+// import HobbiesController from "../controllers/Hobbies.controller.js";
+import {
+  getHobbies,
+  createHobby,
+  updateHobby,
+  deleteHobby,
+} from "../controllers/hobbies.controller.js";
 import EditProfile from "../controllers/EditProfile.controller.js";
 import { Router } from "express";
 
@@ -57,7 +63,11 @@ userRouter.get("/events", getEvents);
 userRouter.get("/directory", DirectoryController);
 userRouter.get("/profile", verifyToken, getUserProfile);
 userRouter.get("/business", BusinessController);
-userRouter.get("/Hobbies", HobbiesController);
+// userRouter.get("/Hobbies", HobbiesController);
+userRouter.get("/Hobbies", getHobbies);
+userRouter.post("/Hobbies", createHobby);
+userRouter.put("/Hobbies/:HOBBY_ID", updateHobby);
+userRouter.delete("/Hobbies/:HOBBY_ID", deleteHobby);
 userRouter.post("/edit-profile", upload.single("PR_PHOTO_URL"), EditProfile);
 
 export default userRouter;
