@@ -7,7 +7,13 @@ import profession from "../controllers/professionSeed.js";
 // import contact from '../controllers/contactUs.controller.js'
 import { contactForm } from "../controllers/contactUs.controller.js";
 import pincodeController from "../controllers/pincode.controller.js";
-import cityController from "../controllers/city.controller.js";
+// import cityController from "../controllers/city.controller.js";
+import {
+  getCities,
+  createCity,
+  updateCity,
+  deleteCity,
+} from "../controllers/city.controller.js";
 import getEvents from "../controllers/events.contoller.js";
 import DirectoryController from "../controllers/Directory.controller.js";
 import upload from "../middlewares/upload.js";
@@ -32,7 +38,11 @@ userRouter.post(
   contactForm
 );
 userRouter.get("/pincode", pincodeController);
-userRouter.get("/cities", cityController);
+// userRouter.get("/cities", cityController);
+userRouter.get("/cities", getCities);
+userRouter.post("/cities", createCity);
+userRouter.put("/cities/:CITY_ID", updateCity);
+userRouter.delete("/cities/:CITY_ID", deleteCity);
 userRouter.get("/events", getEvents);
 userRouter.get("/directory", DirectoryController);
 userRouter.get("/profile", verifyToken, getUserProfile);
