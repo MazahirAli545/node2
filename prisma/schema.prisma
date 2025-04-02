@@ -82,10 +82,10 @@ model Hobbies {
   HOBBY_ID   Int    @id @default(autoincrement())
   HOBBY_NAME String @unique @db.VarChar(100)
   HOBBY_IMAGE_URL String? @db.VarChar(255)
-   CITY_CREATED_BY Int?
-  CITY_CREATED_AT DateTime @default(now())
-  CITY_UPDATED_BY Int?
-  CITY_UPDATED_AT DateTime?
+  HOBBY_CREATED_BY Int?
+  HOBBY_CREATED_AT DateTime @default(now())
+  HOOBY_UPDATED_BY Int?
+  HOBBY_UPDATED_AT DateTime?
 
   // PR_Hobbies PR_Hobbies[] 
 }
