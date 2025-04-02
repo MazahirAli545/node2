@@ -24,7 +24,7 @@ userRouter.post("/protected", verifyToken, someProtectedRoute);
 userRouter.post("/login", LoginUser);
 userRouter.post("/generate-otp", generateotp);
 userRouter.post("/verify-otp", verifyotp);
-userRouter.get("/profession", profession);
+userRouter.get("/professions", profession);
 userRouter.post(
   "/contactUs",
   upload.single("CON_ATTACHMENT"),
@@ -37,7 +37,7 @@ userRouter.get("/events", getEvents);
 userRouter.get("/directory", DirectoryController);
 userRouter.get("/profile", verifyToken, getUserProfile);
 userRouter.get("/business", BusinessController);
-userRouter.get("/hobbies", HobbiesController);
+userRouter.get("/Hobbies", HobbiesController);
 userRouter.post("/edit-profile", upload.single("PR_PHOTO_URL"), EditProfile);
 
 export default userRouter;
