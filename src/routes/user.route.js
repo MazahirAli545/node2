@@ -31,7 +31,7 @@ import {
   createHobby,
   updateHobby,
   deleteHobby,
-} from "../controllers/hobbies.controller.js";
+} from "../controllers/Hobbies.controller.js";
 import EditProfile from "../controllers/EditProfile.controller.js";
 import { Router } from "express";
 
