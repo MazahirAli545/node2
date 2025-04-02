@@ -64,10 +64,10 @@ userRouter.get("/directory", DirectoryController);
 userRouter.get("/profile", verifyToken, getUserProfile);
 userRouter.get("/business", BusinessController);
 // userRouter.get("/Hobbies", HobbiesController);
-userRouter.get("/Hobbies", getHobbies);
-userRouter.post("/Hobbies", createHobby);
-userRouter.put("/Hobbies/:HOBBY_ID", updateHobby);
-userRouter.delete("/Hobbies/:HOBBY_ID", deleteHobby);
+userRouter.get("/hobbies", getHobbies);
+userRouter.post("/hobbies", createHobby);
+userRouter.put("/hobbies/:HOBBY_ID", updateHobby);
+userRouter.delete("/hobbies/:HOBBY_ID", deleteHobby);
 userRouter.post("/edit-profile", upload.single("PR_PHOTO_URL"), EditProfile);
 
 export default userRouter;
