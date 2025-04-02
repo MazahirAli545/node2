@@ -44,12 +44,12 @@ export async function getProfessions(req, res) {
 
 export async function createProfession(req, res) {
   try {
-    const { PROF_NAME, PROF_DESC, PROF_TYPE, PROF_CREATED_BY } = req.body;
+    const { PROF_NAME, PROF_DESC, PROF_ACTIVE_YN, PROF_CREATED_BY } = req.body;
     const newProfession = await prisma.profession.create({
       data: {
         PROF_NAME,
         PROF_DESC,
-        PROF_TYPE,
+        PROF_ACTIVE_YN,
         PROF_CREATED_BY,
       },
     });
