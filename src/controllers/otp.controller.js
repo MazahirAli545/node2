@@ -148,6 +148,42 @@ export async function verifyFunc(PR_MOBILE_NO, otp) {
       return false;
     }
 
+    // const newUser = await prisma.peopleRegistry.create({
+    //   data: {
+    //     PR_UNIQUE_ID: `0000-00-000-000`,
+    //     PR_FULL_NAME,
+    //     PR_DOB: new Date(PR_DOB).toLocaleDateString(),
+    //     PR_MOBILE_NO,
+    //     '',
+    //     '',
+    //     PR_PROFESSION,
+    //     PR_PROFESSION_DETA,
+    //     PR_EDUCATION,
+    //     PR_EDUCATION_DESC,
+    //     PR_ADDRESS,
+    //     PR_AREA_NAME,
+    //     PR_PIN_CODE,
+    //     PR_CITY_CODE: city.CITY_ID,
+    //     PR_STATE_CODE,
+    //     PR_DISTRICT_CODE,
+    //     PR_FATHER_ID,
+    //     PR_MOTHER_ID,
+    //     PR_SPOUSE_ID,
+    //     PR_MARRIED_YN,
+    //     PR_FATHER_NAME,
+    //     PR_MOTHER_NAME,
+    //     PR_SPOUSE_NAME,
+    //     PR_PHOTO_URL,
+    //     PR_BUSS_CODE: business.BUSS_ID,
+    //     PR_BUSS_INTER,
+    //     PR_BUSS_STREAM,
+    //     PR_BUSS_TYPE,
+    //     PR_HOBBY,
+    //     'N'
+    //   },
+    // });
+
+    // newUser.PR_ID
     // Delete OTP after successful verification
     // await prisma.otp.delete({
     //   where: { PR_MOBILE_NO, otp },
