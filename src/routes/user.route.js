@@ -32,7 +32,7 @@ userRouter.post(
   contactForm
 );
 userRouter.get("/pincode", pincodeController);
-userRouter.get("/city", cityController);
+userRouter.get("/cities", cityController);
 userRouter.get("/events", getEvents);
 userRouter.get("/directory", DirectoryController);
 userRouter.get("/profile", verifyToken, getUserProfile);
