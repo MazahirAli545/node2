@@ -165,7 +165,7 @@ async function EditProfile(req, res) {
       },
     });
 
-    // console.log("Updated Profile:", updatedProfile);
+    console.log("Updated Profile:", updatedProfile.Children);
 
     return res.status(200).json({
       message: "Profile updated successfully",
