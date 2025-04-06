@@ -126,7 +126,7 @@ async function EditProfile(req, res) {
     // const dattaa = { ...req.body };
     // console.log("DATATA", dattaa);
     console.log("MAMAMAMAM", req.body);
-    console.log("DARARAR", req.body.Children);
+    console.log("DARARAR", req.body.Children.data);
 
     const updatedProfile = await prisma.peopleRegistry.update({
       where: { PR_ID: Number(PR_ID) },
