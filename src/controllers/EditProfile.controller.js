@@ -21,8 +21,8 @@ async function EditProfile(req, res) {
       });
     }
 
-    console.log("Received PR_ID:", PR_ID);
-    console.log("Request Body:", req.body);
+    // console.log("Received PR_ID:", PR_ID);
+    // console.log("Request Body:", req.body);
 
     // if (!Object.keys(req.body).length) {
     //   return res.status(400).json({
@@ -95,7 +95,7 @@ async function EditProfile(req, res) {
           },
         });
 
-        console.log("existing child: ", existingChild);
+        // console.log("existing child: ", existingChild);
 
         if (existingChild) {
           // Update the existing child
@@ -125,7 +125,7 @@ async function EditProfile(req, res) {
 
     // const dattaa = { ...req.body };
     // console.log("DATATA", dattaa);
-    console.log("MAMAMAMAM");
+    console.log("MAMAMAMAM", req.body);
     console.log("DARARAR", req.body.PR_PROFESSION_ID);
 
     const updatedProfile = await prisma.peopleRegistry.update({
@@ -165,7 +165,7 @@ async function EditProfile(req, res) {
       },
     });
 
-    console.log("Updated Profile:", updatedProfile);
+    // console.log("Updated Profile:", updatedProfile);
 
     return res.status(200).json({
       message: "Profile updated successfully",
