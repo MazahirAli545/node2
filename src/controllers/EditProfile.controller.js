@@ -21,8 +21,8 @@ async function EditProfile(req, res) {
       });
     }
 
-    // console.log("Received PR_ID:", PR_ID);
-    // console.log("Request Body:", req.body);
+    console.log("Received PR_ID:", PR_ID);
+    console.log("Request Body:", req.body);
 
     // if (!Object.keys(req.body).length) {
     //   return res.status(400).json({
