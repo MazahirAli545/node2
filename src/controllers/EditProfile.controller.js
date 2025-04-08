@@ -115,8 +115,10 @@ async function EditProfile(req, res) {
               dob: new Date(child.dob),
             },
           });
-        } else {
-          // Insert a new child record
+        }
+        //  else {
+        // Insert a new child record
+        if (child?.name || child?.dob) {
           return prisma.child.create({
             data: {
               name: child.name,
