@@ -85,37 +85,52 @@ async function EditProfile(req, res) {
 
     var Children = req?.body?.Children;
 
+    if (typeof Children === "string") {
+      try {
+        Children = JSON.parse(Children);
+      } catch (e) {
+        console.error("Failed to parse Children JSON:", e.message);
+        Children = [];
+      }
+    }
+
     if (Array.isArray(Children) && Children.length > 0) {
       const childPromises = Children.filter(
         (child) => child.name && child.dob
       ).map(async (child) => {
-        const existingChild = await prisma.child.findFirst({
-          where: {
-            id: child.id.toString(),
+        // const existingChild = await prisma.child.findFirst({
+        //   where: {
+        //     id: child.id.toString(),
+        //   },
+        // });
+        if (child.id) {
+          const existingChild = await prisma.child.findFirst({
+            where: { id: child.id.toString() },
+          });
+
+          // console.log("existing child: ", existingChild);
+
+          if (existingChild) {
+            // Update the existing child
+            return prisma.child.update({
+              where: { id: existingChild.id },
+              data: {
+                name: child.name,
+                dob: new Date(child.dob),
+              },
+            });
+          }
+        }
+        //  else {
+        // Insert a new child record
+        return prisma.child.create({
+          data: {
+            name: child.name,
+            dob: new Date(child.dob),
+            userId: Number(PR_ID),
           },
         });
-
-        // console.log("existing child: ", existingChild);
-
-        if (existingChild) {
-          // Update the existing child
-          return prisma.child.update({
-            where: { id: existingChild.id },
-            data: {
-              name: child.name,
-              dob: new Date(child.dob),
-            },
-          });
-        } else {
-          // Insert a new child record
-          return prisma.child.create({
-            data: {
-              name: child.name,
-              dob: new Date(child.dob),
-              userId: Number(PR_ID),
-            },
-          });
-        }
+        // }
       });
 
       await Promise.all(childPromises);
@@ -165,22 +180,22 @@ async function EditProfile(req, res) {
       },
     });
 
-    if (Array.isArray(Children) && Children.length > 0) {
-      const childPromises = Children.filter(
-        (child) => child.name && child.dob
-      ).map(async (child) => {
-        return prisma.child.create({
-          data: {
-            name: child.name,
-            dob: new Date(child.dob),
-            // userId: newUser.PR_ID,
-            userId: Number(PR_ID),
-          },
-        });
-      });
-      // console.log("Childrennsssssss", Children)
-      await Promise.all(childPromises);
-    }
+    // if (Array.isArray(Children) && Children.length > 0) {
+    //   const childPromises = Children.filter(
+    //     (child) => child.name && child.dob
+    //   ).map(async (child) => {
+    //     return prisma.child.create({
+    //       data: {
+    //         name: child.name,
+    //         dob: new Date(child.dob),
+    //         // userId: newUser.PR_ID,
+    //         userId: Number(PR_ID),
+    //       },
+    //     });
+    //   });
+    //   // console.log("Childrennsssssss", Children)
+    //   await Promise.all(childPromises);
+    // }
 
     console.log("Updated Profile:", updatedProfile);
 
