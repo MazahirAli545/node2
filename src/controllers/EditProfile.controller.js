@@ -98,56 +98,33 @@ async function EditProfile(req, res) {
       const childPromises = Children.filter(
         (child) => child.name && child.dob
       ).map(async (child) => {
-        // const existingChild = await prisma.child.findFirst({
-        //   where: {
-        //     id: child.id.toString(),
-        //   },
-        // });
-
-        if (child.id && !child.id.startsWith("new-")) {
-          const existingChild = await prisma.child.findFirst({
-            where: { id: child.id.toString() },
-          });
-
-          if (existingChild) {
-            return prisma.child.update({
-              where: { id: existingChild.id },
-              data: {
-                name: child.name,
-                dob: new Date(child.dob),
-              },
-            });
-          }
-        }
-
-        // if (child.id) {
-        //   const existingChild = await prisma.child.findFirst({
-        //     where: { id: child.id.toString() },
-        //   });
-
-        //   // console.log("existing child: ", existingChild);
-
-        //   if (existingChild) {
-        //     // Update the existing child
-        //     return prisma.child.update({
-        //       where: { id: existingChild.id },
-        //       data: {
-        //         name: child.name,
-        //         dob: new Date(child.dob),
-        //       },
-        //     });
-        //   }
-        // }
-        //  else {
-        // Insert a new child record
-        return prisma.child.create({
-          data: {
-            name: child.name,
-            dob: new Date(child.dob),
-            userId: Number(PR_ID),
+        const existingChild = await prisma.child.findFirst({
+          where: {
+            id: child.id.toString(),
           },
         });
-        // }
+
+        // console.log("existing child: ", existingChild);
+
+        if (existingChild) {
+          // Update the existing child
+          return prisma.child.update({
+            where: { id: existingChild.id },
+            data: {
+              name: child.name,
+              dob: new Date(child.dob),
+            },
+          });
+        } else {
+          // Insert a new child record
+          return prisma.child.create({
+            data: {
+              name: child.name,
+              dob: new Date(child.dob),
+              userId: Number(PR_ID),
+            },
+          });
+        }
       });
 
       await Promise.all(childPromises);
