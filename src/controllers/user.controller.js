@@ -8,7 +8,6 @@ import twilio from "twilio";
 import dotenv from "dotenv";
 import otpGenerator from "otp-generator";
 import { generateToken } from "../middlewares/jwt.js";
-import { log } from "console";
 
 dotenv.config();
 
@@ -29,7 +28,7 @@ const checkMobileVerified = async (PR_MOBILE_NO, otp) => {
 export const registerUser = async (req, res) => {
   try {
     const {
-      PR_ID,
+      PR_UNIQUE_ID,
       PR_FULL_NAME,
       PR_DOB,
       PR_GENDER,
@@ -214,7 +213,7 @@ export const registerUser = async (req, res) => {
           },
         });
       });
-
+      // console.log("Childrennsssssss", Children)
       await Promise.all(childPromises);
     }
 
