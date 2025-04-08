@@ -214,45 +214,9 @@ export const registerUser = async (req, res) => {
           },
         });
       });
-      // console.log("Childrennsssssss", Children)
+
       await Promise.all(childPromises);
     }
-
-    // if (Array.isArray(Children) && Children.length > 0) {
-    //   const childPromises = Children.filter(
-    //     (child) => child.name && child.dob
-    //   ).map(async (child) => {
-    //     const existingChild = await prisma.child.findFirst({
-    //       where: {
-    //         id: child.id.toString(),
-    //       },
-    //     });
-
-    //     console.log("existing child: ", existingChild);
-
-    //     if (existingChild) {
-    //       // Update the existing child
-    //       return prisma.child.update({
-    //         where: { id: existingChild.id },
-    //         data: {
-    //           name: child.name,
-    //           dob: new Date(child.dob),
-    //         },
-    //       });
-    //     } else {
-    //       // Insert a new child record
-    //       return prisma.child.create({
-    //         data: {
-    //           name: child.name,
-    //           dob: new Date(child.dob),
-    //           userId: PR_ID || newUser.PR_ID,
-    //         },
-    //       });
-    //     }
-    //   });
-
-    //   await Promise.all(childPromises);
-    // }
 
     const childrens = await prisma.child.findMany();
 
