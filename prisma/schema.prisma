@@ -7,16 +7,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
+
 model Education {
   EDUCTION_ID          Int      @id @default(autoincrement())
   EDUCATION_NAME        String?   @db.Char(50)
-  EDUCATION_ACTIVE_YN   String   @db.Char(1)
+  EDUCATION_IMAGE_URL String? @db.VarChar(255)
   EDUCATION_CREATED_BY  Int
   EDUCATION_CREATED_DT  DateTime @default(now())
   EDUCATION_UPDATED_BY  Int?
   EDUCATION_UPDATED_DT  DateTime?
 
-  @@map("EDUCATION")
+  // @@map("EDUCATION")
 }
 
 model Profession {

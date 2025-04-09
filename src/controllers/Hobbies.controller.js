@@ -65,7 +65,8 @@ export async function createHobby(req, res) {
       data: {
         HOBBY_NAME,
         HOBBY_IMAGE_URL,
-        CITY_CREATED_BY,
+        // CITY_CREATED_BY,
+        HOBBY_CREATED_BY,
       },
     });
 
