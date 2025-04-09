@@ -34,6 +34,8 @@ import {
 } from "../controllers/Hobbies.controller.js";
 import EditProfile from "../controllers/EditProfile.controller.js";
 import { Router } from "express";
+import getEducation from "../controllers/Education.contoller.js";
+import { get } from "http";
 
 const userRouter = Router();
 
@@ -69,5 +71,7 @@ userRouter.post("/hobbies", createHobby);
 userRouter.put("/hobbies/:HOBBY_ID", updateHobby);
 userRouter.delete("/hobbies/:HOBBY_ID", deleteHobby);
 userRouter.post("/edit-profile", upload.single("PR_PHOTO_URL"), EditProfile);
+
+userRouter.get("/education", getEducation);
 
 export default userRouter;
