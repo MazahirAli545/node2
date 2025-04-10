@@ -90,9 +90,9 @@ userRouter.post("/education", createEducation);
 userRouter.put("/education/:EDUCATION_ID", updateEducation);
 userRouter.delete("/education/:EDUCATION_ID", deleteEducation);
 
-userRouter.get("/stream", getStreams);
-userRouter.post("/stream", createStream);
-userRouter.put("/stream/:STREAM_ID", updateStream);
-userRouter.delete("/stream/:STREAM_ID", deleteStream);
+userRouter.get("/streams", getStreams);
+userRouter.post("/streams", createStream);
+userRouter.put("/streams/:STREAM_ID", updateStream);
+userRouter.delete("/streams/:STREAM_ID", deleteStream);
 
 export default userRouter;
