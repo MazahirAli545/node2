@@ -7,7 +7,15 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Stream {
+  STREAM_ID          Int      @id @default(autoincrement())
+  STREAM_NAME        String?   @db.Char(50)
+  STREAM_CREATED_BY  Int
+  STREAM_CREATED_DT  DateTime @default(now())
+  STREAM_UPDATED_BY  Int?
+  STREAM_UPDATED_DT  DateTime?
 
+}
 
 model Education {
   EDUCATION_ID          Int      @id @default(autoincrement())

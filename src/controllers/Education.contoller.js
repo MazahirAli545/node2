@@ -54,7 +54,7 @@ export async function updateEducation(req, res) {
     const updateData = req.body;
 
     const updatedEducation = await prisma.education.update({
-      where: { EDUCTION_ID: Number(EDUCATION_ID) },
+      where: { EDUCATION_ID: Number(EDUCATION_ID) },
       data: updateData,
     });
 

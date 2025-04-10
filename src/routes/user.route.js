@@ -40,6 +40,14 @@ import {
   updateEducation,
   deleteEducation,
 } from "../controllers/Education.contoller.js";
+
+import {
+  getStreams,
+  createStream,
+  updateStream,
+  deleteStream,
+} from "../controllers/Stream.controller.js";
+
 import { get } from "http";
 
 const userRouter = Router();
@@ -81,5 +89,10 @@ userRouter.get("/education", getEducation);
 userRouter.post("/education", createEducation);
 userRouter.put("/education/:EDUCATION_ID", updateEducation);
 userRouter.delete("/education/:EDUCATION_ID", deleteEducation);
+
+userRouter.get("/stream", getStreams);
+userRouter.post("/stream", createStream);
+userRouter.put("/stream/:STREAM_ID ", updateStream);
+userRouter.delete("/stream/:STREAM_ID ", deleteStream);
 
 export default userRouter;
