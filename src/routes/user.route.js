@@ -78,8 +78,8 @@ userRouter.delete("/hobbies/:HOBBY_ID", deleteHobby);
 userRouter.post("/edit-profile", upload.single("PR_PHOTO_URL"), EditProfile);
 
 userRouter.get("/education", getEducation);
-userRouter.get("/education", createEducation);
-userRouter.get("/education/:EDUCTION_ID", updateEducation);
-userRouter.get("/education/:EDUCTION_ID", deleteEducation);
+userRouter.post("/education", createEducation);
+userRouter.put("/education/:EDUCTION_ID", updateEducation);
+userRouter.delete("/education/:EDUCTION_ID", deleteEducation);
 
 export default userRouter;
