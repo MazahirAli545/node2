@@ -79,7 +79,7 @@ userRouter.post("/edit-profile", upload.single("PR_PHOTO_URL"), EditProfile);
 
 userRouter.get("/education", getEducation);
 userRouter.post("/education", createEducation);
-userRouter.put("/education/:EDUCTION_ID", updateEducation);
-userRouter.delete("/education/:EDUCTION_ID", deleteEducation);
+userRouter.put("/education/:EDUCATION_ID", updateEducation);
+userRouter.delete("/education/:EDUCATION_ID", deleteEducation);
 
 export default userRouter;

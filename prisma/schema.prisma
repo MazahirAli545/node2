@@ -10,7 +10,7 @@ datasource db {
 
 
 model Education {
-  EDUCTION_ID          Int      @id @default(autoincrement())
+  EDUCATION_ID          Int      @id @default(autoincrement())
   EDUCATION_NAME        String?   @db.Char(50)
   EDUCATION_IMAGE_URL String? @db.VarChar(255)
   EDUCATION_CREATED_BY  Int

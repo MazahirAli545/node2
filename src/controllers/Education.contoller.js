@@ -50,11 +50,11 @@ export async function createEducation(req, res) {
 
 export async function updateEducation(req, res) {
   try {
-    const { EDUCTION_ID } = req.params;
+    const { EDUCATION_ID } = req.params;
     const updateData = req.body;
 
     const updatedEducation = await prisma.education.update({
-      where: { EDUCTION_ID: Number(EDUCTION_ID) },
+      where: { EDUCTION_ID: Number(EDUCATION_ID) },
       data: updateData,
     });
 
@@ -75,10 +75,10 @@ export async function updateEducation(req, res) {
 
 export async function deleteEducation(req, res) {
   try {
-    const { EDUCTION_ID } = req.params;
+    const { EDUCATION_ID } = req.params;
 
     await prisma.education.delete({
-      where: { EDUCTION_ID: Number(EDUCTION_ID) },
+      where: { EDUCATION_ID: Number(EDUCATION_ID) },
     });
 
     return res.status(200).json({
