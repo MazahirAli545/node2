@@ -77,9 +77,9 @@ userRouter.put("/hobbies/:HOBBY_ID", updateHobby);
 userRouter.delete("/hobbies/:HOBBY_ID", deleteHobby);
 userRouter.post("/edit-profile", upload.single("PR_PHOTO_URL"), EditProfile);
 
-userRouter.get("/getEducation", getEducation);
-userRouter.get("/createEducation", createEducation);
-userRouter.get("/updateEducation", updateEducation);
-userRouter.get("/deleteEducation", deleteEducation);
+userRouter.get("/education", getEducation);
+userRouter.get("/education", createEducation);
+userRouter.get("/education/:EDUCTION_ID", updateEducation);
+userRouter.get("/education/:EDUCTION_ID", deleteEducation);
 
 export default userRouter;
