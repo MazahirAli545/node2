@@ -18,7 +18,6 @@ model Education {
   EDUCATION_UPDATED_BY  Int?
   EDUCATION_UPDATED_DT  DateTime?
 
-  // @@map("EDUCATION")
 }
 
 model Profession {
