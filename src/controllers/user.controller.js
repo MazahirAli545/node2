@@ -213,7 +213,7 @@ export const registerUser = async (req, res) => {
           },
         });
       });
-      // console.log("Childrennsssssss", Children)
+      console.log("Childrennsssssss", Children);
       await Promise.all(childPromises);
     }
 

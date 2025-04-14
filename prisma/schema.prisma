@@ -70,7 +70,7 @@ model PeopleRegistry {
   PR_FATHER_NAME     String?   @db.VarChar(100) 
   PR_MOTHER_NAME     String?   @db.VarChar(100)
   PR_SPOUSE_NAME     String?   @db.VarChar(100)
-  Children         Child[]   
+  Children         Child[] @relation("UserChildren")
   PR_BUSS_CODE     Int?
   BUSSINESS        BUSSINESS? @relation(fields: [PR_BUSS_CODE], references: [BUSS_ID], onDelete: SetNull)
   PR_BUSS_INTER    String? @db.Char(1)
@@ -168,8 +168,9 @@ model Child {
   id       String   @id @default(uuid())
   name     String
   dob      DateTime
-  PeopleRegistry PeopleRegistry @relation(fields: [userId], references: [PR_ID])
-  userId   Int
+    userId   Int
+  user PeopleRegistry @relation("UserChildren", fields: [userId], references: [PR_ID])
+
 }
 
 model Otp {
