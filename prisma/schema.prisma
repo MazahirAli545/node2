@@ -48,7 +48,7 @@ model PeopleRegistry {
   PR_FULL_NAME     String   @db.VarChar(100)
   PR_DOB           String
   PR_GENDER        String?  @db.Char(1)
-  PR_MOBILE_NO     String  @unique @db.VarChar(15)
+  PR_MOBILE_NO     String   @db.VarChar(15)
   PR_PROFESSION_ID Int? 
   Profession    Profession? @relation(fields: [PR_PROFESSION_ID], references: [PROF_ID])
   PR_PROFESSION_DETA  String? @db.VarChar(500)
