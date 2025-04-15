@@ -48,6 +48,7 @@ import {
   deleteStream,
 } from "../controllers/Stream.controller.js";
 
+import { getAllUsersBasicDetails } from "../controllers/RegisteredUser.controller.js";
 import { get } from "http";
 
 const userRouter = Router();
@@ -94,5 +95,7 @@ userRouter.get("/streams", getStreams);
 userRouter.post("/streams", createStream);
 userRouter.put("/streams/:STREAM_ID", updateStream);
 userRouter.delete("/streams/:STREAM_ID", deleteStream);
+
+userRouter.get("/registerUser", getAllUsersBasicDetails);
 
 export default userRouter;
