@@ -233,8 +233,14 @@ export const registerUser = async (req, res) => {
     });
   } catch (error) {
     console.log("Error registering User:", error);
+
+    const message =
+      error?.message ||
+      error?.meta?.cause || // Prisma validation errors
+      "Something went wrong. Please try again.";
+
     return res.status(500).json({
-      message: "Something went wrong",
+      message,
       success: false,
     });
   }
