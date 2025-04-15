@@ -1,6 +1,8 @@
 import { PrismaClient } from "@prisma/client/extension";
 import { verifyFunc, verifyotp, generateotp } from "./otp.controller.js";
 import prisma from "../db/prismaClient.js";
+// import { z } from "zod";
+// import { z } from require("zod");
 import Joi from "joi";
 import twilio from "twilio";
 import dotenv from "dotenv";
@@ -65,6 +67,17 @@ export const registerUser = async (req, res) => {
 
     console.log("-------reqbody------", req.body);
 
+    // const existingmobile = await prisma.peopleRegistry.findFirst({
+    //   where: { PR_MOBILE_NO },
+    // });
+
+    // if (existingmobile) {
+    //   return res.status(400).json({
+    //     message: "this mobile Number is already registered",
+    //     success: false,
+    //   });
+    // }
+
     const mobileNumberSchema = Joi.string()
       .pattern(/^[6-9]\d{9}$/)
       .required()
@@ -77,19 +90,17 @@ export const registerUser = async (req, res) => {
         .json({ message: error.details[0].message, success: false });
     }
 
-    const existingUserWithSameName = await prisma.peopleRegistry.findFirst({
-      where: {
-        PR_MOBILE_NO: PR_MOBILE_NO,
-        PR_FULL_NAME: PR_FULL_NAME,
-      },
-    });
+    // Check if Mobile Number Already Exists
+    // const existingMobile = await prisma.peopleRegistry.findFirst({
+    //   where: { PR_MOBILE_NO },
+    // });
 
-    if (existingUserWithSameName) {
-      return res.status(400).json({
-        message: "This name is already registered with this mobile number",
-        success: false,
-      });
-    }
+    // if (existingMobile) {
+    //   return res.status(400).json({
+    //     message: "This mobile number is already registered",
+    //     success: false,
+    //   });
+    // }
 
     const isMobileVerified = await checkMobileVerified(PR_MOBILE_NO, otp);
     console.log(PR_MOBILE_NO, otp);
