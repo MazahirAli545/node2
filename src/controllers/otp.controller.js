@@ -20,28 +20,6 @@ export const generateotp = async (req, res) => {
   try {
     const { PR_MOBILE_NO } = req.body;
 
-    //     const existinguser = await prisma.peopleRegistry.findFirst({
-    //   where: { PR_MOBILE_NO },
-    // });
-
-    // if(existinguser){
-    //     return res.status(400).json({message: "this mobile Number is already registered" , success : false})
-    // }
-
-    // const mobileNumberSchema = z
-    //   .string()
-    //   .regex(/^[6-9]\d{9}$/, "Invalid mobile number");
-    // const mobileNumberSchema = Joi.string()
-    //   .pattern(/^[6-9]\d{9}$/)
-    //   .messages({ "string.pattern.base": "Invalid mobile number" });
-
-    // const validateResult = mobileNumberSchema.safeParse(PR_MOBILE_NO);
-
-    // if (!validateResult.success) {
-    //   return res
-    //     .status(400)
-    //     .json({ message: "Invalid Mobile Number", success: false });
-    // }
     const mobileNumberSchema = Joi.string()
       .pattern(/^[6-9]\d{9}$/)
       .required()
@@ -53,24 +31,6 @@ export const generateotp = async (req, res) => {
         .status(400)
         .json({ message: error.details[0].message, success: false });
     }
-
-    // const otp = otpGenerator.generate(4, { digits: true, specialChars: false, upperCaseAlphabets: false, lowerCaseAlphabets: false });
-
-    // console.log(`OTP for ${PR_MOBILE_NO}: ${otp}`);
-
-    //   try {
-    //   await twilioClient.messages.create({
-    //     body: `Your Rangrez App Verification Otp is : ${otp}. It is valid for 2 minutes.`,
-    //     from: twillo_Phone_Number,
-    //     to: `+91${PR_MOBILE_NO}`, // Assuming Indian numbers, modify as needed
-    //   });
-
-    //   console.log(`OTP for ${PR_MOBILE_NO}: ${otp}`);
-    // }catch (twilioError) {
-    //   console.error("Twilio error:", twilioError);
-    //   console.log("Falling back to static OTP: 1234");
-    //   otp = "1234"; // Use static OTP in case of Twilio failure
-    // }
 
     const otp = "1234";
 
@@ -148,46 +108,6 @@ export async function verifyFunc(PR_MOBILE_NO, otp) {
       return false;
     }
 
-    // const newUser = await prisma.peopleRegistry.create({
-    //   data: {
-    //     PR_UNIQUE_ID: `0000-00-000-000`,
-    //     PR_FULL_NAME,
-    //     PR_DOB: new Date(PR_DOB).toLocaleDateString(),
-    //     PR_MOBILE_NO,
-    //     '',
-    //     '',
-    //     PR_PROFESSION,
-    //     PR_PROFESSION_DETA,
-    //     PR_EDUCATION,
-    //     PR_EDUCATION_DESC,
-    //     PR_ADDRESS,
-    //     PR_AREA_NAME,
-    //     PR_PIN_CODE,
-    //     PR_CITY_CODE: city.CITY_ID,
-    //     PR_STATE_CODE,
-    //     PR_DISTRICT_CODE,
-    //     PR_FATHER_ID,
-    //     PR_MOTHER_ID,
-    //     PR_SPOUSE_ID,
-    //     PR_MARRIED_YN,
-    //     PR_FATHER_NAME,
-    //     PR_MOTHER_NAME,
-    //     PR_SPOUSE_NAME,
-    //     PR_PHOTO_URL,
-    //     PR_BUSS_CODE: business.BUSS_ID,
-    //     PR_BUSS_INTER,
-    //     PR_BUSS_STREAM,
-    //     PR_BUSS_TYPE,
-    //     PR_HOBBY,
-    //     'N'
-    //   },
-    // });
-
-    // newUser.PR_ID
-    // Delete OTP after successful verification
-    // await prisma.otp.delete({
-    //   where: { PR_MOBILE_NO, otp },
-    // });
     console.log(`OTP successfully verified and deleted for ${PR_MOBILE_NO}`);
     return true;
   } catch (error) {
