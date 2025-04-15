@@ -18,26 +18,11 @@ const twilioClient = twilio(
   process.env.Twillo_Auth_Token
 );
 
-// const checkMobileVerified = async (PR_MOBILE_NO, otp) => {
-//   const success = await verifyFunc(PR_MOBILE_NO, otp);
-
-//   console.log("User Registered ", success);
-//   return success;
-// };
-
 const checkMobileVerified = async (PR_MOBILE_NO, otp) => {
-  if (!otp || otp === "1234") {
-    // OTP is missing or hardcoded (fake) => treat as not verified
-    return false;
-  }
+  const success = await verifyFunc(PR_MOBILE_NO, otp);
 
-  try {
-    const success = await verifyFunc(PR_MOBILE_NO, otp);
-    return success;
-  } catch (error) {
-    console.error("Twilio verification error:", error);
-    return false;
-  }
+  console.log("User Registered ", success);
+  return success;
 };
 
 export const registerUser = async (req, res) => {
@@ -118,18 +103,10 @@ export const registerUser = async (req, res) => {
     // }
 
     const isMobileVerified = await checkMobileVerified(PR_MOBILE_NO, otp);
-    console.log("Mobile Verification Status:", isMobileVerified);
-
-    // console.log(PR_MOBILE_NO, otp);
-    if (!otp || otp === "1234") {
-      return res.status(400).json({
-        message: "Please verify your mobile number before continuing",
-        success: false,
-      });
-    }
+    console.log(PR_MOBILE_NO, otp);
     if (!isMobileVerified) {
       return res.status(400).json({
-        message: "OTP session expired. Please resend OTP and verify again.",
+        message: "Please verify your mobile number first",
         success: false,
       });
     }
