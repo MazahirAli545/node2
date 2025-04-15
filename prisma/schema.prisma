@@ -87,7 +87,8 @@ model PeopleRegistry {
   PR_UPDATED_AT    DateTime?
   // Hobbies PR_Hobbies[]  
  
-
+  @@unique([PR_MOBILE_NO, PR_FULL_NAME])
+  
   @@unique([PR_FATHER_ID])
   @@unique([PR_MOTHER_ID])
   @@unique([PR_SPOUSE_ID])
