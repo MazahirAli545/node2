@@ -55,15 +55,28 @@ export const registerUser = async (req, res) => {
       PR_MOTHER_NAME,
       PR_SPOUSE_NAME,
       PR_PHOTO_URL,
+
       PR_BUSS_INTER,
       PR_BUSS_STREAM,
       PR_BUSS_TYPE,
       PR_HOBBY,
+      // otp,
       otp = "1234",
       Children,
     } = req.body;
 
     console.log("-------reqbody------", req.body);
+
+    // const existingmobile = await prisma.peopleRegistry.findFirst({
+    //   where: { PR_MOBILE_NO },
+    // });
+
+    // if (existingmobile) {
+    //   return res.status(400).json({
+    //     message: "this mobile Number is already registered",
+    //     success: false,
+    //   });
+    // }
 
     const mobileNumberSchema = Joi.string()
       .pattern(/^[6-9]\d{9}$/)
@@ -77,30 +90,20 @@ export const registerUser = async (req, res) => {
         .json({ message: error.details[0].message, success: false });
     }
 
-    // Check if Mobile Number or Name Already Exists
-    const existingUserByMobile = await prisma.peopleRegistry.findFirst({
-      where: { PR_MOBILE_NO },
-    });
+    // Check if Mobile Number Already Exists
+    // const existingMobile = await prisma.peopleRegistry.findFirst({
+    //   where: { PR_MOBILE_NO },
+    // });
 
-    if (existingUserByMobile) {
-      return res.status(400).json({
-        message: "This mobile number is already registered",
-        success: false,
-      });
-    }
-
-    const existingUserByName = await prisma.peopleRegistry.findFirst({
-      where: { PR_FULL_NAME },
-    });
-
-    if (existingUserByName) {
-      return res.status(400).json({
-        message: "This name is already registered with a mobile number",
-        success: false,
-      });
-    }
+    // if (existingMobile) {
+    //   return res.status(400).json({
+    //     message: "This mobile number is already registered",
+    //     success: false,
+    //   });
+    // }
 
     const isMobileVerified = await checkMobileVerified(PR_MOBILE_NO, otp);
+    console.log(PR_MOBILE_NO, otp);
     if (!isMobileVerified) {
       return res.status(400).json({
         message: "Please verify your mobile number first",
@@ -125,6 +128,7 @@ export const registerUser = async (req, res) => {
           CITY_DS_NAME: PR_DISTRICT_NAME,
           CITY_ST_CODE: PR_STATE_CODE,
           CITY_ST_NAME: PR_STATE_NAME,
+          // areas: JSON.stringify(areas), // Store areas as a JSON string
         },
       });
 
@@ -133,6 +137,8 @@ export const registerUser = async (req, res) => {
         data: { CITY_CODE: city.CITY_ID },
       });
     }
+
+    console.log("City Created/Fetched: ", city);
 
     let business = await prisma.bUSSINESS.findFirst({
       where: {
@@ -146,8 +152,13 @@ export const registerUser = async (req, res) => {
         data: {
           BUSS_STREM: PR_BUSS_STREAM,
           BUSS_TYPE: PR_BUSS_TYPE,
-          CITY_CREATED_BY: 1, // Replace with actual user ID
+          CITY_CREATED_BY: 1, // Replace this with the actual user ID
         },
+      });
+
+      await prisma.bUSSINESS.update({
+        where: { BUSS_ID: business.BUSS_ID },
+        data: { BUSS_ID: business.BUSS_ID }, // Ensuring ID is properly set
       });
     }
 
@@ -202,8 +213,13 @@ export const registerUser = async (req, res) => {
           },
         });
       });
+      console.log("Childrennsssssss", Children);
       await Promise.all(childPromises);
     }
+
+    const childrens = await prisma.child.findMany();
+
+    console.log(childrens);
 
     const user = await prisma.peopleRegistry.findUnique({
       where: { PR_ID: newUser.PR_ID },
