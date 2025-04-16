@@ -55,6 +55,7 @@ export const registerUser = async (req, res) => {
       PR_MOTHER_NAME,
       PR_SPOUSE_NAME,
       PR_PHOTO_URL,
+      PR_IS_COMPLETED,
 
       PR_BUSS_INTER,
       PR_BUSS_STREAM,
@@ -165,6 +166,16 @@ export const registerUser = async (req, res) => {
     const professionId =
       PR_PROFESSION_ID && PR_PROFESSION_ID !== 0 ? PR_PROFESSION_ID : null;
 
+    const isCompleted =
+      PR_FULL_NAME &&
+      PR_DOB &&
+      PR_MOBILE_NO &&
+      PR_PROFESSION &&
+      PR_PROFESSION_DETA &&
+      PR_FATHER_NAME &&
+      PR_MOTHER_NAME
+        ? "Y"
+        : "N";
     const newUser = await prisma.peopleRegistry.create({
       data: {
         PR_UNIQUE_ID: `${PR_STATE_CODE}${PR_DISTRICT_CODE}-${
@@ -198,6 +209,7 @@ export const registerUser = async (req, res) => {
         PR_BUSS_STREAM,
         PR_BUSS_TYPE,
         PR_HOBBY,
+        PR_IS_COMPLETED: isCompleted,
       },
     });
 
