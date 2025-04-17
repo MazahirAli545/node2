@@ -81,7 +81,7 @@ export const verifyotp = async (req, res) => {
           //Above is required fields for otp verify
 
           PR_GENDER: "",
-          PR_PROFESSION_ID: "",
+          // PR_PROFESSION_ID: "",
           PR_PROFESSION: "",
           PR_PROFESSION_DETA: "",
           PR_EDUCATION: "",
