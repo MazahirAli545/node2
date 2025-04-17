@@ -82,7 +82,7 @@ export const verifyotp = async (req, res) => {
 
           PR_GENDER: "",
           // PR_PROFESSION_ID: "",
-          PR_PROFESSION: "",
+          // PR_PROFESSION: "",
           PR_PROFESSION_DETA: "",
           PR_EDUCATION: "",
           PR_EDUCATION_DESC: "",
