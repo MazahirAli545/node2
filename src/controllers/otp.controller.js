@@ -116,6 +116,7 @@ export const verifyotp = async (req, res) => {
             message: "OTP verified successfully - User already exists",
             success: true,
             user: existingUser,
+            PR_ID: existingUser.PR_ID,
           });
         }
 
@@ -128,6 +129,7 @@ export const verifyotp = async (req, res) => {
           message: "OTP verified successfully",
           success: true,
           user: newUser,
+          PR_ID: newUser.PR_ID,
         });
       } catch (registrationError) {
         console.error("Basic registration failed:", registrationError);
