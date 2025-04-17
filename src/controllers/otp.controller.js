@@ -89,7 +89,7 @@ export const verifyotp = async (req, res) => {
           PR_ADDRESS: "",
           PR_AREA_NAME: "",
           PR_PIN_CODE: "",
-          PR_CITY_CODE: "",
+          // PR_CITY_CODE: "",
           PR_STATE_CODE: "",
           PR_DISTRICT_CODE: "",
           PR_FATHER_ID: "",
