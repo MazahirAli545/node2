@@ -25,8 +25,6 @@ import DirectoryController from "../controllers/Directory.controller.js";
 import upload from "../middlewares/upload.js";
 import getUserProfile from "../controllers/profile.controller.js";
 import BusinessController from "../controllers/Bussiness.controller.js";
-
-import { authenticateUser } from "../middlewares/authenticateUser.js";
 // import HobbiesController from "../controllers/Hobbies.controller.js";
 import {
   getHobbies,
@@ -79,19 +77,14 @@ userRouter.put("/cities/:CITY_ID", updateCity);
 userRouter.delete("/cities/:CITY_ID", deleteCity);
 userRouter.get("/events", getEvents);
 userRouter.get("/directory", DirectoryController);
-userRouter.get("/profile", verifyToken, authenticateUser, getUserProfile);
+userRouter.get("/profile", verifyToken, getUserProfile);
 userRouter.get("/business", BusinessController);
 // userRouter.get("/Hobbies", HobbiesController);
 userRouter.get("/hobbies", getHobbies);
 userRouter.post("/hobbies", createHobby);
 userRouter.put("/hobbies/:HOBBY_ID", updateHobby);
 userRouter.delete("/hobbies/:HOBBY_ID", deleteHobby);
-userRouter.post(
-  "/edit-profile",
-  upload.single("PR_PHOTO_URL"),
-  authenticateUser,
-  EditProfile
-);
+userRouter.post("/edit-profile", upload.single("PR_PHOTO_URL"), EditProfile);
 
 userRouter.get("/education", getEducation);
 userRouter.post("/education", createEducation);
