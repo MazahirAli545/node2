@@ -191,11 +191,6 @@ export const registerUser = async (req, res) => {
       },
     });
 
-    const token = generateToken({
-      PR_ID: newUser.PR_ID,
-      PR_MOBILE_NO: newUser.PR_MOBILE_NO,
-    });
-
     if (Array.isArray(Children) && Children.length > 0) {
       const childPromises = Children.filter(
         (child) => child.name && child.dob
@@ -225,7 +220,6 @@ export const registerUser = async (req, res) => {
       message: "User registered successfully",
       success: true,
       user,
-      token,
     });
   } catch (error) {
     console.log("Error registering User:", error);

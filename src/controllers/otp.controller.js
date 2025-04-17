@@ -112,16 +112,10 @@ export const verifyotp = async (req, res) => {
         });
 
         if (existingUser) {
-          const token = generateToken({
-            PR_ID: existingUser.PR_ID,
-            PR_MOBILE_NO: existingUser.PR_MOBILE_NO,
-          });
-
           return res.status(200).json({
             message: "OTP verified successfully - User already exists",
             success: true,
             user: existingUser,
-            token,
           });
         }
 
@@ -129,16 +123,11 @@ export const verifyotp = async (req, res) => {
         const newUser = await prisma.peopleRegistry.create({
           data: basicUserData,
         });
-        const token = generateToken({
-          PR_ID: newUser.PR_ID,
-          PR_MOBILE_NO: newUser.PR_MOBILE_NO,
-        });
 
         return res.status(200).json({
           message: "OTP verified successfully",
           success: true,
           user: newUser,
-          token,
         });
       } catch (registrationError) {
         console.error("Basic registration failed:", registrationError);
