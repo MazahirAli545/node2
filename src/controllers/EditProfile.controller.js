@@ -13,10 +13,7 @@ app.use(express.json());
 
 async function EditProfile(req, res) {
   try {
-    // const PR_ID = req.headers.pr_id;
-
-    const PR_ID = req.body.PR_ID || req.headers.pr_id;
-
+    const PR_ID = req.headers.pr_id;
     if (!PR_ID) {
       return res.status(400).json({
         message: "PR_ID is required for updating profile",
