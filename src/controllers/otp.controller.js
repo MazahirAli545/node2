@@ -100,7 +100,7 @@ export const verifyotp = async (req, res) => {
           PR_MOTHER_NAME: "",
           PR_SPOUSE_NAME: "",
           PR_PHOTO_URL: "",
-          PR_BUSS_CODE: "",
+          // PR_BUSS_CODE: "",
           PR_BUSS_INTER: "",
           PR_BUSS_STREAM: "",
           PR_BUSS_TYPE: "",
