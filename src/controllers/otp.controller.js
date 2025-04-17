@@ -59,16 +59,85 @@ export const generateotp = async (req, res) => {
 
 export const verifyotp = async (req, res) => {
   try {
-    const { PR_MOBILE_NO, otp } = req.body;
+    const { PR_MOBILE_NO, otp, PR_FULL_NAME, PR_DOB } = req.body;
+
+    if (!PR_FULL_NAME || !PR_DOB) {
+      return res.status(400).json({
+        message: "Name and date of birth are required",
+        success: false,
+      });
+    }
 
     const success = await verifyFunc(PR_MOBILE_NO, otp);
     console.log(PR_MOBILE_NO, otp);
     if (success) {
-      res
-        .status(200)
-        .json({ message: "OTP verified successfully", success: true });
+      try {
+        const basicUserData = {
+          PR_UNIQUE_ID: "0000-00-001-001",
+          PR_MOBILE_NO,
+          PR_FULL_NAME,
+          PR_DOB,
+          PR_IS_COMPLETED: "N",
+          //Above is required fields for otp verify
+
+          PR_GENDER: "",
+          PR_PROFESSION_ID: "",
+          PR_PROFESSION: "",
+          PR_PROFESSION_DETA: "",
+          PR_EDUCATION: "",
+          PR_EDUCATION_DESC: "",
+          PR_ADDRESS: "",
+          PR_AREA_NAME: "",
+          PR_PIN_CODE: "",
+          PR_CITY_CODE: "",
+          PR_STATE_CODE: "",
+          PR_DISTRICT_CODE: "",
+          PR_FATHER_ID: "",
+          PR_MOTHER_ID: "",
+          PR_SPOUSE_ID: "",
+          PR_MARRIED_YN: "",
+          PR_FATHER_NAME: "",
+          PR_MOTHER_NAME: "",
+          PR_SPOUSE_NAME: "",
+          PR_PHOTO_URL: "",
+          PR_BUSS_CODE: "",
+          PR_BUSS_INTER: "",
+          PR_BUSS_STREAM: "",
+          PR_BUSS_TYPE: "",
+          PR_HOBBY: "",
+        };
+
+        const existingUser = await prisma.peopleRegistry.findFirst({
+          where: { PR_MOBILE_NO },
+        });
+
+        if (existingUser) {
+          return res.status(200).json({
+            message: "OTP verified successfully - User already exists",
+            success: true,
+            user: existingUser,
+          });
+        }
+
+        // Create the basic user record
+        const newUser = await prisma.peopleRegistry.create({
+          data: basicUserData,
+        });
+
+        return res.status(200).json({
+          message: "OTP verified successfully",
+          success: true,
+          user: newUser,
+        });
+      } catch (registrationError) {
+        console.error("Basic registration failed:", registrationError);
+        return res.status(500).json({
+          message: "OTP verified but registration failed",
+          success: false,
+        });
+      }
     } else {
-      res
+      return res
         .status(400)
         .json({ message: "OTP is expired or Invalid", success: false });
     }

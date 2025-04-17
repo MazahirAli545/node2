@@ -176,6 +176,7 @@ export const registerUser = async (req, res) => {
       PR_MOTHER_NAME
         ? "Y"
         : "N";
+
     const newUser = await prisma.peopleRegistry.create({
       data: {
         PR_UNIQUE_ID: `${PR_STATE_CODE}${PR_DISTRICT_CODE}-${
