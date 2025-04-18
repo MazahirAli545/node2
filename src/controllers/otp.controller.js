@@ -226,7 +226,7 @@ export const verifyotp = async (req, res) => {
       });
     }
 
-    // Find or create city to get CITY_ID (similar to registerUser)
+    // Find or create city to get CITY_ID
     let city = await prisma.city.findFirst({
       where: {
         CITY_NAME: PR_CITY_NAME,
@@ -241,9 +241,9 @@ export const verifyotp = async (req, res) => {
           CITY_NAME: PR_CITY_NAME,
           CITY_DS_CODE: PR_DISTRICT_CODE,
           CITY_ST_CODE: PR_STATE_CODE,
-          CITY_PIN_CODE: "", // Will be updated during full registration
-          CITY_DS_NAME: "", // Will be updated during full registration
-          CITY_ST_NAME: "", // Will be updated during full registration
+          CITY_PIN_CODE: "",
+          CITY_DS_NAME: "",
+          CITY_ST_NAME: "",
         },
       });
 
@@ -253,7 +253,10 @@ export const verifyotp = async (req, res) => {
       });
     }
 
-    // Generate temporary unique ID following same format as registration
+    // Format the date as string (YYYY-MM-DD)
+    const formattedDOB = new Date(PR_DOB).toISOString().split("T")[0];
+
+    // Generate temporary unique ID
     const tempUniqueId =
       PR_STATE_CODE && PR_DISTRICT_CODE && city
         ? `${PR_STATE_CODE}${PR_DISTRICT_CODE}-${city.CITY_ID}-001-001`
@@ -264,7 +267,7 @@ export const verifyotp = async (req, res) => {
       PR_UNIQUE_ID: tempUniqueId,
       PR_MOBILE_NO,
       PR_FULL_NAME,
-      PR_DOB: new Date(PR_DOB),
+      PR_DOB: formattedDOB, // Use string formatted date
       PR_IS_COMPLETED: "N",
       PR_GENDER: "",
       PR_PROFESSION_DETA: "",
@@ -302,7 +305,6 @@ export const verifyotp = async (req, res) => {
   } catch (error) {
     console.error("Error in OTP verification:", error);
 
-    // Handle specific Prisma errors
     if (error.code === "P2002") {
       return res.status(400).json({
         message: "Mobile number already registered",
