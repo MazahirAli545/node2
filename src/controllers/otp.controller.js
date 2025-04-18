@@ -57,106 +57,263 @@ export const generateotp = async (req, res) => {
   }
 };
 
+// export const verifyotp = async (req, res) => {
+//   try {
+//     const { PR_MOBILE_NO, otp, PR_FULL_NAME, PR_DOB } = req.body;
+
+//     if (!PR_FULL_NAME || !PR_DOB) {
+//       return res.status(400).json({
+//         message: "Name and date of birth are required",
+//         success: false,
+//       });
+//     }
+
+//     const success = await verifyFunc(PR_MOBILE_NO, otp);
+//     console.log(PR_MOBILE_NO, otp);
+//     if (success) {
+//       try {
+//         // const generateUniqueId = () => {
+//         //   const timestamp = new Date().getTime().toString().slice(-4);
+//         //   const random = Math.floor(1000 + Math.random() * 9000); // 4-digit random
+//         //   return `USER-${timestamp}-${random}`;
+//         // };
+
+//         const basicUserData = {
+//           PR_UNIQUE_ID: "0000-00-001-001",
+//           // PR_UNIQUE_ID: generateUniqueId(),
+//           PR_MOBILE_NO,
+//           PR_FULL_NAME,
+//           PR_DOB,
+//           PR_IS_COMPLETED: "N",
+//           //Above is required fields for otp verify
+
+//           PR_GENDER: "",
+//           // PR_PROFESSION_ID: "",
+//           // PR_PROFESSION: "",
+//           PR_PROFESSION_DETA: "",
+//           PR_EDUCATION: "",
+//           PR_EDUCATION_DESC: "",
+//           PR_ADDRESS: "",
+//           PR_AREA_NAME: "",
+//           PR_PIN_CODE: "",
+//           // PR_CITY_CODE: "",
+//           PR_STATE_CODE: "",
+//           PR_DISTRICT_CODE: "",
+//           // PR_FATHER_ID: "",
+//           // PR_MOTHER_ID: "",
+//           // PR_SPOUSE_ID: "",
+//           PR_MARRIED_YN: "",
+//           PR_FATHER_NAME: "",
+//           PR_MOTHER_NAME: "",
+//           PR_SPOUSE_NAME: "",
+//           PR_PHOTO_URL: "",
+//           // PR_BUSS_CODE: "",
+//           PR_BUSS_INTER: "",
+//           PR_BUSS_STREAM: "",
+//           PR_BUSS_TYPE: "",
+//           PR_HOBBY: "",
+//         };
+
+//         const existingUser = await prisma.peopleRegistry.findFirst({
+//           where: { PR_MOBILE_NO },
+//         });
+
+//         if (existingUser) {
+//           return res.status(200).json({
+//             message: "OTP verified successfully - User already exists",
+//             success: true,
+//             user: existingUser,
+//             PR_ID: existingUser.PR_ID, // Add this line
+//             isExistingUser: true, //
+//           });
+//         }
+
+//         // Create the basic user record
+//         const newUser = await prisma.peopleRegistry.create({
+//           data: basicUserData,
+//         });
+
+//         return res.status(200).json({
+//           message: "OTP verified successfully",
+//           success: true,
+//           user: newUser,
+//           PR_ID: newUser.PR_ID, // Add this line
+//           isExistingUser: false,
+//         });
+//       } catch (registrationError) {
+//         console.error("Basic registration failed:", registrationError);
+//         return res.status(500).json({
+//           message: "OTP verified but registration failed",
+//           success: false,
+//         });
+//       }
+//     } else {
+//       return res
+//         .status(400)
+//         .json({ message: "OTP is expired or Invalid", success: false });
+//     }
+//   } catch (error) {
+//     console.error("Error verifying OTP:", error);
+//     return res
+//       .status(500)
+//       .json({ message: "Something went wrong", success: false });
+//   }
+// };
+
 export const verifyotp = async (req, res) => {
   try {
-    const { PR_MOBILE_NO, otp, PR_FULL_NAME, PR_DOB } = req.body;
+    const {
+      PR_MOBILE_NO,
+      otp,
+      PR_FULL_NAME,
+      PR_DOB,
+      PR_STATE_CODE,
+      PR_DISTRICT_CODE,
+      PR_CITY_NAME,
+    } = req.body;
 
-    if (!PR_FULL_NAME || !PR_DOB) {
+    // Validate input data
+    const schema = Joi.object({
+      PR_MOBILE_NO: Joi.string()
+        .pattern(/^[6-9]\d{9}$/)
+        .required()
+        .messages({ "string.pattern.base": "Invalid mobile number" }),
+      otp: Joi.string().required(),
+      PR_FULL_NAME: Joi.string().min(3).max(100).required(),
+      PR_DOB: Joi.date().required(),
+      PR_STATE_CODE: Joi.string().allow("").optional(),
+      PR_DISTRICT_CODE: Joi.string().allow("").optional(),
+      PR_CITY_NAME: Joi.string().allow("").optional(),
+    });
+
+    const { error } = schema.validate({
+      PR_MOBILE_NO,
+      otp,
+      PR_FULL_NAME,
+      PR_DOB,
+      PR_STATE_CODE,
+      PR_DISTRICT_CODE,
+      PR_CITY_NAME,
+    });
+    if (error) {
       return res.status(400).json({
-        message: "Name and date of birth are required",
+        message: error.details[0].message,
         success: false,
       });
     }
 
-    const success = await verifyFunc(PR_MOBILE_NO, otp);
-    console.log(PR_MOBILE_NO, otp);
-    if (success) {
-      try {
-        // const generateUniqueId = () => {
-        //   const timestamp = new Date().getTime().toString().slice(-4);
-        //   const random = Math.floor(1000 + Math.random() * 9000); // 4-digit random
-        //   return `USER-${timestamp}-${random}`;
-        // };
-
-        const basicUserData = {
-          PR_UNIQUE_ID: "0000-00-001-001",
-          // PR_UNIQUE_ID: generateUniqueId(),
-          PR_MOBILE_NO,
-          PR_FULL_NAME,
-          PR_DOB,
-          PR_IS_COMPLETED: "N",
-          //Above is required fields for otp verify
-
-          PR_GENDER: "",
-          // PR_PROFESSION_ID: "",
-          // PR_PROFESSION: "",
-          PR_PROFESSION_DETA: "",
-          PR_EDUCATION: "",
-          PR_EDUCATION_DESC: "",
-          PR_ADDRESS: "",
-          PR_AREA_NAME: "",
-          PR_PIN_CODE: "",
-          // PR_CITY_CODE: "",
-          PR_STATE_CODE: "",
-          PR_DISTRICT_CODE: "",
-          // PR_FATHER_ID: "",
-          // PR_MOTHER_ID: "",
-          // PR_SPOUSE_ID: "",
-          PR_MARRIED_YN: "",
-          PR_FATHER_NAME: "",
-          PR_MOTHER_NAME: "",
-          PR_SPOUSE_NAME: "",
-          PR_PHOTO_URL: "",
-          // PR_BUSS_CODE: "",
-          PR_BUSS_INTER: "",
-          PR_BUSS_STREAM: "",
-          PR_BUSS_TYPE: "",
-          PR_HOBBY: "",
-        };
-
-        const existingUser = await prisma.peopleRegistry.findFirst({
-          where: { PR_MOBILE_NO },
-        });
-
-        if (existingUser) {
-          return res.status(200).json({
-            message: "OTP verified successfully - User already exists",
-            success: true,
-            user: existingUser,
-            PR_ID: existingUser.PR_ID, // Add this line
-            isExistingUser: true, //
-          });
-        }
-
-        // Create the basic user record
-        const newUser = await prisma.peopleRegistry.create({
-          data: basicUserData,
-        });
-
-        return res.status(200).json({
-          message: "OTP verified successfully",
-          success: true,
-          user: newUser,
-          PR_ID: newUser.PR_ID, // Add this line
-          isExistingUser: false,
-        });
-      } catch (registrationError) {
-        console.error("Basic registration failed:", registrationError);
-        return res.status(500).json({
-          message: "OTP verified but registration failed",
-          success: false,
-        });
-      }
-    } else {
-      return res
-        .status(400)
-        .json({ message: "OTP is expired or Invalid", success: false });
+    // Verify OTP
+    const isOtpValid = await verifyFunc(PR_MOBILE_NO, otp);
+    if (!isOtpValid) {
+      return res.status(400).json({
+        message: "OTP is expired or invalid",
+        success: false,
+      });
     }
+
+    // Check if user already exists
+    const existingUser = await prisma.peopleRegistry.findFirst({
+      where: { PR_MOBILE_NO },
+    });
+
+    if (existingUser) {
+      return res.status(200).json({
+        message: "OTP verified successfully - User already exists",
+        success: true,
+        user: existingUser,
+        PR_ID: existingUser.PR_ID,
+        isExistingUser: true,
+      });
+    }
+
+    // Find or create city to get CITY_ID (similar to registerUser)
+    let city = await prisma.city.findFirst({
+      where: {
+        CITY_NAME: PR_CITY_NAME,
+        CITY_DS_CODE: PR_DISTRICT_CODE,
+        CITY_ST_CODE: PR_STATE_CODE,
+      },
+    });
+
+    if (!city && PR_CITY_NAME && PR_DISTRICT_CODE && PR_STATE_CODE) {
+      city = await prisma.city.create({
+        data: {
+          CITY_NAME: PR_CITY_NAME,
+          CITY_DS_CODE: PR_DISTRICT_CODE,
+          CITY_ST_CODE: PR_STATE_CODE,
+          CITY_PIN_CODE: "", // Will be updated during full registration
+          CITY_DS_NAME: "", // Will be updated during full registration
+          CITY_ST_NAME: "", // Will be updated during full registration
+        },
+      });
+
+      await prisma.city.update({
+        where: { CITY_ID: city.CITY_ID },
+        data: { CITY_CODE: city.CITY_ID },
+      });
+    }
+
+    // Generate temporary unique ID following same format as registration
+    const tempUniqueId =
+      PR_STATE_CODE && PR_DISTRICT_CODE && city
+        ? `${PR_STATE_CODE}${PR_DISTRICT_CODE}-${city.CITY_ID}-001-001`
+        : "0000-00-001-001";
+
+    // Create basic user data
+    const basicUserData = {
+      PR_UNIQUE_ID: tempUniqueId,
+      PR_MOBILE_NO,
+      PR_FULL_NAME,
+      PR_DOB: new Date(PR_DOB),
+      PR_IS_COMPLETED: "N",
+      PR_GENDER: "",
+      PR_PROFESSION_DETA: "",
+      PR_EDUCATION: "",
+      PR_EDUCATION_DESC: "",
+      PR_ADDRESS: "",
+      PR_AREA_NAME: "",
+      PR_PIN_CODE: "",
+      PR_STATE_CODE: PR_STATE_CODE || "",
+      PR_DISTRICT_CODE: PR_DISTRICT_CODE || "",
+      PR_CITY_CODE: city ? city.CITY_ID : null,
+      PR_MARRIED_YN: "",
+      PR_FATHER_NAME: "",
+      PR_MOTHER_NAME: "",
+      PR_SPOUSE_NAME: "",
+      PR_PHOTO_URL: "",
+      PR_BUSS_INTER: "",
+      PR_BUSS_STREAM: "",
+      PR_BUSS_TYPE: "",
+      PR_HOBBY: "",
+    };
+
+    // Create new user
+    const newUser = await prisma.peopleRegistry.create({
+      data: basicUserData,
+    });
+
+    return res.status(200).json({
+      message: "OTP verified successfully",
+      success: true,
+      user: newUser,
+      PR_ID: newUser.PR_ID,
+      isExistingUser: false,
+    });
   } catch (error) {
-    console.error("Error verifying OTP:", error);
-    return res
-      .status(500)
-      .json({ message: "Something went wrong", success: false });
+    console.error("Error in OTP verification:", error);
+
+    // Handle specific Prisma errors
+    if (error.code === "P2002") {
+      return res.status(400).json({
+        message: "Mobile number already registered",
+        success: false,
+      });
+    }
+
+    return res.status(500).json({
+      message: error.message || "Internal server error",
+      success: false,
+    });
   }
 };
 

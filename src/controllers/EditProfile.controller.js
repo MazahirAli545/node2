@@ -288,6 +288,7 @@ async function EditProfile(req, res) {
     const updatedProfile = await prisma.peopleRegistry.update({
       where: { PR_ID: Number(PR_ID) },
       data: {
+        PR_UNIQUE_ID,
         PR_FULL_NAME: req?.body?.PR_FULL_NAME,
         PR_DOB: req?.body?.PR_DOB,
         PR_MOBILE_NO: req?.body?.PR_MOBILE_NO,
