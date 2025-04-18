@@ -113,22 +113,14 @@ model Hobbies {
   // PR_Hobbies PR_Hobbies[] 
 }
 
-// model PR_Hobbies {
-//   PR_ID     Int
-//   HOBBY_ID  Int
 
-//   PeopleRegistry PeopleRegistry @relation(fields: [PR_ID], references: [PR_ID], onDelete: Cascade)
-//   Hobbies        Hobbies        @relation(fields: [HOBBY_ID], references: [HOBBY_ID], onDelete: Cascade)
-
-//   @@id([PR_ID, HOBBY_ID])
-// }
 
 
 
 model City {
   CITY_ID         Int      @id @default(autoincrement()) 
   CITY_PIN_CODE   String?  @db.VarChar(20)  // Renamed from `pincode` @unique @unique @unique
-  CITY_CODE       Int?                      // Added for mapping with `CITY_CODE`
+  CITY_CODE       Int?
   CITY_NAME       String?  @db.VarChar(150)
   CITY_DS_CODE    String?  @db.VarChar(20)  @default("default_ds_code")
   CITY_DS_NAME    String?  @db.VarChar(100) @default("default_ds_name")
@@ -140,10 +132,14 @@ model City {
   CITY_UPDATED_AT DateTime?
 
 
+  // Self-relation for hierarchical cities (e.g., districts within cities)
+  parent   City?   @relation("CityHierarchy", fields: [CITY_CODE], references: [CITY_ID], onDelete: SetNull)
+  children City[]  @relation("CityHierarchy")
 
-  @@map("CITY")
+
 
   PeopleRegistry PeopleRegistry[]
+  @@map("CITY")
 }
 
 model BUSSINESS {
