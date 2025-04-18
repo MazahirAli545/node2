@@ -25,6 +25,13 @@ import DirectoryController from "../controllers/Directory.controller.js";
 import upload from "../middlewares/upload.js";
 import getUserProfile from "../controllers/profile.controller.js";
 import BusinessController from "../controllers/Bussiness.controller.js";
+import {
+  createChild,
+  getChildById,
+  getChildrenByUser,
+  updateChild,
+  deleteChild,
+} from "../controllers/Child.controller.js";
 // import HobbiesController from "../controllers/Hobbies.controller.js";
 import {
   getHobbies,
@@ -97,5 +104,19 @@ userRouter.put("/streams/:STREAM_ID", updateStream);
 userRouter.delete("/streams/:STREAM_ID", deleteStream);
 
 userRouter.get("/registerUser", getAllUsersBasicDetails);
+
+userRouter.post("/createChild", createChild);
+
+// Get all children for a user
+userRouter.get("/getChildrenByUser/user/:userId", getChildrenByUser);
+
+// Get a single child
+userRouter.get("/getChildById/:id", getChildById);
+
+// Update a child
+userRouter.put("/updateChild/:id", updateChild);
+
+// Delete a child
+userRouter.delete("/deleteChild/:id", deleteChild);
 
 export default userRouter;
