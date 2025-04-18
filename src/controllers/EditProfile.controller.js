@@ -83,7 +83,22 @@ async function EditProfile(req, res) {
       console.log("ℹ️ No file uploaded, proceeding with existing photo.");
     }
 
-    var Children = req?.body?.Children;
+    // var Children = req?.body?.Children;
+    let childrenData = [];
+    if (req.body.Children) {
+      try {
+        childrenData =
+          typeof req.body.Children === "string"
+            ? JSON.parse(req.body.Children)
+            : req.body.Children;
+      } catch (e) {
+        console.error("Error parsing Children data:", e);
+        return res.status(400).json({
+          message: "Invalid Children data format",
+          success: false,
+        });
+      }
+    }
 
     if (Array.isArray(Children) && Children.length > 0) {
       const childPromises = Children.filter(
