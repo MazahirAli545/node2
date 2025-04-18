@@ -59,7 +59,7 @@ export async function getHobbies(req, res) {
 
 export async function createHobby(req, res) {
   try {
-    const { HOBBY_NAME, HOBBY_IMAGE_URL, CITY_CREATED_BY } = req.body;
+    const { HOBBY_NAME, HOBBY_IMAGE_URL, HOBBY_CREATED_BY } = req.body;
 
     const newHobby = await prisma.hobbies.create({
       data: {

@@ -281,15 +281,6 @@ async function EditProfile(req, res) {
             });
           }
         }
-
-        // Handle deletions (optional - if you want to delete children not in the request)
-        // const childrenIdsToKeep = childrenData.map(c => c.id).filter(Boolean);
-        // await tx.child.deleteMany({
-        //   where: {
-        //     userId: Number(PR_ID),
-        //     NOT: { id: { in: childrenIdsToKeep } }
-        // }
-        // });
       });
     }
 
