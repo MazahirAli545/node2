@@ -105,18 +105,18 @@ userRouter.delete("/streams/:STREAM_ID", deleteStream);
 
 userRouter.get("/registerUser", getAllUsersBasicDetails);
 
-userRouter.post("/createChild", createChild);
+userRouter.post("/child", createChild);
 
 // Get all children for a user
-userRouter.get("/getChildrenByUser/user/:userId", getChildrenByUser);
+userRouter.get("/child/user/:userId", getChildrenByUser);
 
 // Get a single child
-userRouter.get("/getChildById/:id", getChildById);
+userRouter.get("/child/:id", getChildById);
 
 // Update a child
-userRouter.put("/updateChild/:id", updateChild);
+userRouter.put("/child/:id", updateChild);
 
 // Delete a child
-userRouter.delete("/deleteChild/:id", deleteChild);
+userRouter.delete("/child/:id", deleteChild);
 
 export default userRouter;
