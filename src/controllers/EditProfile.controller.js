@@ -452,9 +452,15 @@ async function EditProfile(req, res) {
       req?.body?.PR_CITY_CODE !== existingProfile.PR_CITY_CODE;
 
     if (locationChanged) {
-      updateData.PR_UNIQUE_ID = `${req?.body?.PR_STATE_CODE}${
-        req?.body?.PR_DISTRICT_CODE
-      }-${req?.body?.PR_CITY_CODE || "00"}-001-001`;
+      // Get the city code from either the request body or existing profile
+      const cityCode =
+        req?.body?.PR_CITY_CODE || existingProfile.PR_CITY_CODE || "00";
+
+      updateData.PR_UNIQUE_ID = `${
+        req?.body?.PR_STATE_CODE || existingProfile.PR_STATE_CODE
+      }${
+        req?.body?.PR_DISTRICT_CODE || existingProfile.PR_DISTRICT_CODE
+      }-${cityCode}-001-001`;
     }
 
     // Update the main profile
