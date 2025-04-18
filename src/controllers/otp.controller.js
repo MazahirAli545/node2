@@ -72,8 +72,14 @@ export const verifyotp = async (req, res) => {
     console.log(PR_MOBILE_NO, otp);
     if (success) {
       try {
+        const generateUniqueId = () => {
+          const timestamp = new Date().getTime().toString().slice(-4);
+          const random = Math.floor(1000 + Math.random() * 9000); // 4-digit random
+          return `USER-${timestamp}-${random}`;
+        };
+
         const basicUserData = {
-          PR_UNIQUE_ID: "0000-00-001-001",
+          PR_UNIQUE_ID: generateUniqueId(),
           PR_MOBILE_NO,
           PR_FULL_NAME,
           PR_DOB,
