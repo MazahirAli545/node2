@@ -413,16 +413,16 @@ async function EditProfile(req, res) {
           where: { userId: Number(PR_ID) },
         });
 
-        // Convert child IDs to numbers for comparison
+        // Get IDs of children to keep (as strings, matching your schema)
         const childrenToKeep = childrenData
           .filter((child) => child.id)
-          .map((child) => Number(child.id)); // Convert to number
+          .map((child) => String(child.id)); // Convert to string
 
         // Process each child from the request
         for (const child of childrenData) {
           if (!child.name || !child.dob) continue;
 
-          const childId = child.id ? Number(child.id) : undefined;
+          const childId = child.id ? String(child.id) : undefined;
           const existingChild = existingChildren.find((c) => c.id === childId);
 
           if (existingChild) {
@@ -444,7 +444,7 @@ async function EditProfile(req, res) {
           }
         }
 
-        // Delete children that were removed (ensure IDs are numbers)
+        // Delete children that were removed (using string IDs)
         await tx.child.deleteMany({
           where: {
             userId: Number(PR_ID),
