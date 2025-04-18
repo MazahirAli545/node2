@@ -315,6 +315,7 @@ async function EditProfile(req, res) {
         PR_PROFESSION_ID: Number(req?.body?.PR_PROFESSION_ID),
         PR_UPDATED_AT: new Date(),
         PR_PHOTO_URL: PR_PHOTO_URL,
+        PR_UNIQUE_ID: req?.body?.PR_UNIQUE_ID,
       },
     });
 
