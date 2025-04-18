@@ -355,20 +355,16 @@ async function EditProfile(req, res) {
       });
     }
 
-    // Handle file upload (if you have file upload logic)
+    // Handle file upload
     let PR_PHOTO_URL = existingProfile.PR_PHOTO_URL;
     if (req.file) {
-      // Your existing file upload logic here
-      // Example:
-      // const uploadResult = await uploadToCloudStorage(req.file);
-      // PR_PHOTO_URL = uploadResult.url;
+      // Your file upload logic here
     } else {
       console.log("ℹ️ No file uploaded, proceeding with existing photo.");
     }
 
     // Validate PR_UNIQUE_ID if provided
     if (req.body.PR_UNIQUE_ID) {
-      // Add any specific validation rules for PR_UNIQUE_ID here
       if (typeof req.body.PR_UNIQUE_ID !== "string") {
         return res.status(400).json({
           message: "PR_UNIQUE_ID must be a string",
@@ -376,7 +372,6 @@ async function EditProfile(req, res) {
         });
       }
 
-      // Check if the PR_UNIQUE_ID is already taken by another profile
       const existingWithSameUniqueId = await prisma.peopleRegistry.findFirst({
         where: {
           PR_UNIQUE_ID: req.body.PR_UNIQUE_ID,
@@ -394,7 +389,7 @@ async function EditProfile(req, res) {
       }
     }
 
-    // Parse Children data if it exists
+    // Parse Children data
     let childrenData = [];
     if (req.body.Children) {
       try {
@@ -414,29 +409,31 @@ async function EditProfile(req, res) {
     // Process children updates in a transaction
     if (Array.isArray(childrenData)) {
       await prisma.$transaction(async (tx) => {
-        // First get all existing children for this user
         const existingChildren = await tx.child.findMany({
           where: { userId: Number(PR_ID) },
         });
+
+        // Convert child IDs to numbers for comparison
+        const childrenToKeep = childrenData
+          .filter((child) => child.id)
+          .map((child) => Number(child.id)); // Convert to number
 
         // Process each child from the request
         for (const child of childrenData) {
           if (!child.name || !child.dob) continue;
 
-          // Check if this child exists already
-          const existingChild = existingChildren.find((c) => c.id === child.id);
+          const childId = child.id ? Number(child.id) : undefined;
+          const existingChild = existingChildren.find((c) => c.id === childId);
 
           if (existingChild) {
-            // Update existing child
             await tx.child.update({
-              where: { id: existingChild.id },
+              where: { id: childId },
               data: {
                 name: child.name,
                 dob: new Date(child.dob),
               },
             });
           } else {
-            // Create new child
             await tx.child.create({
               data: {
                 name: child.name,
@@ -447,10 +444,7 @@ async function EditProfile(req, res) {
           }
         }
 
-        // Delete children that were removed
-        const childrenToKeep = childrenData
-          .filter((child) => child.id)
-          .map((child) => child.id);
+        // Delete children that were removed (ensure IDs are numbers)
         await tx.child.deleteMany({
           where: {
             userId: Number(PR_ID),
@@ -493,7 +487,6 @@ async function EditProfile(req, res) {
       PR_PHOTO_URL: PR_PHOTO_URL,
     };
 
-    // Only update PR_UNIQUE_ID if it's provided in the request
     if (req.body.PR_UNIQUE_ID !== undefined) {
       updateData.PR_UNIQUE_ID = req.body.PR_UNIQUE_ID;
     }
