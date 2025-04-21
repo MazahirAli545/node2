@@ -119,8 +119,8 @@ model Hobbies {
 
 model City {
   CITY_ID         Int      @id @default(autoincrement()) 
-  CITY_PIN_CODE   String?  @db.VarChar(20)  // Renamed from `pincode` @unique @unique @unique
-  CITY_CODE       Int?
+  CITY_PIN_CODE   String?  @db.VarChar(20)  // Renamed from `pincode` @unique @unique 
+  // CITY_CODE       Int?
   CITY_NAME       String?  @db.VarChar(150)
   CITY_DS_CODE    String?  @db.VarChar(20)  @default("default_ds_code")
   CITY_DS_NAME    String?  @db.VarChar(100) @default("default_ds_name")
@@ -133,10 +133,7 @@ model City {
 
 
   // Self-relation for hierarchical cities (e.g., districts within cities)
-  parent   City?   @relation("CityHierarchy", fields: [CITY_CODE], references: [CITY_ID], onDelete: SetNull)
-  children City[]  @relation("CityHierarchy")
-
-
+  
 
   PeopleRegistry PeopleRegistry[]
   @@map("CITY")

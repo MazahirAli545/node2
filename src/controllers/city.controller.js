@@ -9,7 +9,7 @@ export async function getCities(req, res) {
       select: {
         CITY_ID: true,
         CITY_PIN_CODE: true,
-        CITY_CODE: true,
+        // CITY_CODE: true,
         CITY_NAME: true,
         CITY_DS_CODE: true,
         CITY_DS_NAME: true,
@@ -41,7 +41,7 @@ export async function createCity(req, res) {
   try {
     const {
       CITY_PIN_CODE,
-      CITY_CODE,
+      // CITY_CODE,
       CITY_NAME,
       CITY_DS_CODE,
       CITY_DS_NAME,
@@ -53,7 +53,7 @@ export async function createCity(req, res) {
     const newCity = await prisma.city.create({
       data: {
         CITY_PIN_CODE,
-        CITY_CODE,
+        // CITY_CODE,
         CITY_NAME,
         CITY_DS_CODE,
         CITY_DS_NAME,
