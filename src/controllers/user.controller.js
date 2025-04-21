@@ -91,18 +91,6 @@ export const registerUser = async (req, res) => {
         .json({ message: error.details[0].message, success: false });
     }
 
-    // Check if Mobile Number Already Exists
-    // const existingMobile = await prisma.peopleRegistry.findFirst({
-    //   where: { PR_MOBILE_NO },
-    // });
-
-    // if (existingMobile) {
-    //   return res.status(400).json({
-    //     message: "This mobile number is already registered",
-    //     success: false,
-    //   });
-    // }
-
     const isMobileVerified = await checkMobileVerified(PR_MOBILE_NO, otp);
     console.log(PR_MOBILE_NO, otp);
     if (!isMobileVerified) {
@@ -132,11 +120,6 @@ export const registerUser = async (req, res) => {
           // areas: JSON.stringify(areas), // Store areas as a JSON string
         },
       });
-
-      // await prisma.city.update({
-      //   where: { CITY_ID: city.CITY_ID },
-      //   data: { CITY_CODE: city.CITY_ID },
-      // });
     }
 
     console.log("City Created/Fetched: ", city);
@@ -179,9 +162,7 @@ export const registerUser = async (req, res) => {
 
     const newUser = await prisma.peopleRegistry.create({
       data: {
-        PR_UNIQUE_ID: `${PR_STATE_CODE}${PR_DISTRICT_CODE}-${
-          city.CITY_ID
-        }-${"001"}-${"001"}`,
+        PR_UNIQUE_ID: `${PR_STATE_CODE}${PR_DISTRICT_CODE}-${city.CITY_ID.toString()}-${"001"}-${"001"}`,
         PR_FULL_NAME,
         PR_DOB: new Date(PR_DOB).toLocaleDateString(),
         PR_MOBILE_NO,
@@ -213,7 +194,7 @@ export const registerUser = async (req, res) => {
         PR_IS_COMPLETED: isCompleted,
       },
     });
-
+    console.log("City ID:", city.CITY_ID, "Type:", typeof city.CITY_ID);
     if (Array.isArray(Children) && Children.length > 0) {
       const childPromises = Children.filter(
         (child) => child.name && child.dob
