@@ -414,6 +414,28 @@ async function EditProfile(req, res) {
       });
     }
 
+    let city = await prisma.city.findFirst({
+      where: {
+        CITY_NAME: req.body.PR_CITY_NAME?.trim(),
+        CITY_PIN_CODE: Number(req.body.PR_PIN_CODE),
+        CITY_DS_CODE: req.body.PR_DISTRICT_CODE?.trim(),
+        CITY_ST_CODE: req.body.PR_STATE_CODE?.trim(),
+      },
+    });
+
+    if (!city) {
+      city = await prisma.city.create({
+        data: {
+          CITY_NAME: req.body.PR_CITY_NAME?.trim(),
+          CITY_PIN_CODE: Number(req.body.PR_PIN_CODE),
+          CITY_DS_CODE: req.body.PR_DISTRICT_CODE?.trim(),
+          CITY_DS_NAME: req.body.PR_DISTRICT_NAME?.trim(),
+          CITY_ST_CODE: req.body.PR_STATE_CODE?.trim(),
+          CITY_ST_NAME: req.body.PR_STATE_NAME?.trim(),
+        },
+      });
+    }
+
     // Prepare update data
     const updateData = {
       PR_FULL_NAME: req?.body?.PR_FULL_NAME,
