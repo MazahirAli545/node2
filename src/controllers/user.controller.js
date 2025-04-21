@@ -100,9 +100,18 @@ export const registerUser = async (req, res) => {
       });
     }
 
+    // let city = await prisma.city.findFirst({
+    //   where: {
+    //     CITY_NAME: PR_CITY_NAME,
+    //     CITY_DS_CODE: PR_DISTRICT_CODE,
+    //     CITY_ST_CODE: PR_STATE_CODE,
+    //   },
+    // });
+
     let city = await prisma.city.findFirst({
       where: {
         CITY_NAME: PR_CITY_NAME,
+        CITY_PIN_CODE: PR_PIN_CODE,
         CITY_DS_CODE: PR_DISTRICT_CODE,
         CITY_ST_CODE: PR_STATE_CODE,
       },
