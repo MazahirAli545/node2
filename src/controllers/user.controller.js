@@ -195,6 +195,7 @@ export const registerUser = async (req, res) => {
       },
     });
     console.log("City ID:", city.CITY_ID, "Type:", typeof city.CITY_ID);
+
     if (Array.isArray(Children) && Children.length > 0) {
       const childPromises = Children.filter(
         (child) => child.name && child.dob
