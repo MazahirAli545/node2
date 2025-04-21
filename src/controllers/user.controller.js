@@ -133,10 +133,10 @@ export const registerUser = async (req, res) => {
         },
       });
 
-      await prisma.city.update({
-        where: { CITY_ID: city.CITY_ID },
-        data: { CITY_CODE: city.CITY_ID },
-      });
+      // await prisma.city.update({
+      //   where: { CITY_ID: city.CITY_ID },
+      //   data: { CITY_CODE: city.CITY_ID },
+      // });
     }
 
     console.log("City Created/Fetched: ", city);
