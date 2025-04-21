@@ -162,7 +162,9 @@ export const registerUser = async (req, res) => {
 
     const newUser = await prisma.peopleRegistry.create({
       data: {
-        PR_UNIQUE_ID: `${PR_STATE_CODE}${PR_DISTRICT_CODE}-${city.CITY_ID.toString()}-${"001"}-${"001"}`,
+        PR_UNIQUE_ID: `${PR_STATE_CODE}${PR_DISTRICT_CODE}-${
+          city.CITY_ID
+        }-${"001"}-${"001"}`,
         PR_FULL_NAME,
         PR_DOB: new Date(PR_DOB).toLocaleDateString(),
         PR_MOBILE_NO,
@@ -194,7 +196,7 @@ export const registerUser = async (req, res) => {
         PR_IS_COMPLETED: isCompleted,
       },
     });
-    console.log("City ID:", city.CITY_ID, "Type:", typeof city.CITY_ID);
+    // console.log("City ID:", city.CITY_ID, "Type:", typeof city.CITY_ID);
 
     if (Array.isArray(Children) && Children.length > 0) {
       const childPromises = Children.filter(
