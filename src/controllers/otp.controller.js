@@ -160,165 +160,6 @@ export const generateotp = async (req, res) => {
 //   }
 // };
 
-// export const verifyotp = async (req, res) => {
-//   try {
-//     const {
-//       PR_MOBILE_NO,
-//       otp,
-//       PR_FULL_NAME,
-//       PR_DOB,
-//       PR_STATE_CODE,
-//       PR_DISTRICT_CODE,
-//       PR_CITY_NAME,
-//     } = req.body;
-
-//     // Validate input data
-//     const schema = Joi.object({
-//       PR_MOBILE_NO: Joi.string()
-//         .pattern(/^[6-9]\d{9}$/)
-//         .required()
-//         .messages({ "string.pattern.base": "Invalid mobile number" }),
-//       otp: Joi.string().required(),
-//       PR_FULL_NAME: Joi.string().min(3).max(100).required(),
-//       PR_DOB: Joi.date().required(),
-//       PR_STATE_CODE: Joi.string().allow("").optional(),
-//       PR_DISTRICT_CODE: Joi.string().allow("").optional(),
-//       PR_CITY_NAME: Joi.string().allow("").optional(),
-//     });
-
-//     const { error } = schema.validate({
-//       PR_MOBILE_NO,
-//       otp,
-//       PR_FULL_NAME,
-//       PR_DOB,
-//       PR_STATE_CODE,
-//       PR_DISTRICT_CODE,
-//       PR_CITY_NAME,
-//     });
-//     if (error) {
-//       return res.status(400).json({
-//         message: error.details[0].message,
-//         success: false,
-//       });
-//     }
-
-//     // Verify OTP
-//     const isOtpValid = await verifyFunc(PR_MOBILE_NO, otp);
-//     if (!isOtpValid) {
-//       return res.status(400).json({
-//         message: "OTP is expired or invalid",
-//         success: false,
-//       });
-//     }
-
-//     // Check if user already exists
-//     const existingUser = await prisma.peopleRegistry.findFirst({
-//       where: { PR_MOBILE_NO },
-//     });
-
-//     if (existingUser) {
-//       return res.status(200).json({
-//         message: "OTP verified successfully - User already exists",
-//         success: true,
-//         user: existingUser,
-//         PR_ID: existingUser.PR_ID,
-//         isExistingUser: true,
-//       });
-//     }
-
-//     // Find or create city to get CITY_ID
-//     let city = await prisma.city.findFirst({
-//       where: {
-//         CITY_NAME: PR_CITY_NAME,
-//         CITY_DS_CODE: PR_DISTRICT_CODE,
-//         CITY_ST_CODE: PR_STATE_CODE,
-//       },
-//     });
-
-//     if (!city && PR_CITY_NAME && PR_DISTRICT_CODE && PR_STATE_CODE) {
-//       city = await prisma.city.create({
-//         data: {
-//           CITY_NAME: PR_CITY_NAME,
-//           CITY_DS_CODE: PR_DISTRICT_CODE,
-//           CITY_ST_CODE: PR_STATE_CODE,
-//           CITY_PIN_CODE: "",
-//           CITY_DS_NAME: "",
-//           CITY_ST_NAME: "",
-//         },
-//       });
-
-//       // await prisma.city.update({
-//       //   where: { CITY_ID: city.CITY_ID },
-//       //   data: { CITY_CODE: city.CITY_ID },
-//       // });
-//     }
-
-//     // Format the date as string (YYYY-MM-DD)
-//     const formattedDOB = new Date(PR_DOB).toISOString().split("T")[0];
-
-//     // Generate temporary unique ID
-//     const tempUniqueId =
-//       PR_STATE_CODE && PR_DISTRICT_CODE && city
-//         ? `${PR_STATE_CODE}${PR_DISTRICT_CODE}-${city.CITY_ID}-001-001`
-//         : "0000-00-001-001";
-
-//     // Create basic user data
-//     const basicUserData = {
-//       PR_UNIQUE_ID: tempUniqueId,
-//       PR_MOBILE_NO,
-//       PR_FULL_NAME,
-//       PR_DOB: formattedDOB, // Use string formatted date
-//       PR_IS_COMPLETED: "N",
-//       PR_GENDER: "",
-//       PR_PROFESSION_DETA: "",
-//       PR_EDUCATION: "",
-//       PR_EDUCATION_DESC: "",
-//       PR_ADDRESS: "",
-//       PR_AREA_NAME: "",
-//       PR_PIN_CODE: "",
-//       PR_STATE_CODE: PR_STATE_CODE || "",
-//       PR_DISTRICT_CODE: PR_DISTRICT_CODE || "",
-//       PR_CITY_CODE: city ? city.CITY_ID : null,
-//       PR_MARRIED_YN: "",
-//       PR_FATHER_NAME: "",
-//       PR_MOTHER_NAME: "",
-//       PR_SPOUSE_NAME: "",
-//       PR_PHOTO_URL: "",
-//       PR_BUSS_INTER: "",
-//       PR_BUSS_STREAM: "",
-//       PR_BUSS_TYPE: "",
-//       PR_HOBBY: "",
-//     };
-
-//     // Create new user
-//     const newUser = await prisma.peopleRegistry.create({
-//       data: basicUserData,
-//     });
-
-//     return res.status(200).json({
-//       message: "OTP verified successfully",
-//       success: true,
-//       user: newUser,
-//       PR_ID: newUser.PR_ID,
-//       isExistingUser: false,
-//     });
-//   } catch (error) {
-//     console.error("Error in OTP verification:", error);
-
-//     if (error.code === "P2002") {
-//       return res.status(400).json({
-//         message: "Mobile number already registered",
-//         success: false,
-//       });
-//     }
-
-//     return res.status(500).json({
-//       message: error.message || "Internal server error",
-//       success: false,
-//     });
-//   }
-// };
-
 export const verifyotp = async (req, res) => {
   try {
     const {
@@ -331,7 +172,35 @@ export const verifyotp = async (req, res) => {
       PR_CITY_NAME,
     } = req.body;
 
-    // [Keep existing validation code...]
+    // Validate input data
+    const schema = Joi.object({
+      PR_MOBILE_NO: Joi.string()
+        .pattern(/^[6-9]\d{9}$/)
+        .required()
+        .messages({ "string.pattern.base": "Invalid mobile number" }),
+      otp: Joi.string().required(),
+      PR_FULL_NAME: Joi.string().min(3).max(100).required(),
+      PR_DOB: Joi.date().required(),
+      PR_STATE_CODE: Joi.string().allow("").optional(),
+      PR_DISTRICT_CODE: Joi.string().allow("").optional(),
+      PR_CITY_NAME: Joi.string().allow("").optional(),
+    });
+
+    const { error } = schema.validate({
+      PR_MOBILE_NO,
+      otp,
+      PR_FULL_NAME,
+      PR_DOB,
+      PR_STATE_CODE,
+      PR_DISTRICT_CODE,
+      PR_CITY_NAME,
+    });
+    if (error) {
+      return res.status(400).json({
+        message: error.details[0].message,
+        success: false,
+      });
+    }
 
     // Verify OTP
     const isOtpValid = await verifyFunc(PR_MOBILE_NO, otp);
@@ -357,50 +226,48 @@ export const verifyotp = async (req, res) => {
       });
     }
 
-    // ===== IMPROVED CITY HANDLING ===== //
-    let cityId = null; // Explicitly set to null initially
+    // Find or create city to get CITY_ID
+    let city = await prisma.city.findFirst({
+      where: {
+        CITY_NAME: PR_CITY_NAME,
+        CITY_DS_CODE: PR_DISTRICT_CODE,
+        CITY_ST_CODE: PR_STATE_CODE,
+      },
+    });
 
-    // Only attempt city lookup if all required fields are present
-    if (PR_CITY_NAME && PR_DISTRICT_CODE && PR_STATE_CODE) {
-      let city = await prisma.city.findFirst({
-        where: {
+    if (!city && PR_CITY_NAME && PR_DISTRICT_CODE && PR_STATE_CODE) {
+      city = await prisma.city.create({
+        data: {
           CITY_NAME: PR_CITY_NAME,
           CITY_DS_CODE: PR_DISTRICT_CODE,
           CITY_ST_CODE: PR_STATE_CODE,
+          CITY_PIN_CODE: "",
+          CITY_DS_NAME: "",
+          CITY_ST_NAME: "",
         },
       });
 
-      if (!city) {
-        city = await prisma.city.create({
-          data: {
-            CITY_NAME: PR_CITY_NAME,
-            CITY_DS_CODE: PR_DISTRICT_CODE,
-            CITY_ST_CODE: PR_STATE_CODE,
-            CITY_PIN_CODE: "",
-            CITY_DS_NAME: "",
-            CITY_ST_NAME: "",
-          },
-        });
-      }
-      cityId = city.CITY_ID;
+      // await prisma.city.update({
+      //   where: { CITY_ID: city.CITY_ID },
+      //   data: { CITY_CODE: city.CITY_ID },
+      // });
     }
-
-    console.log("Determined city ID:", cityId); // Debug log
 
     // Format the date as string (YYYY-MM-DD)
     const formattedDOB = new Date(PR_DOB).toISOString().split("T")[0];
 
     // Generate temporary unique ID
-    const tempUniqueId = cityId
-      ? `${PR_STATE_CODE}${PR_DISTRICT_CODE}-${cityId}-001-001`
-      : "0000-00-001-001";
+    const tempUniqueId =
+      PR_STATE_CODE && PR_DISTRICT_CODE && city
+        ? `${PR_STATE_CODE}${PR_DISTRICT_CODE}-${city.CITY_ID}-001-001`
+        : "0000-00-001-001";
 
-    // Create basic user data - EXPLICITLY SET city code to null if not provided
+    // Create basic user data
     const basicUserData = {
       PR_UNIQUE_ID: tempUniqueId,
       PR_MOBILE_NO,
       PR_FULL_NAME,
-      PR_DOB: formattedDOB,
+      PR_DOB: formattedDOB, // Use string formatted date
       PR_IS_COMPLETED: "N",
       PR_GENDER: "",
       PR_PROFESSION_DETA: "",
@@ -411,7 +278,7 @@ export const verifyotp = async (req, res) => {
       PR_PIN_CODE: "",
       PR_STATE_CODE: PR_STATE_CODE || "",
       PR_DISTRICT_CODE: PR_DISTRICT_CODE || "",
-      PR_CITY_CODE: cityId, // This will be null if no city found
+      PR_CITY_CODE: city ? city.CITY_ID : null,
       PR_MARRIED_YN: "",
       PR_FATHER_NAME: "",
       PR_MOTHER_NAME: "",
@@ -422,8 +289,6 @@ export const verifyotp = async (req, res) => {
       PR_BUSS_TYPE: "",
       PR_HOBBY: "",
     };
-
-    console.log("User creation data:", basicUserData); // Debug log
 
     // Create new user
     const newUser = await prisma.peopleRegistry.create({
@@ -453,6 +318,7 @@ export const verifyotp = async (req, res) => {
     });
   }
 };
+
 export async function verifyFunc(PR_MOBILE_NO, otp) {
   try {
     const otpRecord = await prisma.otp.findFirst({
