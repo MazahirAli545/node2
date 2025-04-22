@@ -247,10 +247,10 @@ export const verifyotp = async (req, res) => {
         },
       });
 
-      await prisma.city.update({
-        where: { CITY_ID: city.CITY_ID },
-        data: { CITY_CODE: city.CITY_ID },
-      });
+      // await prisma.city.update({
+      //   where: { CITY_ID: city.CITY_ID },
+      //   data: { CITY_CODE: city.CITY_ID },
+      // });
     }
 
     // Format the date as string (YYYY-MM-DD)
