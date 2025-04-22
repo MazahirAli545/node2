@@ -513,10 +513,10 @@ async function EditProfile(req, res) {
       });
     }
 
-    // Handle file upload (keep existing code)
+    // Handle file upload
     let PR_PHOTO_URL = existingProfile.PR_PHOTO_URL;
     if (req.file) {
-      // ... (keep existing file upload code)
+      // Your existing file upload logic here
     } else {
       console.log("ℹ️ No file uploaded, proceeding with existing photo.");
     }
@@ -541,41 +541,59 @@ async function EditProfile(req, res) {
     // Process children updates in a transaction
     if (Array.isArray(childrenData)) {
       await prisma.$transaction(async (tx) => {
-        const existingChildren = await tx.child.findMany({
-          where: { userId: Number(PR_ID) },
-        });
+        try {
+          const existingChildren = await tx.child.findMany({
+            where: { userId: Number(PR_ID) },
+          });
 
-        // Update or create children
-        for (const child of childrenData) {
-          if (!child.name || !child.dob) continue;
+          // Update or create children
+          for (const child of childrenData) {
+            if (!child.name || !child.dob) {
+              console.log("Skipping child - missing name or dob:", child);
+              continue;
+            }
 
-          if (child.id) {
-            await tx.child.update({
-              where: { id: child.id },
-              data: {
-                name: child.name,
-                dob: new Date(child.dob),
-              },
-            });
-          } else {
-            await tx.child.create({
-              data: {
-                name: child.name,
-                dob: new Date(child.dob),
-                userId: Number(PR_ID),
-              },
-            });
+            // Ensure id is properly typed as string
+            const childId = child.id ? String(child.id) : undefined;
+
+            if (childId) {
+              console.log("Updating child:", { id: childId, name: child.name });
+              await tx.child.update({
+                where: { id: childId },
+                data: {
+                  name: child.name,
+                  dob: new Date(child.dob).toISOString(),
+                },
+              });
+            } else {
+              console.log("Creating new child:", { name: child.name });
+              await tx.child.create({
+                data: {
+                  name: child.name,
+                  dob: new Date(child.dob).toISOString(),
+                  userId: Number(PR_ID),
+                },
+              });
+            }
           }
-        }
 
-        // Delete children not in the new list
-        const childrenToKeep = childrenData.map((c) => c.id).filter(Boolean);
-        await tx.child.deleteMany({
-          where: {
-            userId: Number(PR_ID),
-            NOT: { id: { in: childrenToKeep } },
-          },
-        });
+          // Delete children not in the new list
+          const childrenToKeep = childrenData
+            .map((c) => (c.id ? String(c.id) : null))
+            .filter(Boolean);
+
+          console.log("Children to keep:", childrenToKeep);
+
+          await tx.child.deleteMany({
+            where: {
+              userId: Number(PR_ID),
+              NOT: { id: { in: childrenToKeep } },
+            },
+          });
+        } catch (childError) {
+          console.error("Child update error:", childError);
+          throw childError;
+        }
       });
     }
 
@@ -650,7 +668,7 @@ async function EditProfile(req, res) {
       PR_PROFESSION_ID: req.body.PR_PROFESSION_ID
         ? Number(req.body.PR_PROFESSION_ID)
         : existingProfile.PR_PROFESSION_ID,
-      PR_UPDATED_AT: new Date(),
+      PR_UPDATED_AT: new Date().toISOString(),
       PR_PHOTO_URL: PR_PHOTO_URL,
     };
 
@@ -678,7 +696,7 @@ async function EditProfile(req, res) {
       const mobileNumber =
         req.body.PR_MOBILE_NO || existingProfile.PR_MOBILE_NO;
 
-      // Find all users with the same mobile number (if mobile changed)
+      // Find all users with the same mobile number
       const usersWithSameMobile = await prisma.peopleRegistry.findMany({
         where: { PR_MOBILE_NO: mobileNumber },
         orderBy: { PR_ID: "asc" },
@@ -688,14 +706,12 @@ async function EditProfile(req, res) {
       let memberNumber = "001";
 
       if (usersWithSameMobile.length > 0) {
-        // Get the family number from the first user with this mobile
         const firstUser = usersWithSameMobile[0];
         const idParts = firstUser.PR_UNIQUE_ID.split("-");
 
         if (idParts.length === 4) {
           familyNumber = idParts[2];
 
-          // If this is not the first user, find the next member number
           if (usersWithSameMobile.length > 1) {
             const lastUser =
               usersWithSameMobile[usersWithSameMobile.length - 1];
@@ -707,7 +723,6 @@ async function EditProfile(req, res) {
           }
         }
       } else {
-        // New mobile number - find the next available family number for the area
         const lastUserInArea = await prisma.peopleRegistry.findFirst({
           where: {
             PR_STATE_CODE: stateCode,
