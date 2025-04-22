@@ -445,6 +445,8 @@ async function EditProfile(req, res) {
       PR_PHOTO_URL: PR_PHOTO_URL,
     };
 
+    console.log("909090", updateData.PR_CITY_CODE);
+
     // Only update PR_UNIQUE_ID if location fields changed
     const locationChanged =
       req?.body?.PR_STATE_CODE !== existingProfile.PR_STATE_CODE ||
