@@ -306,6 +306,8 @@ export const verifyotp = async (req, res) => {
     // Create basic user data
     const basicUserData = {
       PR_UNIQUE_ID: tempUniqueId,
+      PR_FAMILY_NO: familyNumber, // Added family number
+      PR_MEMBER_NO: memberNumber,
       PR_MOBILE_NO,
       PR_FULL_NAME,
       PR_DOB: formattedDOB, // Use string formatted date
