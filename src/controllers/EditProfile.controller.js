@@ -498,6 +498,9 @@ async function EditProfile(req, res) {
       });
     }
 
+    console.log("Received PR_ID:", PR_ID);
+    console.log("Request Body:", req.body);
+
     const existingProfile = await prisma.peopleRegistry.findUnique({
       where: { PR_ID: Number(PR_ID) },
     });
@@ -509,10 +512,13 @@ async function EditProfile(req, res) {
       });
     }
 
-    // Handle file upload (keep existing code)
+    // Handle file upload
     let PR_PHOTO_URL = existingProfile.PR_PHOTO_URL;
     if (req.file) {
-      // ... (keep existing file upload code)
+      // Your existing file upload logic here
+      // PR_PHOTO_URL = uploadedFileUrl;
+    } else {
+      console.log("ℹ️ No file uploaded, proceeding with existing photo.");
     }
 
     // Parse Children data if it exists
@@ -535,16 +541,68 @@ async function EditProfile(req, res) {
     // Process children updates in a transaction
     if (Array.isArray(childrenData)) {
       await prisma.$transaction(async (tx) => {
-        // ... (keep existing children processing code)
+        const existingChildren = await tx.child.findMany({
+          where: { userId: Number(PR_ID) },
+        });
+
+        for (const child of childrenData) {
+          if (!child.name || !child.dob) continue;
+
+          const existingChild = existingChildren.find((c) => c.id === child.id);
+
+          if (existingChild) {
+            await tx.child.update({
+              where: { id: existingChild.id },
+              data: {
+                name: child.name,
+                dob: new Date(child.dob),
+              },
+            });
+          } else {
+            await tx.child.create({
+              data: {
+                name: child.name,
+                dob: new Date(child.dob),
+                userId: Number(PR_ID),
+              },
+            });
+          }
+        }
       });
     }
 
     // Prepare update data
     const updateData = {
-      // ... (keep all your existing update fields)
+      PR_FULL_NAME: req?.body?.PR_FULL_NAME,
+      PR_DOB: req?.body?.PR_DOB,
+      PR_MOBILE_NO: req?.body?.PR_MOBILE_NO,
+      PR_GENDER: req?.body?.PR_GENDER,
+      PR_PIN_CODE: req?.body?.PR_PIN_CODE,
+      PR_AREA_NAME: req?.body?.PR_AREA_NAME,
+      PR_ADDRESS: req?.body?.PR_ADDRESS,
+      PR_STATE_CODE: req?.body?.PR_STATE_CODE,
+      PR_DISTRICT_CODE: req?.body?.PR_DISTRICT_CODE,
+      PR_EDUCATION: req?.body?.PR_EDUCATION,
+      PR_EDUCATION_DESC: req?.body?.PR_EDUCATION_DESC,
+      PR_PROFESSION_DETA: req?.body?.PR_PROFESSION_DETA,
+      PR_MARRIED_YN: req?.body?.PR_MARRIED_YN,
+      PR_FATHER_ID: req?.body?.PR_FATHER_ID,
+      PR_MOTHER_ID: req?.body?.PR_MOTHER_ID,
+      PR_SPOUSE_ID: req?.body?.PR_SPOUSE_ID,
+      PR_CITY_CODE: req?.body?.PR_CITY_CODE,
+      PR_FATHER_NAME: req?.body?.PR_FATHER_NAME,
+      PR_MOTHER_NAME: req?.body?.PR_MOTHER_NAME,
+      PR_SPOUSE_NAME: req?.body?.PR_SPOUSE_NAME,
+      PR_BUSS_INTER: req?.body?.PR_BUSS_INTER,
+      PR_BUSS_STREAM: req?.body?.PR_BUSS_STREAM,
+      PR_BUSS_TYPE: req?.body?.PR_BUSS_TYPE,
+      PR_HOBBY: req?.body?.PR_HOBBY,
+      PR_PROFESSION_ID: Number(req?.body?.PR_PROFESSION_ID),
+      PR_UPDATED_AT: new Date(),
+      PR_PHOTO_URL: PR_PHOTO_URL,
     };
 
-    // Only update PR_UNIQUE_ID if location fields changed
+    // Check if location fields changed
     const locationChanged =
       req?.body?.PR_STATE_CODE !== existingProfile.PR_STATE_CODE ||
       req?.body?.PR_DISTRICT_CODE !== existingProfile.PR_DISTRICT_CODE ||
@@ -558,7 +616,7 @@ async function EditProfile(req, res) {
       const newCityCode =
         req?.body?.PR_CITY_CODE || existingProfile.PR_CITY_CODE;
 
-      // Find all users with the same mobile number (same family)
+      // Find all family members (same mobile number)
       const familyMembers = await prisma.peopleRegistry.findMany({
         where: { PR_MOBILE_NO: existingProfile.PR_MOBILE_NO },
         orderBy: { PR_ID: "asc" },
@@ -570,16 +628,13 @@ async function EditProfile(req, res) {
           PR_STATE_CODE: newStateCode,
           PR_DISTRICT_CODE: newDistrictCode,
           PR_CITY_CODE: newCityCode,
-          NOT: { PR_MOBILE_NO: existingProfile.PR_MOBILE_NO }, // Exclude current family
+          NOT: { PR_MOBILE_NO: existingProfile.PR_MOBILE_NO },
         },
         orderBy: { PR_UNIQUE_ID: "desc" },
       });
 
       let familyNumber = "001";
-      let familyMemberNumber = "001";
-
       if (lastFamilyInLocation) {
-        // Extract family number from the last family in new location
         const parts = lastFamilyInLocation.PR_UNIQUE_ID?.split("-");
         if (parts?.length === 4) {
           const lastFamilyNum = parseInt(parts[2]);
@@ -591,7 +646,7 @@ async function EditProfile(req, res) {
       await prisma.$transaction(async (tx) => {
         for (let i = 0; i < familyMembers.length; i++) {
           const member = familyMembers[i];
-          familyMemberNumber = (i + 1).toString().padStart(3, "0");
+          const familyMemberNumber = (i + 1).toString().padStart(3, "0");
 
           await tx.peopleRegistry.update({
             where: { PR_ID: member.PR_ID },
@@ -605,8 +660,11 @@ async function EditProfile(req, res) {
         }
       });
 
-      // Update the current profile's unique ID
-      updateData.PR_UNIQUE_ID = `${newStateCode}${newDistrictCode}-${newCityCode}-${familyNumber}-${familyMemberNumber}`;
+      // Update the current profile's data with new location info
+      updateData.PR_UNIQUE_ID =
+        `${newStateCode}${newDistrictCode}-${newCityCode}-${familyNumber}-${
+          familyMembers.findIndex((m) => m.PR_ID === Number(PR_ID)) + 1
+        }`.padStart(3, "0");
       updateData.PR_STATE_CODE = newStateCode;
       updateData.PR_DISTRICT_CODE = newDistrictCode;
       updateData.PR_CITY_CODE = newCityCode;
