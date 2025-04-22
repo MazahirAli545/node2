@@ -446,6 +446,9 @@ async function EditProfile(req, res) {
     };
 
     console.log("909090", updateData.PR_CITY_CODE);
+    console.log("909091", updateData.PR_DISTRICT_CODE);
+    console.log("909092", updateData.PR_FULL_NAME);
+    console.log("909093", updateData.PR_STATE_CODE);
 
     // Only update PR_UNIQUE_ID if location fields changed
     const locationChanged =
