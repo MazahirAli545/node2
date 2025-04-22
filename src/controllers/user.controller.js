@@ -415,8 +415,9 @@ export const registerUser = async (req, res) => {
       PR_FULL_NAME &&
       PR_DOB &&
       PR_MOBILE_NO &&
-      PR_PROFESSION &&
-      PR_PROFESSION_DETA &&
+      PR_PIN_CODE &&
+      PR_AREA_NAME &&
+      PR_ADDRESS &&
       PR_FATHER_NAME &&
       PR_MOTHER_NAME
         ? "Y"

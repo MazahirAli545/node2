@@ -575,8 +575,9 @@ async function EditProfile(req, res) {
       req?.body?.PR_FULL_NAME &&
       req?.body?.PR_DOB &&
       req?.body?.PR_MOBILE_NO &&
-      req?.body?.PR_PROFESSION &&
-      req?.body?.PR_PROFESSION_DETA &&
+      req?.body?.PR_PIN_CODE &&
+      req?.body?.PR_AREA_NAME &&
+      req?.body?.PR_ADDRESS &&
       req?.body?.PR_FATHER_NAME &&
       req?.body?.PR_MOTHER_NAME
         ? "Y"
