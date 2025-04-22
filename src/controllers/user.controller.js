@@ -412,14 +412,14 @@ export const registerUser = async (req, res) => {
       PR_PROFESSION_ID && PR_PROFESSION_ID !== 0 ? PR_PROFESSION_ID : null;
 
     const isCompleted =
-      PR_FULL_NAME &&
-      PR_DOB &&
-      PR_MOBILE_NO &&
-      PR_PIN_CODE &&
-      PR_AREA_NAME &&
-      PR_ADDRESS &&
-      PR_FATHER_NAME &&
-      PR_MOTHER_NAME
+      req?.body?.PR_FULL_NAME &&
+      req?.body?.PR_DOB &&
+      req?.body?.PR_MOBILE_NO &&
+      req?.body?.PR_PIN_CODE &&
+      req?.body?.PR_AREA_NAME &&
+      req?.body?.PR_ADDRESS &&
+      req?.body?.PR_FATHER_NAME &&
+      req?.body?.PR_MOTHER_NAME
         ? "Y"
         : "N";
 
