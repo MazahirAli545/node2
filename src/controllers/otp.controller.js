@@ -257,6 +257,47 @@ export const verifyotp = async (req, res) => {
     const formattedDOB = new Date(PR_DOB).toISOString().split("T")[0];
 
     // Generate temporary unique ID
+    let familyNumber = "001"; // Default family number
+    let familyMemberNumber = "001"; // Default family member number
+
+    // Check if there are existing users with the same mobile number
+    const existingUsers = await prisma.peopleRegistry.findMany({
+      where: { PR_MOBILE_NO: PR_MOBILE_NO },
+      orderBy: { PR_ID: "desc" },
+    });
+
+    if (existingUsers.length > 0) {
+      // If users exist with same mobile number, increment family member number
+      const lastUser = existingUsers[0];
+      const lastUniqueIdParts = lastUser.PR_UNIQUE_ID.split("-");
+
+      if (lastUniqueIdParts.length === 4) {
+        familyNumber = lastUniqueIdParts[2];
+        // Increment family member number
+        const lastMemberNumber = parseInt(lastUniqueIdParts[3]);
+        familyMemberNumber = (lastMemberNumber + 1).toString().padStart(3, "0");
+      }
+    } else {
+      // For new family (new mobile number), find the next available family number
+      const lastFamily = await prisma.peopleRegistry.findFirst({
+        where: {
+          PR_STATE_CODE: PR_STATE_CODE || "",
+          PR_DISTRICT_CODE: PR_DISTRICT_CODE || "",
+          PR_CITY_CODE: city ? city.CITY_ID : null,
+        },
+        orderBy: { PR_ID: "desc" },
+      });
+
+      if (lastFamily) {
+        const lastUniqueIdParts = lastFamily.PR_UNIQUE_ID.split("-");
+        if (lastUniqueIdParts.length === 4) {
+          const lastFamilyNumber = parseInt(lastUniqueIdParts[2]);
+          familyNumber = (lastFamilyNumber + 1).toString().padStart(3, "0");
+        }
+      }
+    }
+
+    // Generate temporary unique ID
     const tempUniqueId =
       PR_STATE_CODE && PR_DISTRICT_CODE && city
         ? `${PR_STATE_CODE}${PR_DISTRICT_CODE}-${city.CITY_ID}-001-001`
