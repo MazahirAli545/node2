@@ -571,18 +571,6 @@ async function EditProfile(req, res) {
       });
     }
 
-    const isCompleted =
-      req?.body?.PR_FULL_NAME &&
-      req?.body?.PR_DOB &&
-      req?.body?.PR_MOBILE_NO &&
-      req?.body?.PR_PIN_CODE &&
-      req?.body?.PR_AREA_NAME &&
-      req?.body?.PR_ADDRESS &&
-      req?.body?.PR_FATHER_NAME &&
-      req?.body?.PR_MOTHER_NAME
-        ? "Y"
-        : "N";
-
     // Prepare update data
     const updateData = {
       PR_FULL_NAME: req?.body?.PR_FULL_NAME,
@@ -612,7 +600,6 @@ async function EditProfile(req, res) {
       PR_PROFESSION_ID: Number(req?.body?.PR_PROFESSION_ID),
       PR_UPDATED_AT: new Date(),
       PR_PHOTO_URL: PR_PHOTO_URL,
-      PR_IS_COMPLETED: isCompleted,
     };
 
     // Check if location fields changed
