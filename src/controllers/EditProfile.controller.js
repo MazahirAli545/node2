@@ -643,6 +643,7 @@ async function EditProfile(req, res) {
       }
 
       // Update all family members with new location-based ID
+
       await prisma.$transaction(async (tx) => {
         for (let i = 0; i < familyMembers.length; i++) {
           const member = familyMembers[i];
@@ -660,11 +661,13 @@ async function EditProfile(req, res) {
         }
       });
 
+      const memberIndex = familyMembers.findIndex(
+        (m) => m.PR_ID === Number(PR_ID)
+      );
+      const familyMemberNumber = (memberIndex + 1).toString().padStart(3, "0");
+
       // Update the current profile's data with new location info
-      updateData.PR_UNIQUE_ID =
-        `${newStateCode}${newDistrictCode}-${newCityCode}-${familyNumber}-${
-          familyMembers.findIndex((m) => m.PR_ID === Number(PR_ID)) + 1
-        }`.padStart(3, "0");
+      updateData.PR_UNIQUE_ID = `${newStateCode}${newDistrictCode}-${newCityCode}-${familyNumber}-${familyMemberNumber}`;
       updateData.PR_STATE_CODE = newStateCode;
       updateData.PR_DISTRICT_CODE = newDistrictCode;
       updateData.PR_CITY_CODE = newCityCode;
