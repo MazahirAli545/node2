@@ -58,7 +58,7 @@ model PeopleRegistry {
   PR_PIN_CODE      String  
   PR_AREA_NAME     String  @db.VarChar(100)
   PR_CITY_CODE     Int?
-  City             City? @relation(fields: [PR_CITY_CODE], references: [CITY_ID], onDelete: SetNull)
+  // City             City? @relation(fields: [PR_CITY_CODE], references: [CITY_ID], onDelete: SetNull)
   PR_STATE_CODE    String?   @db.Char(20)
   PR_DISTRICT_CODE String?   @db.Char(20)      
   PR_FAMILY_NO     String?   @db.Char(3)
@@ -135,7 +135,7 @@ model City {
   // Self-relation for hierarchical cities (e.g., districts within cities)
   
 
-  PeopleRegistry PeopleRegistry[]
+  // PeopleRegistry PeopleRegistry[]
   @@map("CITY")
 }
 
