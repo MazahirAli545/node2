@@ -611,7 +611,7 @@ async function EditProfile(req, res) {
     const updateData = {
       PR_FULL_NAME: req.body.PR_FULL_NAME || existingProfile.PR_FULL_NAME,
       PR_DOB: req.body.PR_DOB
-        ? new Date(req.body.PR_DOB)
+        ? new Date(req.body.PR_DOB).toISOString()
         : existingProfile.PR_DOB,
       PR_MOBILE_NO: req.body.PR_MOBILE_NO || existingProfile.PR_MOBILE_NO,
       PR_GENDER: req.body.PR_GENDER || existingProfile.PR_GENDER,
