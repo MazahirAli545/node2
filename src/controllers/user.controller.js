@@ -25,6 +25,217 @@ const checkMobileVerified = async (PR_MOBILE_NO, otp) => {
   return success;
 };
 
+// export const registerUser = async (req, res) => {
+//   try {
+//     const {
+//       PR_UNIQUE_ID,
+//       PR_FULL_NAME,
+//       PR_DOB,
+//       PR_GENDER,
+//       PR_MOBILE_NO,
+//       PR_PROFESSION_ID,
+//       PR_PROFESSION,
+//       PR_PROFESSION_DETA,
+//       PR_EDUCATION,
+//       PR_EDUCATION_DESC,
+//       PR_ADDRESS,
+//       PR_AREA_NAME,
+//       PR_PIN_CODE,
+//       PR_CITY_CODE,
+//       PR_CITY_NAME,
+//       PR_STATE_NAME,
+//       PR_STATE_CODE,
+//       PR_DISTRICT_NAME,
+//       PR_DISTRICT_CODE,
+//       PR_FATHER_ID,
+//       PR_MOTHER_ID,
+//       PR_SPOUSE_ID,
+//       PR_MARRIED_YN,
+//       PR_FATHER_NAME,
+//       PR_MOTHER_NAME,
+//       PR_SPOUSE_NAME,
+//       PR_PHOTO_URL,
+//       PR_IS_COMPLETED,
+
+//       PR_BUSS_INTER,
+//       PR_BUSS_STREAM,
+//       PR_BUSS_TYPE,
+//       PR_HOBBY,
+//       // otp,
+//       otp = "1234",
+//       Children,
+//     } = req.body;
+
+//     console.log("-------reqbody------", req.body);
+
+//     // const existingmobile = await prisma.peopleRegistry.findFirst({
+//     //   where: { PR_MOBILE_NO },
+//     // });
+
+//     // if (existingmobile) {
+//     //   return res.status(400).json({
+//     //     message: "this mobile Number is already registered",
+//     //     success: false,
+//     //   });
+//     // }
+
+//     const mobileNumberSchema = Joi.string()
+//       .pattern(/^[6-9]\d{9}$/)
+//       .required()
+//       .messages({ "string.pattern.base": "Invalid mobile number" });
+
+//     const { error } = mobileNumberSchema.validate(PR_MOBILE_NO);
+//     if (error) {
+//       return res
+//         .status(400)
+//         .json({ message: error.details[0].message, success: false });
+//     }
+
+//     const isMobileVerified = await checkMobileVerified(PR_MOBILE_NO, otp);
+//     console.log(PR_MOBILE_NO, otp);
+//     if (!isMobileVerified) {
+//       return res.status(400).json({
+//         message: "Please verify your mobile number first",
+//         success: false,
+//       });
+//     }
+
+//     let city = await prisma.city.findFirst({
+//       where: {
+//         CITY_NAME: PR_CITY_NAME,
+//         CITY_DS_CODE: PR_DISTRICT_CODE,
+//         CITY_ST_CODE: PR_STATE_CODE,
+//       },
+//     });
+
+//     if (!city) {
+//       city = await prisma.city.create({
+//         data: {
+//           CITY_PIN_CODE: PR_PIN_CODE,
+//           CITY_NAME: PR_CITY_NAME,
+//           CITY_DS_CODE: PR_DISTRICT_CODE,
+//           CITY_DS_NAME: PR_DISTRICT_NAME,
+//           CITY_ST_CODE: PR_STATE_CODE,
+//           CITY_ST_NAME: PR_STATE_NAME,
+//           // areas: JSON.stringify(areas), // Store areas as a JSON string
+//         },
+//       });
+//     }
+
+//     console.log("City Created/Fetched: ", city);
+
+//     let business = await prisma.bUSSINESS.findFirst({
+//       where: {
+//         BUSS_STREM: PR_BUSS_STREAM,
+//         BUSS_TYPE: PR_BUSS_TYPE,
+//       },
+//     });
+
+//     if (!business) {
+//       business = await prisma.bUSSINESS.create({
+//         data: {
+//           BUSS_STREM: PR_BUSS_STREAM,
+//           BUSS_TYPE: PR_BUSS_TYPE,
+//           CITY_CREATED_BY: 1, // Replace this with the actual user ID
+//         },
+//       });
+
+//       await prisma.bUSSINESS.update({
+//         where: { BUSS_ID: business.BUSS_ID },
+//         data: { BUSS_ID: business.BUSS_ID }, // Ensuring ID is properly set
+//       });
+//     }
+
+//     const professionId =
+//       PR_PROFESSION_ID && PR_PROFESSION_ID !== 0 ? PR_PROFESSION_ID : null;
+
+//     const isCompleted =
+//       PR_FULL_NAME &&
+//       PR_DOB &&
+//       PR_MOBILE_NO &&
+//       PR_PROFESSION &&
+//       PR_PROFESSION_DETA &&
+//       PR_FATHER_NAME &&
+//       PR_MOTHER_NAME
+//         ? "Y"
+//         : "N";
+
+//     const newUser = await prisma.peopleRegistry.create({
+//       data: {
+//         PR_UNIQUE_ID: `${PR_STATE_CODE}${PR_DISTRICT_CODE}-${
+//           city.CITY_ID
+//         }-${"001"}-${"001"}`,
+//         PR_FULL_NAME,
+//         PR_DOB: new Date(PR_DOB).toLocaleDateString(),
+//         PR_MOBILE_NO,
+//         PR_GENDER,
+//         PR_PROFESSION_ID: professionId,
+//         PR_PROFESSION,
+//         PR_PROFESSION_DETA,
+//         PR_EDUCATION,
+//         PR_EDUCATION_DESC,
+//         PR_ADDRESS,
+//         PR_AREA_NAME,
+//         PR_PIN_CODE,
+//         PR_CITY_CODE: city.CITY_ID,
+//         PR_STATE_CODE,
+//         PR_DISTRICT_CODE,
+//         PR_FATHER_ID,
+//         PR_MOTHER_ID,
+//         PR_SPOUSE_ID,
+//         PR_MARRIED_YN,
+//         PR_FATHER_NAME,
+//         PR_MOTHER_NAME,
+//         PR_SPOUSE_NAME,
+//         PR_PHOTO_URL,
+//         PR_BUSS_CODE: business.BUSS_ID,
+//         PR_BUSS_INTER,
+//         PR_BUSS_STREAM,
+//         PR_BUSS_TYPE,
+//         PR_HOBBY,
+//         PR_IS_COMPLETED: isCompleted,
+//       },
+//     });
+
+//     if (Array.isArray(Children) && Children.length > 0) {
+//       const childPromises = Children.filter(
+//         (child) => child.name && child.dob
+//       ).map(async (child) => {
+//         return prisma.child.create({
+//           data: {
+//             name: child.name,
+//             dob: new Date(child.dob),
+//             userId: newUser.PR_ID,
+//           },
+//         });
+//       });
+//       console.log("Childrennsssssss", Children);
+//       await Promise.all(childPromises);
+//     }
+
+//     const childrens = await prisma.child.findMany();
+
+//     console.log(childrens);
+
+//     const user = await prisma.peopleRegistry.findUnique({
+//       where: { PR_ID: newUser.PR_ID },
+//       include: { Children: true },
+//     });
+
+//     return res.status(201).json({
+//       message: "User registered successfully",
+//       success: true,
+//       user,
+//     });
+//   } catch (error) {
+//     console.log("Error registering User:", error);
+//     return res.status(500).json({
+//       message: "Something went wrong",
+//       success: false,
+//     });
+//   }
+// };
+
 export const registerUser = async (req, res) => {
   try {
     const {
@@ -56,29 +267,17 @@ export const registerUser = async (req, res) => {
       PR_SPOUSE_NAME,
       PR_PHOTO_URL,
       PR_IS_COMPLETED,
-
       PR_BUSS_INTER,
       PR_BUSS_STREAM,
       PR_BUSS_TYPE,
       PR_HOBBY,
-      // otp,
       otp = "1234",
       Children,
     } = req.body;
 
     console.log("-------reqbody------", req.body);
 
-    // const existingmobile = await prisma.peopleRegistry.findFirst({
-    //   where: { PR_MOBILE_NO },
-    // });
-
-    // if (existingmobile) {
-    //   return res.status(400).json({
-    //     message: "this mobile Number is already registered",
-    //     success: false,
-    //   });
-    // }
-
+    // Validate mobile number
     const mobileNumberSchema = Joi.string()
       .pattern(/^[6-9]\d{9}$/)
       .required()
@@ -91,8 +290,20 @@ export const registerUser = async (req, res) => {
         .json({ message: error.details[0].message, success: false });
     }
 
+    // Check if mobile is already registered
+    const existingMobile = await prisma.peopleRegistry.findFirst({
+      where: { PR_MOBILE_NO },
+    });
+
+    if (existingMobile) {
+      return res.status(400).json({
+        message: "This mobile number is already registered",
+        success: false,
+      });
+    }
+
+    // Verify mobile OTP
     const isMobileVerified = await checkMobileVerified(PR_MOBILE_NO, otp);
-    console.log(PR_MOBILE_NO, otp);
     if (!isMobileVerified) {
       return res.status(400).json({
         message: "Please verify your mobile number first",
@@ -100,6 +311,7 @@ export const registerUser = async (req, res) => {
       });
     }
 
+    // Handle city creation or lookup
     let city = await prisma.city.findFirst({
       where: {
         CITY_NAME: PR_CITY_NAME,
@@ -109,21 +321,28 @@ export const registerUser = async (req, res) => {
     });
 
     if (!city) {
+      // Generate a new city code if not found
+      const maxCity = await prisma.city.findFirst({
+        orderBy: { CITY_ID: "desc" },
+      });
+      const newCityId = maxCity ? maxCity.CITY_ID + 1 : 1;
+
       city = await prisma.city.create({
         data: {
+          CITY_ID: newCityId, // Explicitly set the ID
           CITY_PIN_CODE: PR_PIN_CODE,
           CITY_NAME: PR_CITY_NAME,
           CITY_DS_CODE: PR_DISTRICT_CODE,
           CITY_DS_NAME: PR_DISTRICT_NAME,
           CITY_ST_CODE: PR_STATE_CODE,
           CITY_ST_NAME: PR_STATE_NAME,
-          // areas: JSON.stringify(areas), // Store areas as a JSON string
         },
       });
     }
 
-    console.log("City Created/Fetched: ", city);
+    console.log("City Details:", city);
 
+    // Handle business creation or lookup
     let business = await prisma.bUSSINESS.findFirst({
       where: {
         BUSS_STREM: PR_BUSS_STREAM,
@@ -136,15 +355,15 @@ export const registerUser = async (req, res) => {
         data: {
           BUSS_STREM: PR_BUSS_STREAM,
           BUSS_TYPE: PR_BUSS_TYPE,
-          CITY_CREATED_BY: 1, // Replace this with the actual user ID
+          CITY_CREATED_BY: 1,
         },
       });
-
-      await prisma.bUSSINESS.update({
-        where: { BUSS_ID: business.BUSS_ID },
-        data: { BUSS_ID: business.BUSS_ID }, // Ensuring ID is properly set
-      });
     }
+
+    // Generate unique ID with proper city code
+    const timestamp = Date.now().toString().slice(-4);
+    const uniqueSuffix = Math.floor(100 + Math.random() * 900); // Random 3-digit number
+    const generatedUniqueId = `${PR_STATE_CODE}${PR_DISTRICT_CODE}-${city.CITY_ID}-${timestamp}-${uniqueSuffix}`;
 
     const professionId =
       PR_PROFESSION_ID && PR_PROFESSION_ID !== 0 ? PR_PROFESSION_ID : null;
@@ -160,13 +379,12 @@ export const registerUser = async (req, res) => {
         ? "Y"
         : "N";
 
+    // Create the new user
     const newUser = await prisma.peopleRegistry.create({
       data: {
-        PR_UNIQUE_ID: `${PR_STATE_CODE}${PR_DISTRICT_CODE}-${
-          city.CITY_ID
-        }-${"001"}-${"001"}`,
+        PR_UNIQUE_ID: generatedUniqueId,
         PR_FULL_NAME,
-        PR_DOB: new Date(PR_DOB).toLocaleDateString(),
+        PR_DOB: new Date(PR_DOB),
         PR_MOBILE_NO,
         PR_GENDER,
         PR_PROFESSION_ID: professionId,
@@ -178,8 +396,11 @@ export const registerUser = async (req, res) => {
         PR_AREA_NAME,
         PR_PIN_CODE,
         PR_CITY_CODE: city.CITY_ID,
+        PR_CITY_NAME,
         PR_STATE_CODE,
+        PR_STATE_NAME,
         PR_DISTRICT_CODE,
+        PR_DISTRICT_NAME,
         PR_FATHER_ID,
         PR_MOTHER_ID,
         PR_SPOUSE_ID,
@@ -196,8 +417,8 @@ export const registerUser = async (req, res) => {
         PR_IS_COMPLETED: isCompleted,
       },
     });
-    // console.log("City ID:", city.CITY_ID, "Type:", typeof city.CITY_ID);
 
+    // Handle children if provided
     if (Array.isArray(Children) && Children.length > 0) {
       const childPromises = Children.filter(
         (child) => child.name && child.dob
@@ -210,14 +431,10 @@ export const registerUser = async (req, res) => {
           },
         });
       });
-      console.log("Childrennsssssss", Children);
       await Promise.all(childPromises);
     }
 
-    const childrens = await prisma.child.findMany();
-
-    console.log(childrens);
-
+    // Fetch the complete user data with children
     const user = await prisma.peopleRegistry.findUnique({
       where: { PR_ID: newUser.PR_ID },
       include: { Children: true },
@@ -229,14 +446,14 @@ export const registerUser = async (req, res) => {
       user,
     });
   } catch (error) {
-    console.log("Error registering User:", error);
+    console.error("Error registering User:", error);
     return res.status(500).json({
       message: "Something went wrong",
       success: false,
+      error: error.message,
     });
   }
 };
-
 export const LoginUser = async (req, res) => {
   try {
     const { PR_MOBILE_NO } = req.body;
