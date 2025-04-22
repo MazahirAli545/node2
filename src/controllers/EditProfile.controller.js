@@ -627,7 +627,7 @@ async function EditProfile(req, res) {
         where: {
           PR_STATE_CODE: newStateCode,
           PR_DISTRICT_CODE: newDistrictCode,
-          PR_CITY_CODE: newCityCode,
+          PR_CITY_CODE: Number(newCityCode),
           NOT: { PR_MOBILE_NO: existingProfile.PR_MOBILE_NO },
         },
         orderBy: { PR_UNIQUE_ID: "desc" },
