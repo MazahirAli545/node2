@@ -212,19 +212,19 @@ export const verifyotp = async (req, res) => {
     }
 
     // Check if user already exists
-    const existingUser = await prisma.peopleRegistry.findFirst({
-      where: { PR_MOBILE_NO },
-    });
+    // const existingUser = await prisma.peopleRegistry.findFirst({
+    //   where: { PR_MOBILE_NO },
+    // });
 
-    if (existingUser) {
-      return res.status(200).json({
-        message: "OTP verified successfully - User already exists",
-        success: true,
-        user: existingUser,
-        PR_ID: existingUser.PR_ID,
-        isExistingUser: true,
-      });
-    }
+    // if (existingUser) {
+    //   return res.status(200).json({
+    //     message: "OTP verified successfully - User already exists",
+    //     success: true,
+    //     user: existingUser,
+    //     PR_ID: existingUser.PR_ID,
+    //     isExistingUser: true,
+    //   });
+    // }
 
     // Find or create city to get CITY_ID
     let city = await prisma.city.findFirst({
