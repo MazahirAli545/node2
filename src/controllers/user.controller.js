@@ -440,6 +440,9 @@ export const registerUser = async (req, res) => {
         PR_CITY_CODE: city?.CITY_ID,
         PR_STATE_CODE,
         PR_DISTRICT_CODE,
+        PR_FAMILY_NO: familyNumber, // Added family number
+        PR_MEMBER_NO: memberNumber, // Added member number
+
         PR_FATHER_ID,
         PR_MOTHER_ID,
         PR_SPOUSE_ID,

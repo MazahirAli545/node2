@@ -656,6 +656,8 @@ async function EditProfile(req, res) {
               PR_STATE_CODE: newStateCode,
               PR_DISTRICT_CODE: newDistrictCode,
               PR_CITY_CODE: Number(newCityCode),
+              PR_FAMILY_NO: familyNumber, // Update family number
+              PR_MEMBER_NO: familyMemberNumber,
             },
           });
         }
@@ -671,6 +673,8 @@ async function EditProfile(req, res) {
       updateData.PR_STATE_CODE = newStateCode;
       updateData.PR_DISTRICT_CODE = newDistrictCode;
       updateData.PR_CITY_CODE = Number(newCityCode);
+      updateData.PR_FAMILY_NO = familyNumber; // Set family number
+      updateData.PR_MEMBER_NO = familyMemberNumber;
     }
 
     // Update the main profile
