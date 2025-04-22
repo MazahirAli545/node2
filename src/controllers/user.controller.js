@@ -353,16 +353,16 @@ export const registerUser = async (req, res) => {
 
     if (existingUsers.length > 0) {
       // Check if user with same name exists
-      const existingUserWithSameName = existingUsers.find(
-        (user) => user.PR_FULL_NAME.toLowerCase() === PR_FULL_NAME.toLowerCase()
-      );
+      // const existingUserWithSameName = existingUsers.find(
+      //   (user) => user.PR_FULL_NAME.toLowerCase() === PR_FULL_NAME.toLowerCase()
+      // );
 
-      if (existingUserWithSameName) {
-        return res.status(400).json({
-          message: "User with this mobile and name already exists",
-          success: false,
-        });
-      }
+      // if (existingUserWithSameName) {
+      //   return res.status(400).json({
+      //     message: "User with this mobile and name already exists",
+      //     success: false,
+      //   });
+      // }
 
       // Get the latest user with this mobile to get family number
       const latestUser = existingUsers[0];
