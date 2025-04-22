@@ -360,188 +360,6 @@ export const generateotp = async (req, res) => {
 //   }
 // };
 
-// export const verifyotp = async (req, res) => {
-//   try {
-//     const {
-//       PR_MOBILE_NO,
-//       otp,
-//       PR_FULL_NAME,
-//       PR_DOB,
-//       PR_STATE_CODE,
-//       PR_DISTRICT_CODE,
-//       PR_CITY_NAME,
-//     } = req.body;
-
-//     // Validate input data
-//     const schema = Joi.object({
-//       PR_MOBILE_NO: Joi.string()
-//         .pattern(/^[6-9]\d{9}$/)
-//         .required()
-//         .messages({ "string.pattern.base": "Invalid mobile number" }),
-//       otp: Joi.string().required(),
-//       PR_FULL_NAME: Joi.string().min(3).max(100).required(),
-//       PR_DOB: Joi.date().required(),
-//       PR_STATE_CODE: Joi.string().allow("").optional(),
-//       PR_DISTRICT_CODE: Joi.string().allow("").optional(),
-//       PR_CITY_NAME: Joi.string().allow("").optional(),
-//     });
-
-//     const { error } = schema.validate({
-//       PR_MOBILE_NO,
-//       otp,
-//       PR_FULL_NAME,
-//       PR_DOB,
-//       PR_STATE_CODE,
-//       PR_DISTRICT_CODE,
-//       PR_CITY_NAME,
-//     });
-//     if (error) {
-//       return res.status(400).json({
-//         message: error.details[0].message,
-//         success: false,
-//       });
-//     }
-
-//     // Verify OTP
-//     const isOtpValid = await verifyFunc(PR_MOBILE_NO, otp);
-//     if (!isOtpValid) {
-//       return res.status(400).json({
-//         message: "OTP is expired or invalid",
-//         success: false,
-//       });
-//     }
-
-//     // Find or create city to get CITY_ID
-//     let city = await prisma.city.findFirst({
-//       where: {
-//         CITY_NAME: PR_CITY_NAME,
-//         CITY_DS_CODE: PR_DISTRICT_CODE,
-//         CITY_ST_CODE: PR_STATE_CODE,
-//       },
-//     });
-
-//     if (!city && PR_CITY_NAME && PR_DISTRICT_CODE && PR_STATE_CODE) {
-//       city = await prisma.city.create({
-//         data: {
-//           CITY_NAME: PR_CITY_NAME,
-//           CITY_DS_CODE: PR_DISTRICT_CODE,
-//           CITY_ST_CODE: PR_STATE_CODE,
-//           CITY_PIN_CODE: "",
-//           CITY_DS_NAME: "",
-//           CITY_ST_NAME: "",
-//         },
-//       });
-//     }
-
-//     // Format the date as string (YYYY-MM-DD)
-//     const formattedDOB = new Date(PR_DOB).toISOString().split("T")[0];
-
-//     // Generate family and member numbers
-//     let familyNumber = "001"; // Default family number
-//     let memberNumber = "001"; // Default member number
-
-//     // Check if there are existing users with the same mobile number
-//     const existingUsers = await prisma.peopleRegistry.findMany({
-//       where: { PR_MOBILE_NO: PR_MOBILE_NO },
-//       orderBy: { PR_ID: "desc" },
-//     });
-
-//     if (existingUsers.length > 0) {
-//       // If users exist with same mobile number, use same family number and increment member number
-//       const lastUser = existingUsers[0];
-//       const lastUniqueIdParts = lastUser.PR_UNIQUE_ID?.split("-") || [];
-
-//       if (lastUniqueIdParts.length === 4) {
-//         familyNumber = lastUniqueIdParts[2];
-//         // Increment member number
-//         const lastMemberNumber = parseInt(lastUniqueIdParts[3]);
-//         memberNumber = (lastMemberNumber + 1).toString().padStart(3, "0");
-//       }
-//     } else {
-//       // For new family (new mobile number), find the next available family number
-//       const lastFamily = await prisma.peopleRegistry.findFirst({
-//         where: {
-//           PR_STATE_CODE: PR_STATE_CODE || "",
-//           PR_DISTRICT_CODE: PR_DISTRICT_CODE || "",
-//           PR_CITY_CODE: city ? city.CITY_ID : null,
-//         },
-//         orderBy: { PR_ID: "desc" },
-//       });
-
-//       if (lastFamily) {
-//         const lastUniqueIdParts = lastFamily.PR_UNIQUE_ID?.split("-") || [];
-//         if (lastUniqueIdParts.length === 4) {
-//           const lastFamilyNumber = parseInt(lastUniqueIdParts[2]);
-//           familyNumber = (lastFamilyNumber + 1).toString().padStart(3, "0");
-//         }
-//       }
-//     }
-
-//     // Generate temporary unique ID
-//     const tempUniqueId =
-//       PR_STATE_CODE && PR_DISTRICT_CODE && city
-//         ? `${PR_STATE_CODE}${PR_DISTRICT_CODE}-${city.CITY_ID}-${familyNumber}-${memberNumber}`
-//         : `0000-00-001-001`;
-
-//     // Create basic user data
-//     const basicUserData = {
-//       PR_UNIQUE_ID: tempUniqueId,
-//       PR_FAMILY_NO: familyNumber, // Added family number
-//       PR_MEMBER_NO: memberNumber, // Added member number
-//       PR_MOBILE_NO,
-//       PR_FULL_NAME,
-//       PR_DOB: formattedDOB,
-//       PR_IS_COMPLETED: "N",
-//       PR_GENDER: "",
-//       PR_PROFESSION_DETA: "",
-//       PR_EDUCATION: "",
-//       PR_EDUCATION_DESC: "",
-//       PR_ADDRESS: "",
-//       PR_AREA_NAME: "",
-//       PR_PIN_CODE: "",
-//       PR_STATE_CODE: PR_STATE_CODE || "",
-//       PR_DISTRICT_CODE: PR_DISTRICT_CODE || "",
-//       PR_CITY_CODE: city ? city.CITY_ID : null,
-//       PR_MARRIED_YN: "",
-//       PR_FATHER_NAME: "",
-//       PR_MOTHER_NAME: "",
-//       PR_SPOUSE_NAME: "",
-//       PR_PHOTO_URL: "",
-//       PR_BUSS_INTER: "",
-//       PR_BUSS_STREAM: "",
-//       PR_BUSS_TYPE: "",
-//       PR_HOBBY: "",
-//     };
-
-//     // Create new user
-//     const newUser = await prisma.peopleRegistry.create({
-//       data: basicUserData,
-//     });
-
-//     return res.status(200).json({
-//       message: "OTP verified successfully",
-//       success: true,
-//       user: newUser,
-//       PR_ID: newUser.PR_ID,
-//       isExistingUser: false,
-//     });
-//   } catch (error) {
-//     console.error("Error in OTP verification:", error);
-
-//     if (error.code === "P2002") {
-//       return res.status(400).json({
-//         message: "Mobile number already registered",
-//         success: false,
-//       });
-//     }
-
-//     return res.status(500).json({
-//       message: error.message || "Internal server error",
-//       success: false,
-//     });
-//   }
-// };
-
 export const verifyotp = async (req, res) => {
   try {
     const {
@@ -552,11 +370,6 @@ export const verifyotp = async (req, res) => {
       PR_STATE_CODE,
       PR_DISTRICT_CODE,
       PR_CITY_NAME,
-      PR_PIN_CODE,
-      PR_AREA_NAME,
-      PR_ADDRESS,
-      PR_FATHER_NAME,
-      PR_MOTHER_NAME,
     } = req.body;
 
     // Validate input data
@@ -571,11 +384,6 @@ export const verifyotp = async (req, res) => {
       PR_STATE_CODE: Joi.string().allow("").optional(),
       PR_DISTRICT_CODE: Joi.string().allow("").optional(),
       PR_CITY_NAME: Joi.string().allow("").optional(),
-      PR_PIN_CODE: Joi.string().allow("").optional(),
-      PR_AREA_NAME: Joi.string().allow("").optional(),
-      PR_ADDRESS: Joi.string().allow("").optional(),
-      PR_FATHER_NAME: Joi.string().allow("").optional(),
-      PR_MOTHER_NAME: Joi.string().allow("").optional(),
     });
 
     const { error } = schema.validate({
@@ -586,13 +394,7 @@ export const verifyotp = async (req, res) => {
       PR_STATE_CODE,
       PR_DISTRICT_CODE,
       PR_CITY_NAME,
-      PR_PIN_CODE,
-      PR_AREA_NAME,
-      PR_ADDRESS,
-      PR_FATHER_NAME,
-      PR_MOTHER_NAME,
     });
-
     if (error) {
       return res.status(400).json({
         message: error.details[0].message,
@@ -606,37 +408,6 @@ export const verifyotp = async (req, res) => {
       return res.status(400).json({
         message: "OTP is expired or invalid",
         success: false,
-      });
-    }
-
-    // Check if user already exists with this mobile number
-    const existingUsers = await prisma.peopleRegistry.findMany({
-      where: { PR_MOBILE_NO: PR_MOBILE_NO },
-      orderBy: { PR_ID: "desc" },
-    });
-
-    // Determine if profile is completed (same logic as registerUser)
-    const isCompleted =
-      PR_FULL_NAME &&
-      PR_DOB &&
-      PR_MOBILE_NO &&
-      PR_PIN_CODE &&
-      PR_AREA_NAME &&
-      PR_ADDRESS &&
-      PR_FATHER_NAME &&
-      PR_MOTHER_NAME
-        ? "Y"
-        : "N";
-
-    // If user exists and is complete, return it
-    if (existingUsers.length > 0 && existingUsers[0].PR_IS_COMPLETED === "Y") {
-      return res.status(200).json({
-        message: "User with this mobile number already exists",
-        success: true,
-        user: existingUsers[0],
-        PR_ID: existingUsers[0].PR_ID,
-        isExistingUser: true,
-        isProfileComplete: true,
       });
     }
 
@@ -655,7 +426,7 @@ export const verifyotp = async (req, res) => {
           CITY_NAME: PR_CITY_NAME,
           CITY_DS_CODE: PR_DISTRICT_CODE,
           CITY_ST_CODE: PR_STATE_CODE,
-          CITY_PIN_CODE: PR_PIN_CODE || "",
+          CITY_PIN_CODE: "",
           CITY_DS_NAME: "",
           CITY_ST_NAME: "",
         },
@@ -666,8 +437,14 @@ export const verifyotp = async (req, res) => {
     const formattedDOB = new Date(PR_DOB).toISOString().split("T")[0];
 
     // Generate family and member numbers
-    let familyNumber = "001";
-    let memberNumber = "001";
+    let familyNumber = "001"; // Default family number
+    let memberNumber = "001"; // Default member number
+
+    // Check if there are existing users with the same mobile number
+    const existingUsers = await prisma.peopleRegistry.findMany({
+      where: { PR_MOBILE_NO: PR_MOBILE_NO },
+      orderBy: { PR_ID: "desc" },
+    });
 
     if (existingUsers.length > 0) {
       // If users exist with same mobile number, use same family number and increment member number
@@ -676,6 +453,7 @@ export const verifyotp = async (req, res) => {
 
       if (lastUniqueIdParts.length === 4) {
         familyNumber = lastUniqueIdParts[2];
+        // Increment member number
         const lastMemberNumber = parseInt(lastUniqueIdParts[3]);
         memberNumber = (lastMemberNumber + 1).toString().padStart(3, "0");
       }
@@ -699,35 +477,34 @@ export const verifyotp = async (req, res) => {
       }
     }
 
-    // Generate unique ID
-    const uniqueId =
+    // Generate temporary unique ID
+    const tempUniqueId =
       PR_STATE_CODE && PR_DISTRICT_CODE && city
         ? `${PR_STATE_CODE}${PR_DISTRICT_CODE}-${city.CITY_ID}-${familyNumber}-${memberNumber}`
         : `0000-00-001-001`;
 
-    // Create user data with dynamic completion status
-    const userData = {
-      PR_UNIQUE_ID: uniqueId,
-      PR_FAMILY_NO: familyNumber,
-      PR_MEMBER_NO: memberNumber,
+    // Create basic user data
+    const basicUserData = {
+      PR_UNIQUE_ID: tempUniqueId,
+      PR_FAMILY_NO: familyNumber, // Added family number
+      PR_MEMBER_NO: memberNumber, // Added member number
       PR_MOBILE_NO,
       PR_FULL_NAME,
       PR_DOB: formattedDOB,
-      PR_IS_COMPLETED: isCompleted,
+      PR_IS_COMPLETED: "N",
       PR_GENDER: "",
-      // PR_PROFESSION: "",
-      // PR_PROFESSION_DETA: "",
+      PR_PROFESSION_DETA: "",
       PR_EDUCATION: "",
       PR_EDUCATION_DESC: "",
-      PR_ADDRESS: PR_ADDRESS || "",
-      PR_AREA_NAME: PR_AREA_NAME || "",
-      PR_PIN_CODE: PR_PIN_CODE || "",
+      PR_ADDRESS: "",
+      PR_AREA_NAME: "",
+      PR_PIN_CODE: "",
       PR_STATE_CODE: PR_STATE_CODE || "",
       PR_DISTRICT_CODE: PR_DISTRICT_CODE || "",
       PR_CITY_CODE: city ? city.CITY_ID : null,
       PR_MARRIED_YN: "",
-      PR_FATHER_NAME: PR_FATHER_NAME || "",
-      PR_MOTHER_NAME: PR_MOTHER_NAME || "",
+      PR_FATHER_NAME: "",
+      PR_MOTHER_NAME: "",
       PR_SPOUSE_NAME: "",
       PR_PHOTO_URL: "",
       PR_BUSS_INTER: "",
@@ -736,28 +513,17 @@ export const verifyotp = async (req, res) => {
       PR_HOBBY: "",
     };
 
-    // Create or update user
-    let user;
-    if (existingUsers.length > 0 && existingUsers[0].PR_IS_COMPLETED === "N") {
-      // Update existing incomplete profile
-      user = await prisma.peopleRegistry.update({
-        where: { PR_ID: existingUsers[0].PR_ID },
-        data: userData,
-      });
-    } else {
-      // Create new profile
-      user = await prisma.peopleRegistry.create({
-        data: userData,
-      });
-    }
+    // Create new user
+    const newUser = await prisma.peopleRegistry.create({
+      data: basicUserData,
+    });
 
     return res.status(200).json({
       message: "OTP verified successfully",
       success: true,
-      user,
-      PR_ID: user.PR_ID,
-      isExistingUser: existingUsers.length > 0,
-      isProfileComplete: isCompleted === "Y",
+      user: newUser,
+      PR_ID: newUser.PR_ID,
+      isExistingUser: false,
     });
   } catch (error) {
     console.error("Error in OTP verification:", error);
