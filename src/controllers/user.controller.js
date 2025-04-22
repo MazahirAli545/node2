@@ -299,24 +299,22 @@ export const registerUser = async (req, res) => {
 
     let city = await prisma.city.findFirst({
       where: {
-        CITY_NAME: PR_CITY_NAME,
-        CITY_DS_CODE: PR_DISTRICT_CODE,
-        CITY_ST_CODE: PR_STATE_CODE,
+        CITY_ID: CITY_ID,
       },
     });
 
-    if (!city) {
-      city = await prisma.city.create({
-        data: {
-          CITY_PIN_CODE: PR_PIN_CODE,
-          CITY_NAME: PR_CITY_NAME,
-          CITY_DS_CODE: PR_DISTRICT_CODE,
-          CITY_DS_NAME: PR_DISTRICT_NAME,
-          CITY_ST_CODE: PR_STATE_CODE,
-          CITY_ST_NAME: PR_STATE_NAME,
-        },
-      });
-    }
+    // if (!city) {
+    //   city = await prisma.city.create({
+    //     data: {
+    //       CITY_PIN_CODE: PR_PIN_CODE,
+    //       CITY_NAME: PR_CITY_NAME,
+    //       CITY_DS_CODE: PR_DISTRICT_CODE,
+    //       CITY_DS_NAME: PR_DISTRICT_NAME,
+    //       CITY_ST_CODE: PR_STATE_CODE,
+    //       CITY_ST_NAME: PR_STATE_NAME,
+    //     },
+    //   });
+    // }
 
     console.log("City Created/Fetched: ", city);
 
@@ -439,7 +437,7 @@ export const registerUser = async (req, res) => {
         PR_ADDRESS,
         PR_AREA_NAME,
         PR_PIN_CODE,
-        PR_CITY_CODE: city.CITY_ID,
+        PR_CITY_CODE: city?.CITY_ID,
         PR_STATE_CODE,
         PR_DISTRICT_CODE,
         PR_FATHER_ID,
