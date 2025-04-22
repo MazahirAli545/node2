@@ -495,8 +495,20 @@ async function EditProfile(req, res) {
       });
     }
 
-    console.log("Received PR_ID:", PR_ID);
-    console.log("Full request body:", req.body);
+    console.log("=== DEBUG ===");
+    console.log("Request Headers:", req.headers);
+    console.log("Request Body:", req.body);
+    console.log(
+      "Existing Profile:",
+      await prisma.peopleRegistry.findUnique({
+        where: { PR_ID: Number(PR_ID) },
+        select: {
+          PR_CITY_CODE: true,
+          PR_STATE_CODE: true,
+          PR_DISTRICT_CODE: true,
+        },
+      })
+    );
 
     const existingProfile = await prisma.peopleRegistry.findUnique({
       where: { PR_ID: Number(PR_ID) },
@@ -509,105 +521,30 @@ async function EditProfile(req, res) {
       });
     }
 
-    // Handle file upload (keep existing code)
-    let PR_PHOTO_URL = existingProfile.PR_PHOTO_URL;
-    if (req.file) {
-      // ... (keep existing file upload code)
-    } else {
-      console.log("ℹ️ No file uploaded, proceeding with existing photo.");
-    }
+    // [Keep existing file upload and children handling code...]
 
-    // Parse Children data if it exists
-    let childrenData = [];
-    if (req.body.Children) {
-      try {
-        childrenData =
-          typeof req.body.Children === "string"
-            ? JSON.parse(req.body.Children)
-            : req.body.Children;
-      } catch (e) {
-        console.error("Error parsing Children data:", e);
-        return res.status(400).json({
-          message: "Invalid Children data format",
-          success: false,
-        });
+    // ===== IMPROVED CITY HANDLING ===== //
+    let cityId = existingProfile.PR_CITY_CODE;
+    let cityChanged = false;
+
+    // 1. Validate if city code exists in database
+    if (req?.body?.PR_CITY_CODE && req.body.PR_CITY_CODE !== 12) {
+      const cityExists = await prisma.city.findUnique({
+        where: { CITY_ID: Number(req.body.PR_CITY_CODE) },
+      });
+
+      if (cityExists) {
+        cityId = Number(req.body.PR_CITY_CODE);
+        cityChanged = cityId !== existingProfile.PR_CITY_CODE;
+      } else {
+        console.warn(
+          `Invalid PR_CITY_CODE: ${req.body.PR_CITY_CODE} - not found in database`
+        );
       }
     }
 
-    // Process children updates in a transaction
-    if (Array.isArray(childrenData)) {
-      await prisma.$transaction(async (tx) => {
-        const existingChildren = await tx.child.findMany({
-          where: { userId: Number(PR_ID) },
-        });
-
-        for (const child of childrenData) {
-          if (!child.name || !child.dob) continue;
-
-          const existingChild = existingChildren.find((c) => c.id === child.id);
-
-          if (existingChild) {
-            await tx.child.update({
-              where: { id: existingChild.id },
-              data: {
-                name: child.name,
-                dob: new Date(child.dob),
-              },
-            });
-          } else {
-            await tx.child.create({
-              data: {
-                name: child.name,
-                dob: new Date(child.dob),
-                userId: Number(PR_ID),
-              },
-            });
-          }
-        }
-      });
-    }
-
-    // Prepare base update data (without city code first)
-    const updateData = {
-      PR_FULL_NAME: req?.body?.PR_FULL_NAME,
-      PR_DOB: req?.body?.PR_DOB,
-      PR_MOBILE_NO: req?.body?.PR_MOBILE_NO,
-      PR_GENDER: req?.body?.PR_GENDER,
-      PR_PIN_CODE: req?.body?.PR_PIN_CODE,
-      PR_AREA_NAME: req?.body?.PR_AREA_NAME,
-      PR_ADDRESS: req?.body?.PR_ADDRESS,
-      PR_STATE_CODE: req?.body?.PR_STATE_CODE,
-      PR_DISTRICT_CODE: req?.body?.PR_DISTRICT_CODE,
-      PR_EDUCATION: req?.body?.PR_EDUCATION,
-      PR_EDUCATION_DESC: req?.body?.PR_EDUCATION_DESC,
-      PR_PROFESSION_DETA: req?.body?.PR_PROFESSION_DETA,
-      PR_MARRIED_YN: req?.body?.PR_MARRIED_YN,
-      PR_FATHER_ID: req?.body?.PR_FATHER_ID,
-      PR_MOTHER_ID: req?.body?.PR_MOTHER_ID,
-      PR_SPOUSE_ID: req?.body?.PR_SPOUSE_ID,
-      PR_FATHER_NAME: req?.body?.PR_FATHER_NAME,
-      PR_MOTHER_NAME: req?.body?.PR_MOTHER_NAME,
-      PR_SPOUSE_NAME: req?.body?.PR_SPOUSE_NAME,
-      PR_BUSS_INTER: req?.body?.PR_BUSS_INTER,
-      PR_BUSS_STREAM: req?.body?.PR_BUSS_STREAM,
-      PR_BUSS_TYPE: req?.body?.PR_BUSS_TYPE,
-      PR_HOBBY: req?.body?.PR_HOBBY,
-      PR_PROFESSION_ID: Number(req?.body?.PR_PROFESSION_ID),
-      PR_UPDATED_AT: new Date(),
-      PR_PHOTO_URL: PR_PHOTO_URL,
-    };
-
-    // ===== IMPROVED CITY HANDLING ===== //
-    let cityId = existingProfile.PR_CITY_CODE; // Default to existing value
-    let cityChanged = false;
-
-    // Case 1: Direct city code provided
-    if (req?.body?.PR_CITY_CODE !== undefined) {
-      cityId = Number(req.body.PR_CITY_CODE) || null;
-      cityChanged = cityId !== existingProfile.PR_CITY_CODE;
-    }
-    // Case 2: Lookup city by name (like registerUser)
-    else if (req?.body?.PR_CITY_NAME) {
+    // 2. Fallback to city name lookup if code not provided or invalid
+    if (!cityChanged && req?.body?.PR_CITY_NAME) {
       const city = await prisma.city.findFirst({
         where: {
           CITY_NAME: req.body.PR_CITY_NAME,
@@ -616,39 +553,51 @@ async function EditProfile(req, res) {
           CITY_ST_CODE: req.body.PR_STATE_CODE || existingProfile.PR_STATE_CODE,
         },
       });
-      const newCityId = city?.CITY_ID || null;
-      cityChanged = newCityId !== existingProfile.PR_CITY_CODE;
-      cityId = newCityId;
+
+      if (city) {
+        cityId = city.CITY_ID;
+        cityChanged = cityId !== existingProfile.PR_CITY_CODE;
+        console.log(
+          `Found city by name: ${req.body.PR_CITY_NAME} → ID: ${cityId}`
+        );
+      }
     }
 
+    // ===== UPDATE DATA PREPARATION ===== //
+    const updateData = {
+      // [Keep all other fields...]
+      PR_UPDATED_AT: new Date(),
+    };
+
+    // Only update city code if it changed
     if (cityChanged) {
       updateData.PR_CITY_CODE = cityId;
-
-      // Regenerate UNIQUE_ID if location changed
-      updateData.PR_UNIQUE_ID = `${
-        req?.body?.PR_STATE_CODE || existingProfile.PR_STATE_CODE
-      }${req?.body?.PR_DISTRICT_CODE || existingProfile.PR_DISTRICT_CODE}-${
-        cityId || "00"
-      }-001-001`;
     }
-    // ===== END CITY HANDLING ===== //
 
-    console.log("Final city code:", cityId);
-    console.log("Update data:", updateData);
+    // ===== UNIQUE ID GENERATION ===== //
+    const stateCode = req?.body?.PR_STATE_CODE || existingProfile.PR_STATE_CODE;
+    const districtCode =
+      req?.body?.PR_DISTRICT_CODE || existingProfile.PR_DISTRICT_CODE;
 
-    // Update the main profile
-    const updatedProfile = await prisma.peopleRegistry.update({
-      where: { PR_ID: Number(PR_ID) },
-      data: updateData,
+    if (
+      cityChanged ||
+      !existingProfile.PR_UNIQUE_ID ||
+      existingProfile.PR_UNIQUE_ID === "0000-00-001-001"
+    ) {
+      updateData.PR_UNIQUE_ID = cityId
+        ? `${stateCode}${districtCode}-${cityId}-001-001`
+        : `${stateCode}${districtCode}-00-001-001`;
+    }
+
+    console.log("Final update data:", {
+      ...updateData,
+      PR_CITY_CODE: cityId,
+      PR_UNIQUE_ID: updateData.PR_UNIQUE_ID || existingProfile.PR_UNIQUE_ID,
     });
 
-    return res.status(200).json({
-      message: "Profile updated successfully",
-      updatedProfile,
-      success: true,
-    });
+    // [Keep the rest of your update logic...]
   } catch (error) {
-    console.error("Updation Error:", error);
+    console.error("Update Error:", error);
     return res.status(500).json({
       error: error.message || "Internal server error",
       success: false,
