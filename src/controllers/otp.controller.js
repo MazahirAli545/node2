@@ -300,8 +300,8 @@ export const verifyotp = async (req, res) => {
     // Generate temporary unique ID
     const tempUniqueId =
       PR_STATE_CODE && PR_DISTRICT_CODE && city
-        ? `${PR_STATE_CODE}${PR_DISTRICT_CODE}-${city.CITY_ID}-001-001`
-        : "0000-00-001-001";
+        ? `${PR_STATE_CODE}${PR_DISTRICT_CODE}-${city.CITY_ID}-${familyNumber}-${familyMemberNumber}`
+        : "0000-00-${familyNumber}-${familyMemberNumber}";
 
     // Create basic user data
     const basicUserData = {
