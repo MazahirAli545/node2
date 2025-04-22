@@ -655,7 +655,7 @@ async function EditProfile(req, res) {
               PR_UNIQUE_ID: `${newStateCode}${newDistrictCode}-${newCityCode}-${familyNumber}-${familyMemberNumber}`,
               PR_STATE_CODE: newStateCode,
               PR_DISTRICT_CODE: newDistrictCode,
-              PR_CITY_CODE: newCityCode,
+              PR_CITY_CODE: Number(newCityCode),
             },
           });
         }
