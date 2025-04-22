@@ -670,7 +670,7 @@ async function EditProfile(req, res) {
       updateData.PR_UNIQUE_ID = `${newStateCode}${newDistrictCode}-${newCityCode}-${familyNumber}-${familyMemberNumber}`;
       updateData.PR_STATE_CODE = newStateCode;
       updateData.PR_DISTRICT_CODE = newDistrictCode;
-      updateData.PR_CITY_CODE = newCityCode;
+      updateData.PR_CITY_CODE = Number(newCityCode);
     }
 
     // Update the main profile
