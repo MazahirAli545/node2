@@ -898,7 +898,7 @@ export const verifyotp = async (req, res) => {
           },
         });
       }
-      cityId = city.CITY_ID;
+      cityId = city?.CITY_ID || null;
     }
 
     // Format the date as string (YYYY-MM-DD)
