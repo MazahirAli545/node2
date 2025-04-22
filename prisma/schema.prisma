@@ -57,7 +57,7 @@ model PeopleRegistry {
   PR_ADDRESS       String  @db.Text
   PR_PIN_CODE      String  
   PR_AREA_NAME     String  @db.VarChar(100)
-  PR_CITY_CODE     Int?
+  PR_CITY_CODE     String?   @db.VarChar(20)
   // City             City? @relation(fields: [PR_CITY_CODE], references: [CITY_ID], onDelete: SetNull)
   PR_STATE_CODE    String?   @db.Char(20)
   PR_DISTRICT_CODE String?   @db.Char(20)      
