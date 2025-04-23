@@ -499,10 +499,82 @@ export const registerUser = async (req, res) => {
   }
 };
 
+// export const LoginUser = async (req, res) => {
+//   try {
+//     const { PR_MOBILE_NO } = req.body;
+
+//     const existingUser = await prisma.peopleRegistry.findFirst({
+//       where: { PR_MOBILE_NO },
+//     });
+
+//     if (!existingUser) {
+//       return res.status(400).json({
+//         message: "This mobile number is not registered",
+//         success: false,
+//       });
+//     }
+
+//     // Generate OTP
+//     // const otp = otpGenerator.generate(4, {
+//     //   digits: true,
+//     //   specialChars: false,
+//     //   upperCaseAlphabets: false,
+//     //   lowerCaseAlphabets: false,
+//     // });
+
+//     const otp = "1234";
+
+//     // Store OTP in the database
+//     await prisma.otp.upsert({
+//       where: { PR_MOBILE_NO },
+//       update: { otp, expiresAt: new Date(Date.now() + 2 * 60 * 1000) },
+//       create: {
+//         PR_MOBILE_NO,
+//         otp,
+//         expiresAt: new Date(Date.now() + 2 * 60 * 1000),
+//       },
+//     });
+
+//     // Send OTP via SMS using Twilio
+//     // await twilioClient.messages.create({
+//     //   body: `Your Rangrez App Verification OTP is: ${otp}. It is valid for 2 minutes.`,
+//     //   from: twillo_Phone_Number,
+//     //   to: `+91${PR_MOBILE_NO}`,
+//     // });
+
+//     // console.log(`OTP sent to ${PR_MOBILE_NO}: ${otp}`);
+
+//     const token = generateToken(existingUser);
+
+//     return res
+//       .status(200)
+//       .json({ message: "OTP sent successfully", success: true, token });
+//   } catch (error) {
+//     console.error("Error logging in:", error);
+//     return res
+//       .status(500)
+//       .json({ message: "Something went wrong", success: false });
+//   }
+// };
+
 export const LoginUser = async (req, res) => {
   try {
-    const { PR_MOBILE_NO } = req.body;
+    const { PR_MOBILE_NO, otp = "1234" } = req.body;
 
+    // Validate mobile number format
+    const mobileNumberSchema = Joi.string()
+      .pattern(/^[6-9]\d{9}$/)
+      .required()
+      .messages({ "string.pattern.base": "Invalid mobile number" });
+
+    const { error } = mobileNumberSchema.validate(PR_MOBILE_NO);
+    if (error) {
+      return res
+        .status(400)
+        .json({ message: error.details[0].message, success: false });
+    }
+
+    // Check if user exists
     const existingUser = await prisma.peopleRegistry.findFirst({
       where: { PR_MOBILE_NO },
     });
@@ -514,45 +586,50 @@ export const LoginUser = async (req, res) => {
       });
     }
 
-    // Generate OTP
-    // const otp = otpGenerator.generate(4, {
-    //   digits: true,
-    //   specialChars: false,
-    //   upperCaseAlphabets: false,
-    //   lowerCaseAlphabets: false,
-    // });
+    // For development/testing - bypass OTP verification if using default "1234"
+    if (otp === "1234") {
+      const token = generateToken(existingUser);
+      return res.status(200).json({
+        message: "Login successful",
+        success: true,
+        token,
+        user: existingUser,
+      });
+    }
 
-    const otp = "1234";
-
-    // Store OTP in the database
-    await prisma.otp.upsert({
+    // In production, you would verify the OTP here
+    const otpRecord = await prisma.otp.findFirst({
       where: { PR_MOBILE_NO },
-      update: { otp, expiresAt: new Date(Date.now() + 2 * 60 * 1000) },
-      create: {
-        PR_MOBILE_NO,
-        otp,
-        expiresAt: new Date(Date.now() + 2 * 60 * 1000),
-      },
     });
 
-    // Send OTP via SMS using Twilio
-    // await twilioClient.messages.create({
-    //   body: `Your Rangrez App Verification OTP is: ${otp}. It is valid for 2 minutes.`,
-    //   from: twillo_Phone_Number,
-    //   to: `+91${PR_MOBILE_NO}`,
-    // });
+    if (!otpRecord || otpRecord.otp !== otp) {
+      return res.status(400).json({
+        message: "Invalid OTP",
+        success: false,
+      });
+    }
 
-    // console.log(`OTP sent to ${PR_MOBILE_NO}: ${otp}`);
+    if (new Date() > otpRecord.expiresAt) {
+      return res.status(400).json({
+        message: "OTP has expired",
+        success: false,
+      });
+    }
 
     const token = generateToken(existingUser);
 
-    return res
-      .status(200)
-      .json({ message: "OTP sent successfully", success: true, token });
+    return res.status(200).json({
+      message: "Login successful",
+      success: true,
+      token,
+      user: existingUser,
+    });
   } catch (error) {
     console.error("Error logging in:", error);
-    return res
-      .status(500)
-      .json({ message: "Something went wrong", success: false });
+    return res.status(500).json({
+      message: "Something went wrong",
+      success: false,
+      error: error.message,
+    });
   }
 };
