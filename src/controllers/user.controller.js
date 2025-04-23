@@ -26,7 +26,7 @@ const checkMobileVerified = async (PR_MOBILE_NO, otp) => {
 };
 
 // export const registerUser = async (req, res) => {
-//   try {
+//   try {ss
 //     const {
 //       PR_UNIQUE_ID,
 //       PR_FULL_NAME,
