@@ -1,4 +1,4 @@
-// import { PrismaClient } from "@prisma/client/extension";
+import { PrismaClient } from "@prisma/client/extension";
 import { verifyFunc, verifyotp, generateotp } from "./otp.controller.js";
 import prisma from "../db/prismaClient.js";
 // import { z } from "zod";
@@ -8,7 +8,6 @@ import twilio from "twilio";
 import dotenv from "dotenv";
 import otpGenerator from "otp-generator";
 import { generateToken } from "../middlewares/jwt.js";
-import prisma from "../lib/prisma.ts";
 
 dotenv.config();
 
