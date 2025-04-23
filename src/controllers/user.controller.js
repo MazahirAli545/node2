@@ -634,9 +634,9 @@ export const registerUser = async (req, res) => {
 //   }
 // };
 
-const Joi = require("joi");
-const { prisma } = require("../prisma/prisma-client");
-const { generateToken } = require("../utils/generateToken");
+// const Joi = require("joi");
+// const { prisma } = require("../prisma/prisma-client");
+// const { generateToken } = require("../utils/generateToken");
 
 // Helper function to check OTP verification
 const checkMobileVerified = async (mobile, otp) => {
