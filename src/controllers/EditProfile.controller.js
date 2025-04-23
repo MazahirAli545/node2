@@ -512,6 +512,20 @@ async function EditProfile(req, res) {
       });
     }
 
+    const cityCode = Number(req.body.PR_CITY_CODE);
+    if (cityCode) {
+      const cityExists = await prisma.city.findUnique({
+        where: { CITY_ID: cityCode },
+      });
+
+      if (!cityExists) {
+        return res.status(400).json({
+          message: "Invalid PR_CITY_CODE — city not found",
+          success: false,
+        });
+      }
+    }
+
     // Handle file upload
     let PR_PHOTO_URL = existingProfile.PR_PHOTO_URL;
     if (req.file) {
@@ -601,7 +615,8 @@ async function EditProfile(req, res) {
       PR_FATHER_ID: req?.body?.PR_FATHER_ID,
       PR_MOTHER_ID: req?.body?.PR_MOTHER_ID,
       PR_SPOUSE_ID: req?.body?.PR_SPOUSE_ID,
-      PR_CITY_CODE: req?.body?.PR_CITY_CODE,
+      // PR_CITY_CODE: req?.body?.PR_CITY_CODE,
+      PR_CITY_CODE: cityCode,
       PR_FATHER_NAME: req?.body?.PR_FATHER_NAME,
       PR_MOTHER_NAME: req?.body?.PR_MOTHER_NAME,
       PR_SPOUSE_NAME: req?.body?.PR_SPOUSE_NAME,
