@@ -18,12 +18,12 @@ const twilioClient = twilio(
   process.env.Twillo_Auth_Token
 );
 
-// const checkMobileVerified = async (PR_MOBILE_NO, otp) => {
-//   const success = await verifyFunc(PR_MOBILE_NO, otp);
+const checkMobileVerified = async (PR_MOBILE_NO, otp) => {
+  const success = await verifyFunc(PR_MOBILE_NO, otp);
 
-//   console.log("User Registered ", success);
-//   return success;
-// };
+  console.log("User Registered ", success);
+  return success;
+};
 
 // export const registerUser = async (req, res) => {
 //   try {
@@ -557,112 +557,9 @@ export const registerUser = async (req, res) => {
 //   }
 // };
 
-// export const LoginUser = async (req, res) => {
-//   try {
-//     const { PR_MOBILE_NO, otp = "1234" } = req.body;
-
-//     // Validate mobile number format
-//     const mobileNumberSchema = Joi.string()
-//       .pattern(/^[6-9]\d{9}$/)
-//       .required()
-//       .messages({ "string.pattern.base": "Invalid mobile number" });
-
-//     const { error } = mobileNumberSchema.validate(PR_MOBILE_NO);
-//     if (error) {
-//       return res
-//         .status(400)
-//         .json({ message: error.details[0].message, success: false });
-//     }
-
-//     // Check if user exists
-//     const existingUser = await prisma.peopleRegistry.findFirst({
-//       where: { PR_MOBILE_NO },
-//     });
-
-//     if (!existingUser) {
-//       return res.status(400).json({
-//         message: "This mobile number is not registered",
-//         success: false,
-//       });
-//     }
-
-//     // For development/testing - bypass OTP verification if using default "1234"
-//     if (otp === "1234") {
-//       const token = generateToken(existingUser);
-//       return res.status(200).json({
-//         message: "Login successful",
-//         success: true,
-//         token,
-//         user: existingUser,
-//       });
-//     }
-
-//     // In production, you would verify the OTP here
-//     const otpRecord = await prisma.otp.findFirst({
-//       where: { PR_MOBILE_NO },
-//     });
-
-//     if (!otpRecord || otpRecord.otp !== otp) {
-//       return res.status(400).json({
-//         message: "Invalid OTP",
-//         success: false,
-//       });
-//     }
-
-//     if (new Date() > otpRecord.expiresAt) {
-//       return res.status(400).json({
-//         message: "OTP has expired",
-//         success: false,
-//       });
-//     }
-
-//     const token = generateToken(existingUser);
-
-//     return res.status(200).json({
-//       message: "Login successful",
-//       success: true,
-//       token,
-//       user: existingUser,
-//     });
-//   } catch (error) {
-//     console.error("Error logging in:", error);
-//     return res.status(500).json({
-//       message: "Something went wrong",
-//       success: false,
-//       error: error.message,
-//     });
-//   }
-// };
-
-// const Joi = require("joi");
-// const { prisma } = require("../prisma/prisma-client");
-// const { generateToken } = require("../utils/generateToken");
-
-// Helper function to check OTP verification
-const checkMobileVerified = async (mobile, otp) => {
-  // For development, bypass OTP verification with default "1234"
-  if (otp === "1234") {
-    return true;
-  }
-
-  const otpRecord = await prisma.otp.findFirst({
-    where: { PR_MOBILE_NO: mobile },
-  });
-
-  if (!otpRecord || otpRecord.otp !== otp) {
-    return false;
-  }
-
-  if (new Date() > otpRecord.expiresAt) {
-    return false;
-  }
-
-  return true;
-};
-
 export const LoginUser = async (req, res) => {
   try {
-    const { PR_MOBILE_NO, otp = "1234", selectedUserId } = req.body;
+    const { PR_MOBILE_NO, otp = "1234" } = req.body;
 
     // Validate mobile number format
     const mobileNumberSchema = Joi.string()
@@ -677,102 +574,55 @@ export const LoginUser = async (req, res) => {
         .json({ message: error.details[0].message, success: false });
     }
 
-    // Check if any users exist with this mobile number
-    const existingUsers = await prisma.peopleRegistry.findMany({
+    // Check if user exists
+    const existingUser = await prisma.peopleRegistry.findFirst({
       where: { PR_MOBILE_NO },
-      orderBy: { PR_ID: "desc" },
     });
 
-    if (!existingUsers || existingUsers.length === 0) {
+    if (!existingUser) {
       return res.status(400).json({
         message: "This mobile number is not registered",
         success: false,
       });
     }
 
-    // Step 1: If no OTP provided, generate/send OTP (or use default in dev)
-    if (!req.body.otp) {
-      // In production, you would generate and send a real OTP here
-      // For now, we'll use the default "1234"
-
-      // If multiple users exist, return them for selection
-      if (existingUsers.length > 1) {
-        return res.status(200).json({
-          message: "Multiple accounts found",
-          success: true,
-          multipleUsers: true,
-          users: existingUsers.map((user) => ({
-            PR_ID: user.PR_ID,
-            PR_FULL_NAME: user.PR_FULL_NAME,
-            PR_UNIQUE_ID: user.PR_UNIQUE_ID,
-            PR_PROFESSION: user.PR_PROFESSION,
-            // Add other relevant user details
-          })),
-          debugOtp: "1234", // Remove in production
-        });
-      }
-
-      // For single user, proceed with OTP
+    // For development/testing - bypass OTP verification if using default "1234"
+    if (otp === "1234") {
+      const token = generateToken(existingUser);
       return res.status(200).json({
-        message: "OTP sent successfully",
+        message: "Login successful",
         success: true,
-        otpRequired: true,
-        debugOtp: "1234", // Remove in production
+        token,
+        user: existingUser,
       });
     }
 
-    // Step 2: Verify OTP (skip if using default in development)
-    const isVerified = await checkMobileVerified(PR_MOBILE_NO, otp);
-    if (!isVerified) {
+    // In production, you would verify the OTP here
+    const otpRecord = await prisma.otp.findFirst({
+      where: { PR_MOBILE_NO },
+    });
+
+    if (!otpRecord || otpRecord.otp !== otp) {
       return res.status(400).json({
-        message: "Invalid or expired OTP",
+        message: "Invalid OTP",
         success: false,
       });
     }
 
-    // Step 3: Handle user selection if multiple accounts exist
-    let user;
-    if (existingUsers.length === 1) {
-      user = existingUsers[0];
-    } else {
-      if (!selectedUserId) {
-        return res.status(400).json({
-          message: "User selection required",
-          success: false,
-        });
-      }
-      user = existingUsers.find((u) => u.PR_ID === selectedUserId);
-      if (!user) {
-        return res.status(400).json({
-          message: "Invalid user selection",
-          success: false,
-        });
-      }
+    if (new Date() > otpRecord.expiresAt) {
+      return res.status(400).json({
+        message: "OTP has expired",
+        success: false,
+      });
     }
 
-    // Step 4: Generate token for the selected user
-    const token = generateToken(user);
-
-    // Include family and member information in response
-    const responseUser = {
-      PR_ID: user.PR_ID,
-      PR_FULL_NAME: user.PR_FULL_NAME,
-      PR_UNIQUE_ID: user.PR_UNIQUE_ID,
-      PR_MOBILE_NO: user.PR_MOBILE_NO,
-      PR_GENDER: user.PR_GENDER,
-      PR_PROFESSION: user.PR_PROFESSION,
-      PR_ADDRESS: user.PR_ADDRESS,
-      PR_FAMILY_NO: user.PR_FAMILY_NO,
-      PR_MEMBER_NO: user.PR_MEMBER_NO,
-      PR_PHOTO_URL: user.PR_PHOTO_URL,
-      // Add other relevant fields
-    };
+    const token = generateToken(existingUser);
 
     return res.status(200).json({
       message: "Login successful",
       success: true,
       token,
-      user: responseUser,
+      user: existingUser,
     });
   } catch (error) {
     console.error("Error logging in:", error);
@@ -783,3 +633,153 @@ export const LoginUser = async (req, res) => {
     });
   }
 };
+
+// const Joi = require("joi");
+// const { prisma } = require("../prisma/prisma-client");
+// const { generateToken } = require("../utils/generateToken");
+
+// Helper function to check OTP verification
+// const checkMobileVerified = async (mobile, otp) => {
+//   // For development, bypass OTP verification with default "1234"
+//   if (otp === "1234") {
+//     return true;
+//   }
+
+//   const otpRecord = await prisma.otp.findFirst({
+//     where: { PR_MOBILE_NO: mobile },
+//   });
+
+//   if (!otpRecord || otpRecord.otp !== otp) {
+//     return false;
+//   }
+
+//   if (new Date() > otpRecord.expiresAt) {
+//     return false;
+//   }
+
+//   return true;
+// };
+
+// export const LoginUser = async (req, res) => {
+//   try {
+//     const { PR_MOBILE_NO, otp = "1234", selectedUserId } = req.body;
+
+//     // Validate mobile number format
+//     const mobileNumberSchema = Joi.string()
+//       .pattern(/^[6-9]\d{9}$/)
+//       .required()
+//       .messages({ "string.pattern.base": "Invalid mobile number" });
+
+//     const { error } = mobileNumberSchema.validate(PR_MOBILE_NO);
+//     if (error) {
+//       return res
+//         .status(400)
+//         .json({ message: error.details[0].message, success: false });
+//     }
+
+//     // Check if any users exist with this mobile number
+//     const existingUsers = await prisma.peopleRegistry.findMany({
+//       where: { PR_MOBILE_NO },
+//       orderBy: { PR_ID: "desc" },
+//     });
+
+//     if (!existingUsers || existingUsers.length === 0) {
+//       return res.status(400).json({
+//         message: "This mobile number is not registered",
+//         success: false,
+//       });
+//     }
+
+//     // Step 1: If no OTP provided, generate/send OTP (or use default in dev)
+//     if (!req.body.otp) {
+//       // In production, you would generate and send a real OTP here
+//       // For now, we'll use the default "1234"
+
+//       // If multiple users exist, return them for selection
+//       if (existingUsers.length > 1) {
+//         return res.status(200).json({
+//           message: "Multiple accounts found",
+//           success: true,
+//           multipleUsers: true,
+//           users: existingUsers.map((user) => ({
+//             PR_ID: user.PR_ID,
+//             PR_FULL_NAME: user.PR_FULL_NAME,
+//             PR_UNIQUE_ID: user.PR_UNIQUE_ID,
+//             PR_PROFESSION: user.PR_PROFESSION,
+//             // Add other relevant user details
+//           })),
+//           debugOtp: "1234", // Remove in production
+//         });
+//       }
+
+//       // For single user, proceed with OTP
+//       return res.status(200).json({
+//         message: "OTP sent successfully",
+//         success: true,
+//         otpRequired: true,
+//         debugOtp: "1234", // Remove in production
+//       });
+//     }
+
+//     // Step 2: Verify OTP (skip if using default in development)
+//     const isVerified = await checkMobileVerified(PR_MOBILE_NO, otp);
+//     if (!isVerified) {
+//       return res.status(400).json({
+//         message: "Invalid or expired OTP",
+//         success: false,
+//       });
+//     }
+
+//     // Step 3: Handle user selection if multiple accounts exist
+//     let user;
+//     if (existingUsers.length === 1) {
+//       user = existingUsers[0];
+//     } else {
+//       if (!selectedUserId) {
+//         return res.status(400).json({
+//           message: "User selection required",
+//           success: false,
+//         });
+//       }
+//       user = existingUsers.find((u) => u.PR_ID === selectedUserId);
+//       if (!user) {
+//         return res.status(400).json({
+//           message: "Invalid user selection",
+//           success: false,
+//         });
+//       }
+//     }
+
+//     // Step 4: Generate token for the selected user
+//     const token = generateToken(user);
+
+//     // Include family and member information in response
+//     const responseUser = {
+//       PR_ID: user.PR_ID,
+//       PR_FULL_NAME: user.PR_FULL_NAME,
+//       PR_UNIQUE_ID: user.PR_UNIQUE_ID,
+//       PR_MOBILE_NO: user.PR_MOBILE_NO,
+//       PR_GENDER: user.PR_GENDER,
+//       PR_PROFESSION: user.PR_PROFESSION,
+//       PR_ADDRESS: user.PR_ADDRESS,
+//       PR_FAMILY_NO: user.PR_FAMILY_NO,
+//       PR_MEMBER_NO: user.PR_MEMBER_NO,
+//       PR_PHOTO_URL: user.PR_PHOTO_URL,
+//       // Add other relevant fields
+//     };
+
+//     return res.status(200).json({
+//       message: "Login successful",
+//       success: true,
+//       token,
+//       user: responseUser,
+//     });
+//   } catch (error) {
+//     console.error("Error logging in:", error);
+//     return res.status(500).json({
+//       message: "Something went wrong",
+//       success: false,
+//       error: error.message,
+//     });
+//   }
+// };
