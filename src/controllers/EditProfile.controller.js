@@ -512,6 +512,7 @@ async function EditProfile(req, res) {
       });
     }
 
+    // comment
     const cityCode = Number(req.body.PR_CITY_CODE);
     if (cityCode) {
       const cityExists = await prisma.city.findUnique({
