@@ -8,6 +8,7 @@ import twilio from "twilio";
 import dotenv from "dotenv";
 import otpGenerator from "otp-generator";
 import { generateToken } from "../middlewares/jwt.js";
+import prisma from "../lib/prisma.ts";
 
 dotenv.config();
 
