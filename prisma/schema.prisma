@@ -85,6 +85,7 @@ model PeopleRegistry {
   PR_CREATED_AT    DateTime @default(now())
   PR_UPDATED_BY    Int?     
   PR_UPDATED_AT    DateTime?
+    PR_ROLE          PR_ROLE    @default(End_User) 
   // Hobbies PR_Hobbies[]  
  
   @@unique([PR_MOBILE_NO, PR_FULL_NAME])
@@ -99,6 +100,12 @@ model PeopleRegistry {
   @@map("PEOPLE_REGISTRY")
 
   Contact Contact[]
+}
+
+enum PR_ROLE {
+  Admin     @map("Admin")
+  End_User  @map("End User")
+  Master    @map("Master")
 }
 
 model Hobbies {
