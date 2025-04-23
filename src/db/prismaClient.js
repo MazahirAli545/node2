@@ -8,5 +8,5 @@ const prisma = globalForPrisma.prisma || new PrismaClient();
 
 // }
 
-globalForPrisma.prisma = prisma;
+// globalForPrisma.prisma = prisma;
 export default prisma;
