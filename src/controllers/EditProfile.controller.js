@@ -530,8 +530,41 @@ async function EditProfile(req, res) {
     // Handle file upload
     let PR_PHOTO_URL = existingProfile.PR_PHOTO_URL;
     if (req.file) {
-      // Your existing file upload logic here
-      // PR_PHOTO_URL = uploadedFileUrl;
+      console.log("📸 File received:", req.file);
+      const filePath = req.file.path;
+      const formData = new FormData();
+      formData.append("image", fs.createReadStream(filePath), {
+        filename: req.file.originalname,
+        contentType: req.file.mimetype,
+      });
+
+      try {
+        const uploadResponse = await axios.post(
+          process.env.HOSTINGER_UPLOAD_API_URL,
+          formData,
+          { headers: { ...formData.getHeaders() } }
+        );
+
+        console.log("📤 Upload API Response:", uploadResponse.data);
+
+        if (uploadResponse.data && uploadResponse.data.status === "success") {
+          PR_PHOTO_URL = `${process.env.HOSTINGER_UPLOAD_API_URL}${uploadResponse.data.url}`;
+          console.log("✅ File uploaded successfully! 📂", PR_PHOTO_URL);
+        } else {
+          console.error(
+            "❌ Unexpected response from Hostinger API:",
+            uploadResponse.data
+          );
+          throw new Error("Invalid response from Hostinger API");
+        }
+      } catch (uploadError) {
+        console.error("❌ File upload error:", uploadError.message);
+        return res.status(500).json({
+          message: "File upload failed",
+          success: false,
+          error: uploadError.message,
+        });
+      }
     } else {
       console.log("ℹ️ No file uploaded, proceeding with existing photo.");
     }
