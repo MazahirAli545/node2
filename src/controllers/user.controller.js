@@ -784,9 +784,125 @@ const checkMobileVerified = async (mobile, otp) => {
 //   }
 // };
 
+// export const LoginUser = async (req, res) => {
+//   try {
+//     const { PR_MOBILE_NO, otp, selectedUserId } = req.body;
+
+//     // Validate mobile number format
+//     const mobileNumberSchema = Joi.string()
+//       .pattern(/^[6-9]\d{9}$/)
+//       .required()
+//       .messages({ "string.pattern.base": "Invalid mobile number" });
+
+//     const { error } = mobileNumberSchema.validate(PR_MOBILE_NO);
+//     if (error) {
+//       return res
+//         .status(400)
+//         .json({ message: error.details[0].message, success: false });
+//     }
+
+//     // Step 1: First check if OTP is provided
+//     if (!otp) {
+//       // In production, generate and send OTP here
+//       // For now, we'll use the default "1234"
+
+//       // Check if mobile number exists in database (but don't return users yet)
+//       const userCount = await prisma.peopleRegistry.count({
+//         where: { PR_MOBILE_NO },
+//       });
+
+//       if (userCount === 0) {
+//         return res.status(400).json({
+//           message: "This mobile number is not registered",
+//           success: false,
+//         });
+//       }
+
+//       // For any case (single or multiple users), first require OTP verification
+//       return res.status(200).json({
+//         message: "OTP sent successfully",
+//         success: true,
+//         otpRequired: true,
+//         debugOtp: "1234", // Remove in production
+//       });
+//     }
+
+//     // Step 2: Verify OTP (skip if using default in development)
+//     const isVerified = await checkMobileVerified(PR_MOBILE_NO, otp);
+//     if (!isVerified) {
+//       return res.status(400).json({
+//         message: "Invalid or expired OTP",
+//         success: false,
+//       });
+//     }
+
+//     // Step 3: Now that OTP is verified, check for users
+//     const existingUsers = await prisma.peopleRegistry.findMany({
+//       where: { PR_MOBILE_NO },
+//       orderBy: { PR_ID: "desc" },
+//     });
+
+//     if (!existingUsers || existingUsers.length === 0) {
+//       return res.status(400).json({
+//         message: "This mobile number is not registered",
+//         success: false,
+//       });
+//     }
+
+//     // If multiple users exist, return them for selection
+//     if (existingUsers.length > 1) {
+//       return res.status(200).json({
+//         message: "Multiple accounts found",
+//         success: true,
+//         multipleUsers: true,
+//         users: existingUsers.map((user) => ({
+//           PR_ID: user.PR_ID,
+//           PR_FULL_NAME: user.PR_FULL_NAME,
+//           PR_UNIQUE_ID: user.PR_UNIQUE_ID,
+//           PR_PROFESSION: user.PR_PROFESSION,
+//           // Add other relevant user details
+//         })),
+//       });
+//     }
+
+//     // If only one user exists, generate token directly
+//     const user = existingUsers[0];
+//     const token = generateToken(user);
+
+//     // Include family and member information in response
+//     const responseUser = {
+//       PR_ID: user.PR_ID,
+//       PR_FULL_NAME: user.PR_FULL_NAME,
+//       PR_UNIQUE_ID: user.PR_UNIQUE_ID,
+//       PR_MOBILE_NO: user.PR_MOBILE_NO,
+//       PR_GENDER: user.PR_GENDER,
+//       PR_PROFESSION: user.PR_PROFESSION,
+//       PR_ADDRESS: user.PR_ADDRESS,
+//       PR_FAMILY_NO: user.PR_FAMILY_NO,
+//       PR_MEMBER_NO: user.PR_MEMBER_NO,
+//       PR_PHOTO_URL: user.PR_PHOTO_URL,
+//       // Add other relevant fields
+//     };
+
+//     return res.status(200).json({
+//       message: "Login successful",
+//       success: true,
+//       token,
+//       user: responseUser,
+//     });
+//   } catch (error) {
+//     console.error("Error logging in:", error);
+//     return res.status(500).json({
+//       message: "Something went wrong",
+//       success: false,
+//       error: error.message,
+//     });
+//   }
+// };
+
 export const LoginUser = async (req, res) => {
   try {
-    const { PR_MOBILE_NO, otp, selectedUserId } = req.body;
+    const { PR_MOBILE_NO, otp = "1234", selectedUserId } = req.body;
 
     // Validate mobile number format
     const mobileNumberSchema = Joi.string()
@@ -803,9 +919,6 @@ export const LoginUser = async (req, res) => {
 
     // Step 1: First check if OTP is provided
     if (!otp) {
-      // In production, generate and send OTP here
-      // For now, we'll use the default "1234"
-
       // Check if mobile number exists in database (but don't return users yet)
       const userCount = await prisma.peopleRegistry.count({
         where: { PR_MOBILE_NO },
@@ -840,6 +953,11 @@ export const LoginUser = async (req, res) => {
     const existingUsers = await prisma.peopleRegistry.findMany({
       where: { PR_MOBILE_NO },
       orderBy: { PR_ID: "desc" },
+      include: {
+        Profession: true,
+        City: true,
+        Children: true,
+      },
     });
 
     if (!existingUsers || existingUsers.length === 0) {
@@ -849,39 +967,72 @@ export const LoginUser = async (req, res) => {
       });
     }
 
-    // If multiple users exist, return them for selection
-    if (existingUsers.length > 1) {
-      return res.status(200).json({
-        message: "Multiple accounts found",
-        success: true,
-        multipleUsers: true,
-        users: existingUsers.map((user) => ({
-          PR_ID: user.PR_ID,
-          PR_FULL_NAME: user.PR_FULL_NAME,
-          PR_UNIQUE_ID: user.PR_UNIQUE_ID,
-          PR_PROFESSION: user.PR_PROFESSION,
-          // Add other relevant user details
-        })),
-      });
+    // Step 4: Handle user selection if multiple accounts exist
+    let user;
+    if (existingUsers.length === 1) {
+      user = existingUsers[0];
+    } else {
+      if (!selectedUserId) {
+        return res.status(200).json({
+          message: "Multiple accounts found",
+          success: true,
+          multipleUsers: true,
+          users: existingUsers.map((user) => ({
+            PR_ID: user.PR_ID,
+            PR_FULL_NAME: user.PR_FULL_NAME,
+            PR_UNIQUE_ID: user.PR_UNIQUE_ID,
+            PR_PROFESSION: user.Profession?.PROF_NAME,
+            PR_PHOTO_URL: user.PR_PHOTO_URL,
+          })),
+        });
+      }
+
+      user = existingUsers.find((u) => u.PR_ID === selectedUserId);
+      if (!user) {
+        return res.status(400).json({
+          message: "Invalid user selection",
+          success: false,
+        });
+      }
     }
 
-    // If only one user exists, generate token directly
-    const user = existingUsers[0];
+    // Step 5: Generate token for the selected user
     const token = generateToken(user);
 
-    // Include family and member information in response
+    // Prepare complete user data for response
     const responseUser = {
       PR_ID: user.PR_ID,
       PR_FULL_NAME: user.PR_FULL_NAME,
       PR_UNIQUE_ID: user.PR_UNIQUE_ID,
       PR_MOBILE_NO: user.PR_MOBILE_NO,
       PR_GENDER: user.PR_GENDER,
-      PR_PROFESSION: user.PR_PROFESSION,
       PR_ADDRESS: user.PR_ADDRESS,
-      PR_FAMILY_NO: user.PR_FAMILY_NO,
-      PR_MEMBER_NO: user.PR_MEMBER_NO,
       PR_PHOTO_URL: user.PR_PHOTO_URL,
-      // Add other relevant fields
+      PR_DOB: user.PR_DOB,
+      PR_PIN_CODE: user.PR_PIN_CODE,
+      PR_STATE_CODE: user.PR_STATE_CODE,
+      PR_DISTRICT_CODE: user.PR_DISTRICT_CODE,
+      PR_AREA_NAME: user.PR_AREA_NAME,
+      PR_EDUCATION: user.PR_EDUCATION,
+      PR_EDUCATION_DESC: user.PR_EDUCATION_DESC,
+      PR_PROFESSION_DETA: user.PR_PROFESSION_DETA,
+      PR_FATHER_NAME: user.PR_FATHER_NAME,
+      PR_MOTHER_NAME: user.PR_MOTHER_NAME,
+      PR_SPOUSE_NAME: user.PR_SPOUSE_NAME,
+      PR_MARRIED_YN: user.PR_MARRIED_YN,
+      PR_BUSS_INTER: user.PR_BUSS_INTER || "N",
+      PR_BUSS_STREAM: user.PR_BUSS_STREAM || "",
+      PR_BUSS_TYPE: user.PR_BUSS_TYPE || "",
+      PR_HOBBY: user.PR_HOBBY || [],
+      Profession: {
+        PROF_ID: user.Profession?.PROF_ID,
+        PROF_NAME: user.Profession?.PROF_NAME,
+      },
+      City: {
+        CITY_ST_NAME: user.City?.CITY_ST_NAME,
+        CITY_DS_NAME: user.City?.CITY_DS_NAME,
+      },
+      Children: user.Children || [],
     };
 
     return res.status(200).json({
@@ -895,7 +1046,7 @@ export const LoginUser = async (req, res) => {
     return res.status(500).json({
       message: "Something went wrong",
       success: false,
-      error: error.message,
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };
