@@ -18,12 +18,12 @@ const twilioClient = twilio(
   process.env.Twillo_Auth_Token
 );
 
-const checkMobileVerified = async (PR_MOBILE_NO, otp) => {
-  const success = await verifyFunc(PR_MOBILE_NO, otp);
+// const checkMobileVerified = async (PR_MOBILE_NO, otp) => {
+//   const success = await verifyFunc(PR_MOBILE_NO, otp);
 
-  console.log("User Registered ", success);
-  return success;
-};
+//   console.log("User Registered ", success);
+//   return success;
+// };
 
 // export const registerUser = async (req, res) => {
 //   try {
@@ -639,26 +639,26 @@ export const registerUser = async (req, res) => {
 // const { generateToken } = require("../utils/generateToken");
 
 // Helper function to check OTP verification
-// const checkMobileVerified = async (mobile, otp) => {
-//   // For development, bypass OTP verification with default "1234"
-//   if (otp === "1234") {
-//     return true;
-//   }
+const checkMobileVerified = async (mobile, otp) => {
+  // For development, bypass OTP verification with default "1234"
+  if (otp === "1234") {
+    return true;
+  }
 
-//   const otpRecord = await prisma.otp.findFirst({
-//     where: { PR_MOBILE_NO: mobile },
-//   });
+  const otpRecord = await prisma.otp.findFirst({
+    where: { PR_MOBILE_NO: mobile },
+  });
 
-//   if (!otpRecord || otpRecord.otp !== otp) {
-//     return false;
-//   }
+  if (!otpRecord || otpRecord.otp !== otp) {
+    return false;
+  }
 
-//   if (new Date() > otpRecord.expiresAt) {
-//     return false;
-//   }
+  if (new Date() > otpRecord.expiresAt) {
+    return false;
+  }
 
-//   return true;
-// };
+  return true;
+};
 
 export const LoginUser = async (req, res) => {
   try {
