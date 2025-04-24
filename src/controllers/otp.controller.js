@@ -1292,3 +1292,101 @@ export async function verifyFunc(PR_MOBILE_NO, otp) {
     return false;
   }
 }
+
+export const updateProfile = async (req, res) => {
+  try {
+    const { PR_ID, PR_MOBILE_NO, PR_FULL_NAME, otp } = req.body;
+
+    // Validate input data
+    const schema = Joi.object({
+      PR_ID: Joi.number().required(),
+      PR_MOBILE_NO: Joi.string()
+        .pattern(/^[6-9]\d{9}$/)
+        .required()
+        .messages({ "string.pattern.base": "Invalid mobile number" }),
+      PR_FULL_NAME: Joi.string().min(3).max(100).required(),
+      otp: Joi.string().required(),
+    });
+
+    const { error } = schema.validate({
+      PR_ID,
+      PR_MOBILE_NO,
+      PR_FULL_NAME,
+      otp,
+    });
+
+    if (error) {
+      return res.status(400).json({
+        message: error.details[0].message,
+        success: false,
+      });
+    }
+
+    // Verify OTP
+    const isOtpValid = await verifyFunc(PR_MOBILE_NO, otp);
+    if (!isOtpValid) {
+      return res.status(400).json({
+        message: "OTP is expired or invalid",
+        success: false,
+      });
+    }
+
+    // Check if user exists
+    const existingUser = await prisma.peopleRegistry.findUnique({
+      where: { PR_ID: Number(PR_ID) },
+    });
+
+    if (!existingUser) {
+      return res.status(404).json({
+        message: "User not found",
+        success: false,
+      });
+    }
+
+    // Check if the new mobile number is already registered to another user
+    if (existingUser.PR_MOBILE_NO !== PR_MOBILE_NO) {
+      const userWithSameMobile = await prisma.peopleRegistry.findFirst({
+        where: {
+          PR_MOBILE_NO: PR_MOBILE_NO,
+          NOT: { PR_ID: Number(PR_ID) },
+        },
+      });
+
+      if (userWithSameMobile) {
+        return res.status(400).json({
+          message: "This mobile number is already registered to another user",
+          success: false,
+        });
+      }
+    }
+
+    // Update user information
+    const updatedUser = await prisma.peopleRegistry.update({
+      where: { PR_ID: Number(PR_ID) },
+      data: {
+        PR_MOBILE_NO,
+        PR_FULL_NAME,
+      },
+    });
+
+    return res.status(200).json({
+      message: "Profile updated successfully",
+      success: true,
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error("Error in profile update:", error);
+
+    if (error.code === "P2002") {
+      return res.status(400).json({
+        message: "Mobile number already registered",
+        success: false,
+      });
+    }
+
+    return res.status(500).json({
+      message: error.message || "Internal server error",
+      success: false,
+    });
+  }
+};

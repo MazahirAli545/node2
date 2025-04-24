@@ -14,6 +14,7 @@ import {
 import { contactForm } from "../controllers/contactUs.controller.js";
 import pincodeController from "../controllers/pincode.controller.js";
 // import cityController from "../controllers/city.controller.js";
+import { updateProfile } from "../controllers/otp.controller.js";
 import {
   getCities,
   createCity,
@@ -118,5 +119,7 @@ userRouter.put("/child/:id", updateChild);
 
 // Delete a child
 userRouter.delete("/child/:id", deleteChild);
+
+userRouter.post("/updateMobNam", updateProfile);
 
 export default userRouter;
