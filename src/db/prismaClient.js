@@ -24,11 +24,14 @@ import { PrismaClient } from "@prisma/client";
 
 const globalForPrisma = globalThis;
 
-// Only create ONE instance
-if (!globalForPrisma.prisma) {
-  globalForPrisma.prisma = new PrismaClient();
+const prisma = globalForPrisma.prisma ?? new PrismaClient();
+
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma;
 }
 
-const prisma = globalForPrisma.prisma;
+process.on("beforeExit", async () => {
+  await prisma.$disconnect();
+});
 
 export default prisma;
