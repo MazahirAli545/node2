@@ -1042,7 +1042,7 @@ export const verifyotp = async (req, res) => {
         .required()
         .messages({ "string.pattern.base": "Invalid mobile number" }),
       otp: Joi.string().required(),
-      PR_FULL_NAME: Joi.string().min(3).max(100).required(),
+      PR_FULL_NAME: Joi.string().min(1).max(100).required(),
       PR_DOB: Joi.date().required(),
       PR_STATE_CODE: Joi.string().allow("").optional(),
       PR_DISTRICT_CODE: Joi.string().allow("").optional(),
