@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 // const prisma = new PrismaClient();
-import prisma from "../db/prismaClient";
+import prisma from "../db/prismaClient.js";
 
 // Create a new child
 export const createChild = async (req, res) => {

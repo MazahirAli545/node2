@@ -5,10 +5,10 @@ import multer from "multer";
 import fs from "fs";
 import axios from "axios";
 import FormData from "form-data";
+import prisma from "../db/prismaClient.js";
 
 const app = express();
 // const prisma = new PrismaClient();
-import prisma from "../db/prismaClient";
 
 app.use(express.json());
 

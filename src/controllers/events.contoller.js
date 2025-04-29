@@ -1,9 +1,9 @@
 import { PrismaClient } from "@prisma/client";
 import express from "express";
+import prisma from "../db/prismaClient.js";
 
 const app = express();
 // const prisma = new PrismaClient();
-import prisma from "../db/prismaClient";
 
 async function getEvents(req, res) {
   try {
