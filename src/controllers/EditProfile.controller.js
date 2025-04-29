@@ -7,7 +7,8 @@ import axios from "axios";
 import FormData from "form-data";
 
 const app = express();
-const prisma = new PrismaClient();
+// const prisma = new PrismaClient();
+import prisma from "../db/prismaClient";
 
 app.use(express.json());
 

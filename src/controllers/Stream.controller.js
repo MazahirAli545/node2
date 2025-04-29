@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import prisma from "../db/prismaClient";
+// const prisma = new PrismaClient();
 
 export async function getStreams(req, res) {
   try {

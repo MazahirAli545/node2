@@ -1,7 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 import express from "express";
+import prisma from "../db/prismaClient";
 
-const prisma = new PrismaClient();
+// const prisma = new PrismaClient();
 
 export async function getCities(req, res) {
   try {

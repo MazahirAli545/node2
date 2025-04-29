@@ -1,8 +1,9 @@
 import { PrismaClient } from "@prisma/client";
+import prisma from "../db/prismaClient";
 import express from "express";
 
 const app = express();
-const prisma = new PrismaClient();
+// const prisma = new PrismaClient();
 
 async function BusinessController(req, res) {
   try {
@@ -19,14 +20,14 @@ async function BusinessController(req, res) {
     });
 
     return res.status(200).json({
-      message: "Cities fetched successfully",
+      message: "Business fetched successfully",
       success: true,
       Business,
     });
   } catch (error) {
-    console.error("Error fetching cities:", error);
+    console.error("Error fetching Business:", error);
     return res.status(500).json({
-      message: "Error fetching cities",
+      message: "Error fetching Business",
       success: false,
       error: error.message,
     });

@@ -1,8 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 import express from "express";
-
+import prisma from "../db/prismaClient";
 const app = express();
-const prisma = new PrismaClient();
+// const prisma = new PrismaClient();
 
 async function getUserProfile(req, res) {
   try {

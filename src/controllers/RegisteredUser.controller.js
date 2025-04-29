@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import prisma from "../db/prismaClient";
+// const prisma = new PrismaClient();
 
 export const getAllUsersBasicDetails = async (req, res) => {
   try {
