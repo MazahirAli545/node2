@@ -57,6 +57,7 @@ import {
 } from "../controllers/Stream.controller.js";
 
 import { getAllUsersBasicDetails } from "../controllers/RegisteredUser.controller.js";
+import { getUsersByMobileNumber } from "../controllers/UserFamily.controller.js";
 import { get } from "http";
 
 const userRouter = Router();
@@ -121,5 +122,7 @@ userRouter.put("/child/:id", updateChild);
 userRouter.delete("/child/:id", deleteChild);
 
 userRouter.post("/updateMobNam", updateProfile);
+
+userRouter.get("/by-mobile/:mobileNumber", getUsersByMobileNumber);
 
 export default userRouter;
