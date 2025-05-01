@@ -17,6 +17,7 @@ const twilioClient = twilio(
   process.env.Twillo_Account_SID,
   process.env.Twillo_Auth_Token
 );
+const prisma = new PrismaClient();
 
 // const checkMobileVerified = async (PR_MOBILE_NO, otp) => {
 //   const success = await verifyFunc(PR_MOBILE_NO, otp);
