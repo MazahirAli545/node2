@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client/extension";
 import { verifyFunc, verifyotp, generateotp } from "./otp.controller.js";
-// import prisma from "../db/prismaClient.js";
+import prisma from "../db/prismaClient.js";
 // import { z } from "zod";
 // import { z } from require("zod");
 import Joi from "joi";
@@ -17,7 +17,6 @@ const twilioClient = twilio(
   process.env.Twillo_Account_SID,
   process.env.Twillo_Auth_Token
 );
-const prisma = new PrismaClient();
 
 // const checkMobileVerified = async (PR_MOBILE_NO, otp) => {
 //   const success = await verifyFunc(PR_MOBILE_NO, otp);
