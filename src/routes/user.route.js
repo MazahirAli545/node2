@@ -67,6 +67,7 @@ userRouter.post("/protected", verifyToken, someProtectedRoute);
 userRouter.post("/login", LoginUser);
 userRouter.post("/generate-otp", generateotp);
 userRouter.post("/verify-otp", verifyotp);
+
 // userRouter.get("/professions", profession);
 userRouter.get("/professions", getProfessions);
 userRouter.post("/professions", createProfession);
@@ -88,6 +89,7 @@ userRouter.get("/events", getEvents);
 userRouter.get("/directory", DirectoryController);
 userRouter.get("/profile", verifyToken, getUserProfile);
 userRouter.get("/business", BusinessController);
+
 // userRouter.get("/Hobbies", HobbiesController);
 userRouter.get("/hobbies", getHobbies);
 userRouter.post("/hobbies", createHobby);
@@ -124,5 +126,7 @@ userRouter.delete("/child/:id", deleteChild);
 userRouter.post("/updateMobNam", updateProfile);
 
 userRouter.get("/by-mobile/:mobileNumber", getUsersByMobileNumber);
+
+
 
 export default userRouter;

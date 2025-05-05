@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import userRouter from "./routes/user.route.js";
+import adminRouter from "./routes/admin.route.js"
 import pkg from "twilio/lib/twiml/MessagingResponse.js";
 import cors from "cors";
 
@@ -18,7 +19,12 @@ app.get("/", (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 
+// User route
 app.use("/api/user", userRouter);
+
+
+// Admin route
+app.use("/api/admin", adminRouter); 
 
 // console.log("232", userRouter);
 
