@@ -229,6 +229,7 @@ model Category {
 
   ParentCategory  Category?  @relation("ParentChild", fields: [CATE_CATE_ID], references: [CATE_ID], onDelete: SetNull)
   SubCategories     Category[] @relation("ParentChild")
+  SubCategoryEvents Events[]   @relation("SubCategory") // Opposite relation field for SubCategory
   Events      Events[]  // ✅ One-to-Many Relationship (Category has multiple Events)
 }
 
@@ -253,7 +254,8 @@ model Events {
   EVET_UPDATED_DT    DateTime?
 
   Category          Category @relation(fields: [ENVT_CATE_ID], references: [CATE_ID]) // ✅ Correct One-to-Many
-  
+  SubCategory         Category? @relation("SubCategory", fields: [ENVT_CATE_CATE_ID], references: [CATE_ID])
+
 }
 
 
