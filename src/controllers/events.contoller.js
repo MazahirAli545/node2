@@ -9,8 +9,12 @@ async function getEvents(req, res) {
   try {
     const events = await prisma.events.findMany({
       include: {
-        Category: true, // ✅ Fetch related Category details
-        SubCategories: true,
+        Category: {
+          include: {
+            ParentCategory: true,
+            SubCategories: true,
+          },
+        },
       },
     });
 
