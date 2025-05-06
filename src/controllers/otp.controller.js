@@ -9,9 +9,6 @@ import dotenv from "dotenv";
 import axios from "axios";
 
 dotenv.config();
-const axios = require("axios");
-const apiKey = "94587c48-8d46-11ea-9fa5-0200cd936042";
-const otpTemplateName = "your_template_name"; // Replace with your actual template name
 
 const twillo_Phone_Number = +16203019559;
 
@@ -60,47 +57,6 @@ export const generateotp = async (req, res) => {
       .json({ message: "Something went wrong", success: false });
   }
 };
-
-// export const generateotp = async (req, res) => {
-//   try {
-//     const { PR_MOBILE_NO } = req.body;
-
-//     const mobileNumberSchema = Joi.string()
-//       .pattern(/^[6-9]\d{9}$/)
-//       .required()
-//       .messages({ "string.pattern.base": "Invalid mobile number" });
-
-//     const { error } = mobileNumberSchema.validate(PR_MOBILE_NO);
-//     if (error) {
-//       return res
-//         .status(400)
-//         .json({ message: error.details[0].message, success: false });
-//     }
-
-//     const otp = "1234";
-
-//     console.log(`Static OTP for ${PR_MOBILE_NO}: ${otp}`);
-
-//     await prisma.otp.upsert({
-//       where: { PR_MOBILE_NO },
-//       update: { otp, expiresAt: new Date(Date.now() + 2 * 60 * 1000) },
-//       create: {
-//         PR_MOBILE_NO,
-//         otp,
-//         expiresAt: new Date(Date.now() + 2 * 60 * 1000),
-//       },
-//     });
-
-//     return res
-//       .status(200)
-//       .json({ message: "OTP sent successfully", success: true });
-//   } catch (error) {
-//     console.error("Error generating OTP:", error);
-//     return res
-//       .status(500)
-//       .json({ message: "Something went wrong", success: false });
-//   }
-// };
 
 export const verifyotp = async (req, res) => {
   try {
