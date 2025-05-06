@@ -219,7 +219,7 @@ model Contact {
 
 model Category {
   CATE_ID        Int     @id @default(autoincrement())
-  CATE_CATE_ID   Int     @unique
+  CATE_CATE_ID   Int     
   CATE_DESC      String  @db.VarChar(50)
   CATE_ACTIVE_YN String  @db.Char(1)
   CATE_CREATED_BY Int
@@ -250,7 +250,7 @@ model Events {
   EVET_UPDATED_BY    Int?
   EVET_UPDATED_DT    DateTime?
 
-  Category          Category @relation(fields: [ENVT_CATE_ID], references: [CATE_CATE_ID]) // ✅ Correct One-to-Many
+  Category          Category @relation(fields: [ENVT_CATE_ID], references: [CATE_ID]) // ✅ Correct One-to-Many
 }
 
 
