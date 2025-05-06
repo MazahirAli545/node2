@@ -102,6 +102,17 @@ model PeopleRegistry {
   Contact Contact[]
 }
 
+model DonationPayment {
+  id        Int      @id @default(autoincrement())
+  paymentId String   @unique
+  amount    Int
+  currency  String
+  status    String
+  method    String
+  captured  Boolean
+  createdAt DateTime @default(now())
+}
+
 enum PR_ROLE {
   Admin     @map("Admin")
   End_User  @map("End User")
