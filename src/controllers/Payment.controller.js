@@ -1,8 +1,9 @@
 import { PrismaClient } from "@prisma/client";
 import prisma from "../db/prismaClient.js";
+
 const express = require("express");
 const router = express.Router();
-const axios = require("axios");
+// const axios = require("axios");
 
 const RAZORPAY_API_KEY = process.env.RAZORPAY_API_KEY;
 const RAZORPAY_SECRET_KEY = process.env.RAZORPAY_SECRET_KEY;
