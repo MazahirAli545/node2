@@ -104,13 +104,36 @@ model PeopleRegistry {
 
 model DonationPayment {
   id        Int      @id @default(autoincrement())
+  ENVIT_ID  Int
   paymentId String   @unique
+  entity String
   amount    Int
   currency  String
   status    String
+  order_id  Int
+  invoice_id Int
+  international Int 
   method    String
+  amount_refunded   Int
+  refund_status Int
   captured  Boolean
+  description String
+  bank Int
+  wallet Int
+  vpa Int
+  email String
+  contact String
+  fee Int
+  tax Int
+  error_code String
+  error_description String
+  error_source String
+  error_step String
+  error_reason String
+  JSON_LOG String
   createdAt DateTime @default(now())
+
+
 }
 
 enum PR_ROLE {
