@@ -219,7 +219,7 @@ model Contact {
 
 model Category {
   CATE_ID        Int     @id @default(autoincrement())
-  CATE_CATE_ID   Int     
+  CATE_CATE_ID   Int?    
   CATE_DESC      String  @db.VarChar(50)
   CATE_ACTIVE_YN String  @db.Char(1)
   CATE_CREATED_BY Int
@@ -227,6 +227,8 @@ model Category {
   CATE_UPDATED_BY Int?
   CATE_UPDATED_DT DateTime?
 
+  ParentCategory    Category?  @relation("ParentChild", fields: [CATE_CATE_ID], references: [CATE_ID])
+  SubCategories     Category[] @relation("ParentChild")
   Events      Events[]  // ✅ One-to-Many Relationship (Category has multiple Events)
 }
 
