@@ -104,8 +104,6 @@ model PeopleRegistry {
 
 model DonationPayment {
   id        Int      @id @default(autoincrement())
-  PR_ID     Int
-  PR_FULL_NAME String
   paymentId String   @unique
   amount    Int
   currency  String
