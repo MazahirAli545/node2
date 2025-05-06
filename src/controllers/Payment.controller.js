@@ -1,9 +1,9 @@
 import { PrismaClient } from "@prisma/client";
 import prisma from "../db/prismaClient.js";
 import axios from "axios";
-const express = require("express");
+import express from "express";
+import dotenv from "dotenv";
 const router = express.Router();
-// const axios = require("axios");
 
 const RAZORPAY_API_KEY = process.env.RAZORPAY_API_KEY;
 const RAZORPAY_SECRET_KEY = process.env.RAZORPAY_SECRET_KEY;
@@ -15,7 +15,7 @@ export const capturePayment = async (req, res) => {
   try {
     const response = await axios({
       method: "POST",
-      url: "https://api.razorpay.com/v1/payments/" + paymentId + "/capture",
+      url: `https://api.razorpay.com/v1/payments/${paymentId}/capture`,
       auth: {
         username: RAZORPAY_API_KEY,
         Password: RAZORPAY_SECRET_KEY,
