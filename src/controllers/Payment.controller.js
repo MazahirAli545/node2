@@ -1,7 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 import prisma from "../db/prismaClient.js";
+import express from "express";
 
-const express = require("express");
+// const express = require("express");
 const router = express.Router();
 // const axios = require("axios");
 
