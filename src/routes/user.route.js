@@ -59,7 +59,7 @@ import {
 import { getAllUsersBasicDetails } from "../controllers/RegisteredUser.controller.js";
 import { getUsersByMobileNumber } from "../controllers/UserFamily.controller.js";
 import { get } from "http";
-import { capturePayment } from "../controllers/Payment.controller.js";
+// import { capturePayment } from "../controllers/Payment.controller.js";
 
 const userRouter = Router();
 
