@@ -127,8 +127,6 @@ userRouter.delete("/child/:id", deleteChild);
 userRouter.post("/updateMobNam", updateProfile);
 
 userRouter.get("/by-mobile/:mobileNumber", getUsersByMobileNumber);
-userRouter.post("/capture-payment", capturePayment);
-
-
+// userRouter.post("/capture-payment", capturePayment);
 
 export default userRouter;
