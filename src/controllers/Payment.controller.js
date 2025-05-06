@@ -129,7 +129,7 @@ export const capturePayment = async (req, res) => {
 
   try {
     // Validate required fields
-    const requiredFields = ["paymentId", "amount", "ENVIT_ID", "PR_FULL_NAME"];
+    const requiredFields = ["paymentId", "amount"];
     const missingFields = requiredFields.filter((field) => !req.body[field]);
 
     if (missingFields.length > 0) {
@@ -139,52 +139,117 @@ export const capturePayment = async (req, res) => {
       });
     }
 
-    // Prepare database record
-    const paymentRecord = {
-      ENVIT_ID: parseInt(req.body.ENVIT_ID) || 0,
-      PR_FULL_NAME: req.body.PR_FULL_NAME || "",
-      paymentId: req.body.paymentId,
-      entity: req.body.entity || "payment",
-      amount: Math.round(parseFloat(req.body.amount) * 100), // store in paise
-      currency: req.body.currency || "INR",
-      status: req.body.status || "captured",
-      order_id: req.body.order_id || null,
-      invoice_id: req.body.invoice_id || null,
-      international: req.body.international ? 1 : 0,
-      method: req.body.method || "",
-      amount_refunded: req.body.amount_refunded || 0,
-      refund_status: req.body.refund_status ? 1 : 0,
-      captured: req.body.captured || false,
-      description: req.body.description || "",
-      bank: req.body.bank ? 1 : 0,
-      wallet: req.body.wallet ? 1 : 0,
-      vpa: req.body.vpa ? 1 : 0,
-      email: req.body.email || "",
-      contact: req.body.contact || "",
-      fee: req.body.fee || 0,
-      tax: req.body.tax || 0,
-      error_code: req.body.error_code || "",
-      error_description: req.body.error_description || "",
-      error_source: req.body.error_source || "",
-      error_step: req.body.error_step || "",
-      error_reason: req.body.error_reason || "",
-      JSON_LOG: req.body.JSON_LOG || JSON.stringify(req.body),
-    };
+    // Extract payment info from request body
+    const { paymentId, amount, ENVIT_ID, entity, currency, status, method } =
+      req.body;
 
-    console.log("Creating payment record:", paymentRecord);
+    // Get payment data from JSON_LOG if available or create minimal data
+    let paymentData;
+    if (req.body.JSON_LOG) {
+      try {
+        paymentData = JSON.parse(req.body.JSON_LOG);
+      } catch (e) {
+        console.error("Failed to parse JSON_LOG:", e);
+        paymentData = null;
+      }
+    }
 
-    // Save to database
-    const savedPayment = await prisma.donationPayment.create({
-      data: paymentRecord,
-    });
+    // If no parsed data is available, use minimal data
+    if (!paymentData) {
+      // Convert amount to paise for storage
+      const amountInPaise = Math.round(parseFloat(amount) * 100);
 
-    console.log("Payment saved successfully:", savedPayment);
+      // Create minimal payment record
+      const paymentRecord = {
+        paymentId: paymentId,
+        amount: amountInPaise, // Store in paise in database
+        currency: currency || "INR",
+        status: status || "captured",
+        method: method || "card",
+        entity: entity || "payment",
+        captured: true,
+        JSON_LOG:
+          req.body.JSON_LOG ||
+          JSON.stringify({
+            id: paymentId,
+            amount: amountInPaise,
+            currency: currency || "INR",
+            status: status || "captured",
+            method: method || "card",
+          }),
+      };
 
-    return res.status(200).json({
-      success: true,
-      message: "Payment captured and saved successfully",
-      data: savedPayment,
-    });
+      if (ENVIT_ID) {
+        paymentRecord.ENVIT_ID = parseInt(ENVIT_ID);
+      }
+
+      console.log("Creating payment record:", paymentRecord);
+
+      // Save to database
+      const savedPayment = await prisma.donationPayment.create({
+        data: paymentRecord,
+      });
+
+      console.log("Payment saved successfully:", savedPayment);
+
+      return res.status(200).json({
+        success: true,
+        message: "Payment captured and saved successfully",
+        data: savedPayment,
+      });
+    } else {
+      // For parsed JSON_LOG data
+      const paymentRecord = {
+        paymentId: paymentData.id,
+        amount: paymentData.amount, // Already in paise from Razorpay
+        currency: paymentData.currency,
+        status: paymentData.status,
+        method: paymentData.method,
+        entity: paymentData.entity,
+        captured: paymentData.captured || false,
+        JSON_LOG: req.body.JSON_LOG,
+      };
+
+      // Only add fields that exist in the schema
+      if (ENVIT_ID) {
+        paymentRecord.ENVIT_ID = parseInt(ENVIT_ID);
+      }
+
+      if (paymentData.order_id) {
+        paymentRecord.order_id = paymentData.order_id;
+      }
+
+      if (paymentData.invoice_id) {
+        paymentRecord.invoice_id = paymentData.invoice_id;
+      }
+
+      if (paymentData.description) {
+        paymentRecord.description = paymentData.description;
+      }
+
+      if (paymentData.email) {
+        paymentRecord.email = paymentData.email;
+      }
+
+      if (paymentData.contact) {
+        paymentRecord.contact = paymentData.contact;
+      }
+
+      console.log("Creating payment record from JSON_LOG:", paymentRecord);
+
+      // Save to database
+      const savedPayment = await prisma.donationPayment.create({
+        data: paymentRecord,
+      });
+
+      console.log("Payment saved successfully:", savedPayment);
+
+      return res.status(200).json({
+        success: true,
+        message: "Payment captured and saved successfully",
+        data: savedPayment,
+      });
+    }
   } catch (error) {
     console.error("Database error:", {
       message: error.message,
