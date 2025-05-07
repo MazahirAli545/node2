@@ -105,6 +105,7 @@ model PeopleRegistry {
 model DonationPayment {
   id        Int      @id @default(autoincrement())
   ENVIT_ID  Int
+   PR_FULL_NAME      String   
   paymentId String   @unique
   entity String
   amount    Int

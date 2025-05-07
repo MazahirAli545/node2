@@ -196,8 +196,7 @@ export const capturePayment = async (req, res) => {
     return res.status(500).json({
       success: false,
       error: "Failed to save payment",
-      details:
-        process.env.NODE_ENV === "development" ? error.message : undefined,
+      details: error.message,
     });
   }
 };
