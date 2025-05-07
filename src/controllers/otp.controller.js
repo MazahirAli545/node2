@@ -16,6 +16,48 @@ const twilioClient = twilio(
   process.env.Twillo_Account_SID,
   process.env.Twillo_Auth_Token
 );
+const API_KEY = "94587c48-8d46-11ea-9fa5-0200cd936042";
+const OTP_TEMPLATE_NAME = "YourTemplateName";
+// export const generateotp = async (req, res) => {
+//   try {
+//     const { PR_MOBILE_NO } = req.body;
+
+//     const mobileNumberSchema = Joi.string()
+//       .pattern(/^[6-9]\d{9}$/)
+//       .required()
+//       .messages({ "string.pattern.base": "Invalid mobile number" });
+
+//     const { error } = mobileNumberSchema.validate(PR_MOBILE_NO);
+//     if (error) {
+//       return res
+//         .status(400)
+//         .json({ message: error.details[0].message, success: false });
+//     }
+
+//     const otp = "1234";
+
+//     console.log(`Static OTP for ${PR_MOBILE_NO}: ${otp}`);
+
+//     await prisma.otp.upsert({
+//       where: { PR_MOBILE_NO },
+//       update: { otp, expiresAt: new Date(Date.now() + 2 * 60 * 1000) },
+//       create: {
+//         PR_MOBILE_NO,
+//         otp,
+//         expiresAt: new Date(Date.now() + 2 * 60 * 1000),
+//       },
+//     });
+
+//     return res
+//       .status(200)
+//       .json({ message: "OTP sent successfully", success: true });
+//   } catch (error) {
+//     console.error("Error generating OTP:", error);
+//     return res
+//       .status(500)
+//       .json({ message: "Something went wrong", success: false });
+//   }
+// };
 
 export const generateotp = async (req, res) => {
   try {
@@ -33,10 +75,15 @@ export const generateotp = async (req, res) => {
         .json({ message: error.details[0].message, success: false });
     }
 
-    const otp = "1234";
+    // Generate 4-digit OTP
+    const otp = otpGenerator.generate(4, {
+      upperCaseAlphabets: false,
+      specialChars: false,
+      lowerCaseAlphabets: false,
+      digits: true,
+    });
 
-    console.log(`Static OTP for ${PR_MOBILE_NO}: ${otp}`);
-
+    // Save OTP in DB
     await prisma.otp.upsert({
       where: { PR_MOBILE_NO },
       update: { otp, expiresAt: new Date(Date.now() + 2 * 60 * 1000) },
@@ -47,11 +94,17 @@ export const generateotp = async (req, res) => {
       },
     });
 
+    // Send OTP using 2Factor API
+    const url = `https://2factor.in/API/V1/${API_KEY}/SMS/${PR_MOBILE_NO}/${otp}/${OTP_TEMPLATE_NAME}`;
+    const response = await axios.get(url);
+
+    console.log(`OTP ${otp} sent to ${PR_MOBILE_NO}:`, response.data);
+
     return res
       .status(200)
       .json({ message: "OTP sent successfully", success: true });
   } catch (error) {
-    console.error("Error generating OTP:", error);
+    console.error("Error generating OTP:", error.message);
     return res
       .status(500)
       .json({ message: "Something went wrong", success: false });
