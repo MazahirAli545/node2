@@ -145,7 +145,7 @@ export const capturePayment = async (req, res) => {
       PR_FULL_NAME: req.body.PR_FULL_NAME || "",
       paymentId: req.body.paymentId,
       entity: req.body.entity || "payment",
-      amount: Math.round(parseFloat(req.body.amount) * 100), // store in paise
+      amount: Math.round(parseFloat(req.body.amount) / 100), // store in paise
       currency: req.body.currency || "INR",
       status: req.body.status || "captured",
       order_id: req.body.order_id || undefined,
