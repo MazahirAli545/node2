@@ -304,7 +304,7 @@ const checkMobileVerified = async (mobile, otp) => {
 
 export const LoginUser = async (req, res) => {
   try {
-    const { PR_MOBILE_NO, otp = "1234", selectedUserId } = req.body;
+    const { PR_MOBILE_NO, otp, selectedUserId } = req.body;
 
     // Validate mobile number format
     const mobileNumberSchema = Joi.string()

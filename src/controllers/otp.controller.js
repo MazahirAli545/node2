@@ -362,7 +362,7 @@ export async function verifyFunc(PR_MOBILE_NO, otp) {
       return false;
     }
 
-    if (otp !== otpRecord.otp && otp !== "1234") {
+    if (otp !== otpRecord.otp) {
       console.log(`Incorrect OTP entered for ${PR_MOBILE_NO}`);
       return false;
     }
