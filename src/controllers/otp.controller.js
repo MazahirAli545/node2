@@ -86,11 +86,11 @@ export const generateotp = async (req, res) => {
     // Save OTP in DB
     await prisma.otp.upsert({
       where: { PR_MOBILE_NO },
-      update: { otp, expiresAt: new Date(Date.now() + 2 * 60 * 1000) },
+      update: { otp, expiresAt: new Date(Date.now() + 5 * 60 * 1000) },
       create: {
         PR_MOBILE_NO,
         otp,
-        expiresAt: new Date(Date.now() + 2 * 60 * 1000),
+        expiresAt: new Date(Date.now() + 5 * 60 * 1000),
       },
     });
 
@@ -134,7 +134,7 @@ export const verifyotp = async (req, res) => {
         .pattern(/^[6-9]\d{9}$/)
         .required()
         .messages({ "string.pattern.base": "Invalid mobile number" }),
-      otp: Joi.string().required(),
+      otp: Joi.string().length(4).required(),
       PR_FULL_NAME: Joi.string().min(1).max(100).required(),
       PR_DOB: Joi.date().required(),
       PR_STATE_CODE: Joi.string().allow("").optional(),
