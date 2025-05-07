@@ -283,12 +283,12 @@ export const registerUser = async (req, res) => {
 
 const checkMobileVerified = async (mobile, otp) => {
   // For development, bypass OTP verification with default "1234"
-  if (otp === "1234") {
-    return true;
-  }
+  // if (otp === "1234") {
+  //   return true;
+  // }
 
   const otpRecord = await prisma.otp.findFirst({
-    where: { PR_MOBILE_NO: mobile },
+    where: { PR_MOBILE_NO: mobile, otp },
   });
 
   if (!otpRecord || otpRecord.otp !== otp) {
