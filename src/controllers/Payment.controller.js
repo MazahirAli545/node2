@@ -129,7 +129,7 @@ export const capturePayment = async (req, res) => {
 
   try {
     // Validate required fields
-    const requiredFields = ["paymentId", "amount", "ENVIT_ID", "PR_FULL_NAME"];
+    const requiredFields = ["paymentId", "amount", "ENVIT_ID"];
     const missingFields = requiredFields.filter((field) => !req.body[field]);
 
     if (missingFields.length > 0) {
@@ -148,8 +148,8 @@ export const capturePayment = async (req, res) => {
       amount: Math.round(parseFloat(req.body.amount) * 100), // store in paise
       currency: req.body.currency || "INR",
       status: req.body.status || "captured",
-      order_id: req.body.order_id || null,
-      invoice_id: req.body.invoice_id || null,
+      order_id: req.body.order_id || undefined,
+      invoice_id: req.body.invoice_id || undefined,
       international: req.body.international ? 1 : 0,
       method: req.body.method || "",
       amount_refunded: req.body.amount_refunded || 0,

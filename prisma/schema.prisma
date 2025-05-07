@@ -111,8 +111,8 @@ model DonationPayment {
   amount    Int
   currency  String
   status    String
-  order_id  Int
-  invoice_id Int
+  order_id  Int?
+  invoice_id Int?
   international Int 
   method    String
   amount_refunded   Int
