@@ -94,11 +94,21 @@ export const generateotp = async (req, res) => {
       },
     });
 
+    const cleanedMobileNo = PR_MOBILE_NO.replace(/^\+/, "");
+
     // Send OTP using 2Factor API
-    const url = `https://2factor.in/API/V1/${API_KEY}/SMS/${PR_MOBILE_NO}/${otp}/${OTP_TEMPLATE_NAME}`;
+    const url = `https://2factor.in/API/V1/${API_KEY}/SMS/${cleanedMobileNo}/${otp}/${OTP_TEMPLATE_NAME}`;
     const response = await axios.get(url);
 
-    console.log(`OTP ${otp} sent to ${PR_MOBILE_NO}:`, response.data);
+    console.log(`OTP ${otp} sent to ${cleanedMobileNo}:`, response.data);
+
+    if (process.env.NODE_ENV !== "production") {
+      return res.status(200).json({
+        message: "OTP sent successfully",
+        success: true,
+        otp,
+      });
+    }
 
     return res
       .status(200)
