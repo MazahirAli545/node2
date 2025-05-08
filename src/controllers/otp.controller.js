@@ -17,7 +17,7 @@ const twilioClient = twilio(
   process.env.Twillo_Auth_Token
 );
 const API_KEY = "94587c48-8d46-11ea-9fa5-0200cd936042";
-const OTP_TEMPLATE_NAME = "YourTemplateName";
+const OTP_TEMPLATE_NAME = "OTP1";
 // export const generateotp = async (req, res) => {
 //   try {
 //     const { PR_MOBILE_NO } = req.body;
