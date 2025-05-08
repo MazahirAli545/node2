@@ -148,8 +148,8 @@ export const capturePayment = async (req, res) => {
       amount: Math.round(parseFloat(req.body.amount) * 100), // store in paise
       currency: req.body.currency || "INR",
       status: req.body.status || "captured",
-      order_id: req.body.order_id || undefined,
-      invoice_id: req.body.invoice_id || undefined,
+      order_id: req.body.order_id || "",
+      invoice_id: req.body.invoice_id || "",
       international: req.body.international ? 1 : 0,
       method: req.body.method || "",
       amount_refunded: req.body.amount_refunded || 0,
