@@ -10,6 +10,10 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+<<<<<<< HEAD
+=======
+  "description": "",
+>>>>>>> 854bd6a292a6430f8337b2099ea93e09661aec30
   "devDependencies": {
     "@types/node": "^22.13.1",
     "nodemon": "^3.1.9",
@@ -35,6 +39,7 @@
     "otp-generator": "^4.0.1",
     "twilio": "^5.4.3",
     "zod": "^3.24.2"
+<<<<<<< HEAD
   },
   "repository": {
     "type": "git",
@@ -45,4 +50,7 @@
   },
   "homepage": "https://github.com/MazahirAli545/node2#readme",
   "description": ""
+=======
+  }
+>>>>>>> 854bd6a292a6430f8337b2099ea93e09661aec30
 }
