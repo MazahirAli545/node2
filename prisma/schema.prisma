@@ -131,7 +131,7 @@ model DonationPayment {
   error_source String
   error_step String
   error_reason String
-  JSON_LOG String
+  JSON_LOG String @db.VarChar(4000)
   createdAt DateTime @default(now())
 
 
