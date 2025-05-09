@@ -1,0 +1,48 @@
+{
+  "name": "rangrez-backend",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "postinstall": "prisma generate"
+  },
+  "type": "module",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^22.13.1",
+    "nodemon": "^3.1.9",
+    "prisma": "^6.3.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.3.1",
+    "axios": "^1.7.9",
+    "cloudinary": "^1.21.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "form-data": "^4.0.2",
+    "fs": "^0.0.1-security",
+    "joi": "^17.13.3",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "multer-storage-cloudinary": "^4.0.0",
+    "mysql2": "^3.14.0",
+    "otp-generator": "^4.0.1",
+    "twilio": "^5.4.3",
+    "zod": "^3.24.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MazahirAli545/node2.git"
+  },
+  "bugs": {
+    "url": "https://github.com/MazahirAli545/node2/issues"
+  },
+  "homepage": "https://github.com/MazahirAli545/node2#readme",
+  "description": ""
+}

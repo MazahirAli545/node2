@@ -1,0 +1,5 @@
+-- DropIndex
+DROP INDEX `City_CITY_CODE_key` ON `City`;
+
+-- AlterTable
+ALTER TABLE `City` MODIFY `CITY_CODE` INTEGER NULL DEFAULT 0;
