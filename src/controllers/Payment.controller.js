@@ -127,7 +127,7 @@ export const capturePayment = async (req, res) => {
 
   try {
     // Validate required fields
-    const requiredFields = ["paymentId", "amount", "ENVIT_ID"];
+    const requiredFields = ["paymentId", "amount", "ENVIT_ID", "cate_id"];
     const missingFields = requiredFields.filter((field) => !req.body[field]);
 
     if (missingFields.length > 0) {
@@ -167,6 +167,7 @@ export const capturePayment = async (req, res) => {
       error_step: req.body.error_step || "",
       error_reason: req.body.error_reason || "",
       JSON_LOG: req.body.JSON_LOG || JSON.stringify(req.body),
+      cate_id: parseInt(req.body.cate_id) || 0
     };
 
     console.log("Creating payment record:", paymentRecord);
