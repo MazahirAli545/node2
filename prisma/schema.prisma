@@ -122,7 +122,7 @@ model DonationPayment {
   bank Int
   wallet Int
   vpa Int
-  // email String
+  email String
   contact String
   fee Int
   tax Int

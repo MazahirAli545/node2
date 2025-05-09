@@ -157,7 +157,7 @@ export const capturePayment = async (req, res) => {
       bank: req.body.bank ? 1 : 0,
       wallet: req.body.wallet ? 1 : 0,
       vpa: req.body.vpa ? 1 : 0,
-      // email: req.body.email || "",
+      email: req.body.email || "",
       contact: req.body.contact || "",
       fee: req.body.fee || 0,
       tax: req.body.tax || 0,
