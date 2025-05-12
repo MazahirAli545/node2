@@ -21,7 +21,7 @@ import {
   updateCity,
   deleteCity,
 } from "../controllers/city.controller.js";
-import getEvents from "../controllers/events.contoller.js";
+import { getEvents, createEvent, updateEvent, deleteEvent } from "../controllers/events.contoller.js";
 import DirectoryController from "../controllers/Directory.controller.js";
 import upload from "../middlewares/upload.js";
 import getUserProfile from "../controllers/profile.controller.js";
@@ -87,10 +87,15 @@ userRouter.get("/cities", getCities);
 userRouter.post("/cities", createCity);
 userRouter.put("/cities/:CITY_ID", updateCity);
 userRouter.delete("/cities/:CITY_ID", deleteCity);
-userRouter.get("/events", getEvents);
 userRouter.get("/directory", DirectoryController);
 userRouter.get("/profile", verifyToken, getUserProfile);
 userRouter.get("/business", BusinessController);
+
+// Events
+userRouter.get("/events", getEvents);
+userRouter.post("/events", createEvent);
+userRouter.put("/events/:ENVT_ID", updateEvent);
+userRouter.delete("/events/:ENVT_ID", deleteEvent)
 
 // userRouter.get("/Hobbies", HobbiesController);
 userRouter.get("/hobbies", getHobbies);
