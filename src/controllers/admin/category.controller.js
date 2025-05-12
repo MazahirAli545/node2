@@ -9,6 +9,7 @@ export const getCategories = async (req, res) => {
       },
       select: {
         CATE_ID: true,
+        CATE_CATE_ID: true,
         CATE_DESC: true,
       },
       orderBy: {
