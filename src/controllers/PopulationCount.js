@@ -29,29 +29,24 @@ export const getUserStats = async (req, res) => {
     });
     const familyCount = groupedMobile.length;
 
-    const familiesWith2ChildrenResult = await prisma.$queryRaw`
-      SELECT COUNT(*) AS count FROM (
-        SELECT PR_MOBILE_NO
-        FROM \`PeopleRegistry\`
-        GROUP BY PR_MOBILE_NO
-        HAVING COUNT(*) = 2
-      ) AS families;
-    `;
-    const familiesWith2Children = Number(
-      familiesWith2ChildrenResult[0]?.count || 0
-    );
+    // Replace previous $queryRaw calls with this:
+    const familiesWith2ChildrenResult = await prisma.$queryRawUnsafe(`
+  SELECT COUNT(*) AS count FROM (
+    SELECT PR_MOBILE_NO
+    FROM \`PeopleRegistry\`
+    GROUP BY PR_MOBILE_NO
+    HAVING COUNT(*) = 2
+  ) AS families;
+`);
 
-    const familiesWithMoreThan2ChildrenResult = await prisma.$queryRaw`
-      SELECT COUNT(*) AS count FROM (
-        SELECT PR_MOBILE_NO
-        FROM \`PeopleRegistry\`
-        GROUP BY PR_MOBILE_NO
-        HAVING COUNT(*) > 2
-      ) AS families;
-    `;
-    const familiesWithMoreThan2Children = Number(
-      familiesWithMoreThan2ChildrenResult[0]?.count || 0
-    );
+    const familiesWithMoreThan2ChildrenResult = await prisma.$queryRawUnsafe(`
+  SELECT COUNT(*) AS count FROM (
+    SELECT PR_MOBILE_NO
+    FROM \`PeopleRegistry\`
+    GROUP BY PR_MOBILE_NO
+    HAVING COUNT(*) > 2
+  ) AS families;
+`);
 
     const eighteenYearsAgo = new Date();
     eighteenYearsAgo.setFullYear(eighteenYearsAgo.getFullYear() - 18);
