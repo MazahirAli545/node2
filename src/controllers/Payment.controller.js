@@ -97,10 +97,37 @@ const RAZORPAY_API_KEY = process.env.RAZORPAY_API_KEY;
 const RAZORPAY_SECRET_KEY = process.env.RAZORPAY_SECRET_KEY;
 
 // Create a new Razorpay order
+// Add better error handling for missing environment variables
+if (!RAZORPAY_API_KEY || !RAZORPAY_SECRET_KEY) {
+  console.error("Razorpay API keys are not configured!");
+  throw new Error("Payment service configuration error");
+}
+
 export const createOrder = async (req, res) => {
   try {
     const { amount, currency = "INR" } = req.body;
+
+    // Validate amount
+    if (!amount || isNaN(amount)) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid amount provided",
+      });
+    }
+
     const amountInPaise = Math.round(parseFloat(amount) * 100);
+
+    // Debug log to verify auth credentials
+    console.log(
+      "Using Razorpay API Key:",
+      RAZORPAY_API_KEY ? `${RAZORPAY_API_KEY.substring(0, 3)}...` : "NOT SET"
+    );
+    console.log(
+      "Using Razorpay Secret Key:",
+      RAZORPAY_SECRET_KEY
+        ? `${RAZORPAY_SECRET_KEY.substring(0, 3)}...`
+        : "NOT SET"
+    );
 
     const response = await axios.post(
       "https://api.razorpay.com/v1/orders",
@@ -108,13 +135,14 @@ export const createOrder = async (req, res) => {
         amount: amountInPaise,
         currency,
         receipt: `receipt_${Date.now()}`,
-        payment_capture: 1, // Auto-capture payment
+        payment_capture: 1,
       },
       {
         auth: {
           username: RAZORPAY_API_KEY,
           password: RAZORPAY_SECRET_KEY,
         },
+        timeout: 10000, // 10 second timeout
       }
     );
 
@@ -123,10 +151,30 @@ export const createOrder = async (req, res) => {
       order: response.data,
     });
   } catch (error) {
-    console.error("Order creation error:", error);
+    console.error("Full order creation error:", {
+      message: error.message,
+      code: error.code,
+      response: error.response?.data,
+      config: {
+        url: error.config?.url,
+        method: error.config?.method,
+        auth: error.config?.auth
+          ? {
+              username: error.config.auth.username
+                ? `${error.config.auth.username.substring(0, 3)}...`
+                : "undefined",
+              password: error.config.auth.password
+                ? `${error.config.auth.password.substring(0, 3)}...`
+                : "undefined",
+            }
+          : null,
+      },
+    });
+
     res.status(500).json({
       success: false,
-      error: error.response?.data || "Order creation failed",
+      error: "Order creation failed",
+      details: error.response?.data?.error?.description || error.message,
     });
   }
 };
@@ -147,16 +195,27 @@ export const capturePayment = async (req, res) => {
       });
     }
 
-    // First verify the payment with Razorpay
-    const paymentDetails = await axios.get(
-      `https://api.razorpay.com/v1/payments/${req.body.paymentId}`,
-      {
-        auth: {
-          username: RAZORPAY_API_KEY,
-          password: RAZORPAY_SECRET_KEY,
-        },
-      }
-    );
+    // Verify the payment with Razorpay
+    let paymentDetails;
+    try {
+      paymentDetails = await axios.get(
+        `https://api.razorpay.com/v1/payments/${req.body.paymentId}`,
+        {
+          auth: {
+            username: RAZORPAY_API_KEY,
+            password: RAZORPAY_SECRET_KEY,
+          },
+          timeout: 10000,
+        }
+      );
+    } catch (error) {
+      console.error("Payment verification failed:", error);
+      throw new Error(
+        `Failed to verify payment: ${
+          error.response?.data?.error?.description || error.message
+        }`
+      );
+    }
 
     const paymentData = paymentDetails.data;
 
@@ -176,7 +235,8 @@ export const capturePayment = async (req, res) => {
       amount_refunded: paymentData.amount_refunded || 0,
       refund_status: paymentData.refund_status ? 1 : 0,
       captured: paymentData.captured || false,
-      description: paymentData.description || "",
+      description:
+        paymentData.description || `Donation for ${req.body.ENVIT_ID}`,
       bank: paymentData.bank ? 1 : 0,
       wallet: paymentData.wallet ? 1 : 0,
       vpa: paymentData.vpa ? 1 : 0,
@@ -194,9 +254,15 @@ export const capturePayment = async (req, res) => {
     };
 
     // Save to database
-    const savedPayment = await prisma.donationPayment.create({
-      data: paymentRecord,
-    });
+    let savedPayment;
+    try {
+      savedPayment = await prisma.donationPayment.create({
+        data: paymentRecord,
+      });
+    } catch (dbError) {
+      console.error("Database error:", dbError);
+      throw new Error("Failed to save payment to database");
+    }
 
     return res.status(200).json({
       success: true,
@@ -204,11 +270,17 @@ export const capturePayment = async (req, res) => {
       data: savedPayment,
     });
   } catch (error) {
-    console.error("Payment capture error:", error);
+    console.error("Full payment capture error:", {
+      message: error.message,
+      stack: error.stack,
+      requestBody: req.body,
+    });
+
     return res.status(500).json({
       success: false,
-      error: "Failed to process payment",
-      details: error.message,
+      error: error.message || "Failed to process payment",
+      details:
+        error.response?.data?.error?.description || "Internal server error",
     });
   }
 };
