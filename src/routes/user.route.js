@@ -69,6 +69,7 @@ import {
   // createOrder,
 } from "../controllers/Payment.controller.js";
 import { getAllDonationPayments } from "../controllers/UsersPaymentDetails.js";
+import { getUserStats } from "../controllers/PopulationCount.js";
 
 const userRouter = Router();
 
@@ -144,5 +145,5 @@ userRouter.get("/by-mobile/:mobileNumber", getUsersByMobileNumber);
 userRouter.post("/capture-payment", capturePayment);
 // userRouter.post("/create-order", createOrder);
 userRouter.get("/allDonationPayments", getAllDonationPayments);
-
+userRouter.get("/getStats", getUserStats);
 export default userRouter;

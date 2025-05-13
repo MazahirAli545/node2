@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import prisma from "../db/prismaClient.js";
 
-const getUserStats = async (req, res) => {
+export const getUserStats = async (req, res) => {
   try {
     // 1. Total number of users
     const totalUsers = await prisma.peopleRegistry.count();
