@@ -10,7 +10,7 @@ export const getUserStats = async (req, res) => {
       familyCount,
       familiesWith2Children,
       familiesWithMoreThan2Children,
-      childrenCount, // New count for children <= 18
+      childrenCount, // Count for children <= 18
     ] = await Promise.all([
       // Total population count
       prisma.peopleRegistry.count(),
@@ -53,10 +53,10 @@ export const getUserStats = async (req, res) => {
         ) as families
       `.then((result) => Number(result[0]?.count || 0)),
 
-      // Count of children aged 18 or younger
+      // Count of children aged 18 or younger from PEOPLE_REGISTRY table
       prisma.$queryRaw`
-        SELECT COUNT(*) as count FROM child
-        WHERE TIMESTAMPDIFF(YEAR, dob, CURDATE()) <= 18
+        SELECT COUNT(*) as count FROM PEOPLE_REGISTRY
+        WHERE TIMESTAMPDIFF(YEAR, PR_DOB, CURDATE()) <= 18
       `.then((result) => Number(result[0]?.count || 0)),
     ]);
 
