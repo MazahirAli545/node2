@@ -10,6 +10,7 @@ export const getUserStats = async (req, res) => {
       familyCount,
       familiesWith2Children,
       familiesWithMoreThan2Children,
+      childrenCount, // New count for children <= 18
     ] = await Promise.all([
       // Total population count
       prisma.peopleRegistry.count(),
@@ -51,6 +52,12 @@ export const getUserStats = async (req, res) => {
           HAVING COUNT(*) > 2
         ) as families
       `.then((result) => Number(result[0]?.count || 0)),
+
+      // Count of children aged 18 or younger
+      prisma.$queryRaw`
+        SELECT COUNT(*) as count FROM child
+        WHERE TIMESTAMPDIFF(YEAR, dob, CURDATE()) <= 18
+      `.then((result) => Number(result[0]?.count || 0)),
     ]);
 
     // Calculate gender percentages
@@ -86,6 +93,7 @@ export const getUserStats = async (req, res) => {
     res.json({
       totalPopulation, // Absolute number
       familyCount, // Absolute number
+      childrenCount, // Absolute number of children <= 18
       genderDistribution: {
         male: `${malePercentage}%`,
         female: `${femalePercentage}%`,
