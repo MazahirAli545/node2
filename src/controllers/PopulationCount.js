@@ -4,17 +4,6 @@ export const getUserStats = async (req, res) => {
   try {
     console.log("🔍 Fetching user stats...");
 
-    const totalPopulation = await prisma.peopleRegistry.count();
-    console.log("✅ Total population:", totalPopulation);
-
-    const genderCounts = await prisma.peopleRegistry.groupBy({
-      by: ["PR_GENDER"],
-      _count: { PR_GENDER: true },
-      where: {
-        PR_GENDER: { in: ["M", "F"] },
-      },
-    });
-
     const groupedMobile = await prisma.peopleRegistry.groupBy({
       by: ["PR_MOBILE_NO"],
       _count: { PR_MOBILE_NO: true },
@@ -29,18 +18,46 @@ export const getUserStats = async (req, res) => {
 
     const familyCount = groupedMobile.length;
 
+    const today = new Date();
     const eighteenYearsAgo = new Date();
-    eighteenYearsAgo.setFullYear(eighteenYearsAgo.getFullYear() - 18);
+    eighteenYearsAgo.setFullYear(today.getFullYear() - 18);
 
-    const childrenCount = await prisma.child.count({
-      where: {
-        dob: {
-          gte: eighteenYearsAgo,
-        },
+    // Fetch DOB and Gender from PeopleRegistry
+    const allPeople = await prisma.peopleRegistry.findMany({
+      select: {
+        PR_DOB: true,
+        PR_GENDER: true,
       },
     });
 
-    // ✅ Group by userId and count number of children per PR_ID (PeopleRegistry.PR_ID)
+    let maleCount = 0;
+    let femaleCount = 0;
+    let childCount = 0;
+
+    allPeople.forEach((person) => {
+      const dob = new Date(person.PR_DOB);
+      if (isNaN(dob)) return;
+
+      const age = today.getFullYear() - dob.getFullYear();
+      const hasBirthdayPassed =
+        today.getMonth() > dob.getMonth() ||
+        (today.getMonth() === dob.getMonth() &&
+          today.getDate() >= dob.getDate());
+
+      const actualAge = hasBirthdayPassed ? age : age - 1;
+
+      if (actualAge <= 18) {
+        childCount++;
+      } else if (person.PR_GENDER === "M") {
+        maleCount++;
+      } else if (person.PR_GENDER === "F") {
+        femaleCount++;
+      }
+    });
+
+    const totalPopulation = maleCount + femaleCount + childCount;
+
+    // Group by userId in child table to count number of children per family
     const childrenGroup = await prisma.child.groupBy({
       by: ["userId"],
       _count: { userId: true },
@@ -58,20 +75,18 @@ export const getUserStats = async (req, res) => {
       }
     });
 
-    const maleCount =
-      genderCounts.find((g) => g.PR_GENDER === "M")?._count?.PR_GENDER || 0;
-    const femaleCount =
-      genderCounts.find((g) => g.PR_GENDER === "F")?._count?.PR_GENDER || 0;
-
-    const totalGenderCount = maleCount + femaleCount;
-
-    const malePercentage = totalGenderCount
-      ? Math.round((maleCount / totalGenderCount) * 100)
+    // Gender + child distribution
+    const malePercentage = totalPopulation
+      ? Math.round((maleCount / totalPopulation) * 100)
       : 0;
-    const femalePercentage = totalGenderCount
-      ? Math.round((femaleCount / totalGenderCount) * 100)
+    const femalePercentage = totalPopulation
+      ? Math.round((femaleCount / totalPopulation) * 100)
+      : 0;
+    const childPercentage = totalPopulation
+      ? Math.round((childCount / totalPopulation) * 100)
       : 0;
 
+    // Children distribution by family
     const totalFamiliesWithChildren =
       familiesWith2Children + familiesWithMoreThan2Children;
 
@@ -88,10 +103,15 @@ export const getUserStats = async (req, res) => {
     const stats = {
       totalPopulation,
       familyCount,
-      childrenCount,
-      genderDistribution: {
+      count: {
+        male: maleCount,
+        female: femaleCount,
+        child: childCount,
+      },
+      percentageDistribution: {
         male: `${malePercentage}%`,
         female: `${femalePercentage}%`,
+        child: `${childPercentage}%`,
       },
       childrenDistribution: {
         familiesWith2Children: `${familiesWith2ChildrenPercentage}%`,
