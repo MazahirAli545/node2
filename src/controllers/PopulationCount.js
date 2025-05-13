@@ -157,6 +157,8 @@ export const getUserStats = async (req, res) => {
     const familyCount = groupedMobile.length;
 
     const today = new Date();
+    const eighteenYearsAgo = new Date();
+    eighteenYearsAgo.setFullYear(today.getFullYear() - 18);
 
     const allPeople = await prisma.peopleRegistry.findMany({
       select: {
@@ -168,16 +170,11 @@ export const getUserStats = async (req, res) => {
       },
     });
 
-    const allChildrenFromChildTable = await prisma.child.findMany({
-      select: { PR_ID: true, userId: true },
-    });
-
-    const childIdsSet = new Set(allChildrenFromChildTable.map((c) => c.PR_ID));
-
     let maleCount = 0;
     let femaleCount = 0;
     let childCount = 0;
 
+    // For PR-based parent mapping
     const parentMapFromPeopleRegistry = new Map();
 
     allPeople.forEach((person) => {
@@ -191,20 +188,22 @@ export const getUserStats = async (req, res) => {
           today.getDate() >= dob.getDate());
       const actualAge = hasBirthdayPassed ? age : age - 1;
 
-      if (actualAge <= 18 && childIdsSet.has(person.PR_ID)) {
+      if (actualAge <= 18) {
         childCount++;
 
         if (person.PR_FATHER_ID) {
+          const id = person.PR_FATHER_ID;
           parentMapFromPeopleRegistry.set(
-            person.PR_FATHER_ID,
-            (parentMapFromPeopleRegistry.get(person.PR_FATHER_ID) || 0) + 1
+            id,
+            (parentMapFromPeopleRegistry.get(id) || 0) + 1
           );
         }
 
         if (person.PR_MOTHER_ID) {
+          const id = person.PR_MOTHER_ID;
           parentMapFromPeopleRegistry.set(
-            person.PR_MOTHER_ID,
-            (parentMapFromPeopleRegistry.get(person.PR_MOTHER_ID) || 0) + 1
+            id,
+            (parentMapFromPeopleRegistry.get(id) || 0) + 1
           );
         }
       } else {
@@ -225,14 +224,21 @@ export const getUserStats = async (req, res) => {
       ? Math.round((childCount / totalPopulation) * 100)
       : 0;
 
+    // 🔹 1. From CHILD table
+    const childrenFromChildTable = await prisma.child.findMany({
+      select: {
+        userId: true, // parent PR_ID
+      },
+    });
+
     const parentMapFromChildTable = new Map();
-    allChildrenFromChildTable.forEach((child) => {
-      if (child.userId) {
-        parentMapFromChildTable.set(
-          child.userId,
-          (parentMapFromChildTable.get(child.userId) || 0) + 1
-        );
-      }
+
+    childrenFromChildTable.forEach((child) => {
+      const parentId = child.userId;
+      parentMapFromChildTable.set(
+        parentId,
+        (parentMapFromChildTable.get(parentId) || 0) + 1
+      );
     });
 
     const calcDistribution = (map) => {
