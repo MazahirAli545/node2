@@ -29,14 +29,15 @@
 //         PR_GENDER: true,
 //         PR_FATHER_ID: true,
 //         PR_MOTHER_ID: true,
+//         PR_BUSS_INTER: true, // Added this field for business interest calculation
 //       },
 //     });
 
 //     let maleCount = 0;
 //     let femaleCount = 0;
 //     let childCount = 0;
+//     let businessInterestCount = 0;
 
-//     // For PR-based parent mapping
 //     const parentMapFromPeopleRegistry = new Map();
 
 //     allPeople.forEach((person) => {
@@ -72,6 +73,10 @@
 //         if (person.PR_GENDER === "M") maleCount++;
 //         else if (person.PR_GENDER === "F") femaleCount++;
 //       }
+
+//       if (person.PR_BUSS_INTER === "Y") {
+//         businessInterestCount++;
+//       }
 //     });
 
 //     const totalPopulation = maleCount + femaleCount + childCount;
@@ -85,11 +90,13 @@
 //     const childPercentage = totalPopulation
 //       ? Math.round((childCount / totalPopulation) * 100)
 //       : 0;
+//     const businessInterestPercentage = totalPopulation
+//       ? Math.round((businessInterestCount / totalPopulation) * 100)
+//       : 0;
 
-//     // 🔹 1. From CHILD table
 //     const childrenFromChildTable = await prisma.child.findMany({
 //       select: {
-//         userId: true, // parent PR_ID
+//         userId: true,
 //       },
 //     });
 
@@ -130,6 +137,23 @@
 //       fromPeopleRegistry: calcDistribution(parentMapFromPeopleRegistry),
 //     };
 
+//     const donations = await prisma.donationPayment.findMany({
+//       select: {
+//         id: true,
+//         amount: true,
+//       },
+//     });
+
+//     const totalDonations = donations.length;
+//     const totalDonationAmount = donations.reduce(
+//       (sum, donation) => sum + donation.amount,
+//       0
+//     );
+
+//     const donationPercentageOfPopulation = totalPopulation
+//       ? Math.round((totalDonations / totalPopulation) * 100)
+//       : 0;
+
 //     const stats = {
 //       totalPopulation,
 //       familyCount,
@@ -144,6 +168,15 @@
 //         child: `${childPercentage}%`,
 //       },
 //       childrenDistribution,
+//       donationStats: {
+//         totalDonations,
+//         totalDonationAmount,
+//         donationPercentageOfPopulation: `${donationPercentageOfPopulation}%`,
+//       },
+//       businessInterestStats: {
+//         interestedCount: businessInterestCount,
+//         percentageOfPopulation: `${businessInterestPercentage}%`,
+//       },
 //     };
 
 //     console.log("📊 Final Stats:", stats);
@@ -155,8 +188,6 @@
 // };
 
 // export default getUserStats;
-
-import prisma from "../db/prismaClient.js";
 
 export const getUserStats = async (req, res) => {
   try {
@@ -187,7 +218,7 @@ export const getUserStats = async (req, res) => {
         PR_GENDER: true,
         PR_FATHER_ID: true,
         PR_MOTHER_ID: true,
-        PR_BUSS_INTER: true, // Added this field for business interest calculation
+        PR_BUSS_INTER: true,
       },
     });
 
@@ -290,9 +321,15 @@ export const getUserStats = async (req, res) => {
       };
     };
 
+    // Combining child data from both PeopleRegistry and Child table
+    const allParentMap = new Map([
+      ...parentMapFromPeopleRegistry,
+      ...parentMapFromChildTable,
+    ]);
+
     const childrenDistribution = {
       fromChildTable: calcDistribution(parentMapFromChildTable),
-      fromPeopleRegistry: calcDistribution(parentMapFromPeopleRegistry),
+      fromPeopleRegistry: calcDistribution(allParentMap),
     };
 
     const donations = await prisma.donationPayment.findMany({
