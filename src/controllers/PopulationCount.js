@@ -3,7 +3,7 @@ import prisma from "../db/prismaClient.js";
 
 export const getUserStats = async (req, res) => {
   try {
-    console.log("🔍 Starting to fetch user stats...");
+    console.log("🔍 Fetching user stats...");
 
     const totalPopulation = await prisma.peopleRegistry.count();
     console.log("✅ Total population:", totalPopulation);
@@ -15,7 +15,6 @@ export const getUserStats = async (req, res) => {
         PR_GENDER: { in: ["M", "F"] },
       },
     });
-    console.log("✅ Gender counts:", genderCounts);
 
     const groupedMobile = await prisma.peopleRegistry.groupBy({
       by: ["PR_MOBILE_NO"],
@@ -29,12 +28,11 @@ export const getUserStats = async (req, res) => {
       },
     });
     const familyCount = groupedMobile.length;
-    console.log("✅ Family count (mobile with >1 members):", familyCount);
 
     const familiesWith2ChildrenResult = await prisma.$queryRaw`
       SELECT COUNT(*) AS count FROM (
         SELECT PR_MOBILE_NO
-        FROM "PeopleRegistry"
+        FROM \`PeopleRegistry\`
         GROUP BY PR_MOBILE_NO
         HAVING COUNT(*) = 2
       ) AS families;
@@ -42,12 +40,11 @@ export const getUserStats = async (req, res) => {
     const familiesWith2Children = Number(
       familiesWith2ChildrenResult[0]?.count || 0
     );
-    console.log("✅ Families with exactly 2 children:", familiesWith2Children);
 
     const familiesWithMoreThan2ChildrenResult = await prisma.$queryRaw`
       SELECT COUNT(*) AS count FROM (
         SELECT PR_MOBILE_NO
-        FROM "PeopleRegistry"
+        FROM \`PeopleRegistry\`
         GROUP BY PR_MOBILE_NO
         HAVING COUNT(*) > 2
       ) AS families;
@@ -55,22 +52,17 @@ export const getUserStats = async (req, res) => {
     const familiesWithMoreThan2Children = Number(
       familiesWithMoreThan2ChildrenResult[0]?.count || 0
     );
-    console.log(
-      "✅ Families with more than 2 children:",
-      familiesWithMoreThan2Children
-    );
 
-    // Children aged <= 18
     const eighteenYearsAgo = new Date();
     eighteenYearsAgo.setFullYear(eighteenYearsAgo.getFullYear() - 18);
+
     const childrenCount = await prisma.child.count({
       where: {
         dob: {
-          gte: eighteenYearsAgo, // Children <= 18
+          gte: eighteenYearsAgo,
         },
       },
     });
-    console.log("✅ Children aged ≤ 18:", childrenCount);
 
     // Gender Distribution Calculation
     const maleCount =
@@ -86,7 +78,6 @@ export const getUserStats = async (req, res) => {
       ? Math.round((femaleCount / totalGenderCount) * 100)
       : 0;
 
-    // Children Distribution Percentages
     const totalFamiliesWithChildren =
       familiesWith2Children + familiesWithMoreThan2Children;
 
@@ -117,7 +108,7 @@ export const getUserStats = async (req, res) => {
     console.log("📊 Final Stats:", stats);
     res.json(stats);
   } catch (error) {
-    console.error("❌ Error generating stats:", error);
+    console.error("❌ Error generating population statistics:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
