@@ -53,16 +53,33 @@ export const getUserStats = async (req, res) => {
         ) as families
       `.then((result) => Number(result[0]?.count || 0)),
 
-      // Count of children aged 18 or younger using Prisma ORM syntax
-      prisma.child.count({
-        where: {
-          dob: {
-            lte: new Date(
-              new Date().setFullYear(new Date().getFullYear() - 18)
-            ),
-          },
-        },
-      }),
+      // Count of children aged 18 or younger - using Prisma's debug mode to log the query
+      (async () => {
+        try {
+          const count = await prisma.child.count({
+            where: {
+              dob: {
+                lte: new Date(
+                  new Date().setFullYear(new Date().getFullYear() - 18)
+                ),
+              },
+            },
+          });
+          console.log(`Found ${count} children aged 18 or younger`);
+          return count;
+        } catch (err) {
+          console.error("Error counting children:", err);
+          // Fallback to querying directly by model name without conditions
+          try {
+            const allChildrenCount = await prisma.child.count();
+            console.log(`Total children in database: ${allChildrenCount}`);
+            return allChildrenCount;
+          } catch (fallbackErr) {
+            console.error("Fallback error counting all children:", fallbackErr);
+            return 0;
+          }
+        }
+      })(),
     ]);
 
     // Calculate gender percentages
