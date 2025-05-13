@@ -19,7 +19,7 @@ export const getUserStats = async (req, res) => {
         by: ["PR_GENDER"],
         _count: { PR_GENDER: true },
         where: {
-          PR_GENDER: { not: null },
+          PR_GENDER: { in: ["M", "F"] }, // Only count M and F
         },
       }),
 
@@ -53,26 +53,46 @@ export const getUserStats = async (req, res) => {
       `.then((result) => Number(result[0]?.count || 0)),
     ]);
 
-    // Format gender counts
+    // Calculate gender percentages
     const maleCount =
       genderCounts.find((g) => g.PR_GENDER === "M")?._count?.PR_GENDER || 0;
     const femaleCount =
       genderCounts.find((g) => g.PR_GENDER === "F")?._count?.PR_GENDER || 0;
-    const otherGenderCount = genderCounts
-      .filter((g) => !["M", "F"].includes(g.PR_GENDER))
-      .reduce((sum, g) => sum + g._count.PR_GENDER, 0);
+    const totalGenderCount = maleCount + femaleCount;
+
+    const malePercentage =
+      totalGenderCount > 0
+        ? Math.round((maleCount / totalGenderCount) * 100)
+        : 0;
+    const femalePercentage =
+      totalGenderCount > 0
+        ? Math.round((femaleCount / totalGenderCount) * 100)
+        : 0;
+
+    // Calculate children distribution percentages
+    const totalFamiliesWithChildren =
+      familiesWith2Children + familiesWithMoreThan2Children;
+    const familiesWith2ChildrenPercentage =
+      totalFamiliesWithChildren > 0
+        ? Math.round((familiesWith2Children / totalFamiliesWithChildren) * 100)
+        : 0;
+    const familiesWithMoreThan2ChildrenPercentage =
+      totalFamiliesWithChildren > 0
+        ? Math.round(
+            (familiesWithMoreThan2Children / totalFamiliesWithChildren) * 100
+          )
+        : 0;
 
     res.json({
-      totalPopulation,
+      totalPopulation, // Absolute number
+      familyCount, // Absolute number
       genderDistribution: {
-        male: maleCount,
-        female: femaleCount,
-        other: otherGenderCount,
+        male: `${malePercentage}%`,
+        female: `${femalePercentage}%`,
       },
-      familyCount,
       childrenDistribution: {
-        familiesWith2Children,
-        familiesWithMoreThan2Children,
+        familiesWith2Children: `${familiesWith2ChildrenPercentage}%`,
+        familiesWithMoreThan2Children: `${familiesWithMoreThan2ChildrenPercentage}%`,
       },
     });
   } catch (error) {
@@ -80,7 +100,5 @@ export const getUserStats = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
-
-// export default getUserStats;
 
 export default getUserStats;
