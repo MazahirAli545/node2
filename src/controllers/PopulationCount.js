@@ -53,10 +53,10 @@ export const getUserStats = async (req, res) => {
         ) as families
       `.then((result) => Number(result[0]?.count || 0)),
 
-      // Count of children aged 18 or younger from PEOPLE_REGISTRY table
+      // Count of children aged 18 or younger from the child table
       prisma.$queryRaw`
-        SELECT COUNT(*) as count FROM PEOPLE_REGISTRY
-        WHERE TIMESTAMPDIFF(YEAR, PR_DOB, CURDATE()) <= 18
+        SELECT COUNT(*) as count FROM CHILD
+        WHERE TIMESTAMPDIFF(YEAR, dob, CURDATE()) <= 18
       `.then((result) => Number(result[0]?.count || 0)),
     ]);
 
