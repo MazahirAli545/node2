@@ -3,92 +3,82 @@ import prisma from "../db/prismaClient.js";
 
 export const getUserStats = async (req, res) => {
   try {
-    console.log("Fetching user stats...");
+    console.log("🔍 Starting to fetch user stats...");
 
-    const [
-      totalPopulation,
-      genderCounts,
-      familyCount,
-      familiesWith2Children,
-      familiesWithMoreThan2Children,
-      childrenCount,
-    ] = await Promise.all([
-      // 1. Total population count
-      prisma.peopleRegistry.count(),
+    const totalPopulation = await prisma.peopleRegistry.count();
+    console.log("✅ Total population:", totalPopulation);
 
-      // 2. Gender counts (M/F)
-      prisma.peopleRegistry.groupBy({
-        by: ["PR_GENDER"],
-        _count: { PR_GENDER: true },
-        where: {
-          PR_GENDER: { in: ["M", "F"] },
-        },
-      }),
+    const genderCounts = await prisma.peopleRegistry.groupBy({
+      by: ["PR_GENDER"],
+      _count: { PR_GENDER: true },
+      where: {
+        PR_GENDER: { in: ["M", "F"] },
+      },
+    });
+    console.log("✅ Gender counts:", genderCounts);
 
-      // 3. Family count: Mobile numbers with >1 members
-      prisma.peopleRegistry
-        .groupBy({
-          by: ["PR_MOBILE_NO"],
-          _count: { PR_MOBILE_NO: true },
-          having: {
-            PR_MOBILE_NO: {
-              _count: {
-                gt: 1,
-              },
-            },
+    const groupedMobile = await prisma.peopleRegistry.groupBy({
+      by: ["PR_MOBILE_NO"],
+      _count: { PR_MOBILE_NO: true },
+      having: {
+        PR_MOBILE_NO: {
+          _count: {
+            gt: 1,
           },
-        })
-        .then((results) => results.length),
+        },
+      },
+    });
+    const familyCount = groupedMobile.length;
+    console.log("✅ Family count (mobile with >1 members):", familyCount);
 
-      // 4. Families with exactly 2 children
-      prisma.$queryRaw`
-        SELECT COUNT(*) AS count FROM (
-          SELECT PR_MOBILE_NO
-          FROM "PeopleRegistry"
-          GROUP BY PR_MOBILE_NO
-          HAVING COUNT(*) = 2
-        ) AS families;
-      `.then((result) => Number(result[0]?.count || 0)),
+    const familiesWith2ChildrenResult = await prisma.$queryRaw`
+      SELECT COUNT(*) AS count FROM (
+        SELECT PR_MOBILE_NO
+        FROM "PeopleRegistry"
+        GROUP BY PR_MOBILE_NO
+        HAVING COUNT(*) = 2
+      ) AS families;
+    `;
+    const familiesWith2Children = Number(
+      familiesWith2ChildrenResult[0]?.count || 0
+    );
+    console.log("✅ Families with exactly 2 children:", familiesWith2Children);
 
-      // 5. Families with more than 2 children
-      prisma.$queryRaw`
-        SELECT COUNT(*) AS count FROM (
-          SELECT PR_MOBILE_NO
-          FROM "PeopleRegistry"
-          GROUP BY PR_MOBILE_NO
-          HAVING COUNT(*) > 2
-        ) AS families;
-      `.then((result) => Number(result[0]?.count || 0)),
+    const familiesWithMoreThan2ChildrenResult = await prisma.$queryRaw`
+      SELECT COUNT(*) AS count FROM (
+        SELECT PR_MOBILE_NO
+        FROM "PeopleRegistry"
+        GROUP BY PR_MOBILE_NO
+        HAVING COUNT(*) > 2
+      ) AS families;
+    `;
+    const familiesWithMoreThan2Children = Number(
+      familiesWithMoreThan2ChildrenResult[0]?.count || 0
+    );
+    console.log(
+      "✅ Families with more than 2 children:",
+      familiesWithMoreThan2Children
+    );
 
-      // 6. Children aged <= 18
-      (async () => {
-        try {
-          const eighteenYearsAgo = new Date();
-          eighteenYearsAgo.setFullYear(eighteenYearsAgo.getFullYear() - 18);
+    // Children aged <= 18
+    const eighteenYearsAgo = new Date();
+    eighteenYearsAgo.setFullYear(eighteenYearsAgo.getFullYear() - 18);
+    const childrenCount = await prisma.child.count({
+      where: {
+        dob: {
+          gte: eighteenYearsAgo, // Children <= 18
+        },
+      },
+    });
+    console.log("✅ Children aged ≤ 18:", childrenCount);
 
-          const count = await prisma.child.count({
-            where: {
-              dob: {
-                gte: eighteenYearsAgo, // children who are 18 or younger
-              },
-            },
-          });
-          console.log(`Children <= 18: ${count}`);
-          return count;
-        } catch (err) {
-          console.error("Error counting children <=18:", err);
-          return 0;
-        }
-      })(),
-    ]);
-
-    // Calculate gender percentages
+    // Gender Distribution Calculation
     const maleCount =
       genderCounts.find((g) => g.PR_GENDER === "M")?._count?.PR_GENDER || 0;
     const femaleCount =
       genderCounts.find((g) => g.PR_GENDER === "F")?._count?.PR_GENDER || 0;
-
     const totalGenderCount = maleCount + femaleCount;
+
     const malePercentage = totalGenderCount
       ? Math.round((maleCount / totalGenderCount) * 100)
       : 0;
@@ -96,13 +86,14 @@ export const getUserStats = async (req, res) => {
       ? Math.round((femaleCount / totalGenderCount) * 100)
       : 0;
 
-    // Children distribution
+    // Children Distribution Percentages
     const totalFamiliesWithChildren =
       familiesWith2Children + familiesWithMoreThan2Children;
 
     const familiesWith2ChildrenPercentage = totalFamiliesWithChildren
       ? Math.round((familiesWith2Children / totalFamiliesWithChildren) * 100)
       : 0;
+
     const familiesWithMoreThan2ChildrenPercentage = totalFamiliesWithChildren
       ? Math.round(
           (familiesWithMoreThan2Children / totalFamiliesWithChildren) * 100
@@ -123,10 +114,10 @@ export const getUserStats = async (req, res) => {
       },
     };
 
-    console.log("Stats generated:", stats);
+    console.log("📊 Final Stats:", stats);
     res.json(stats);
   } catch (error) {
-    console.error("Error generating population statistics:", error);
+    console.error("❌ Error generating stats:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
