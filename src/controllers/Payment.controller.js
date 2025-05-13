@@ -5,8 +5,8 @@ import axios from "axios";
 
 const router = express.Router();
 
-const RAZORPAY_API_KEY = process.env.RAZORPAY_API_KEY;
-const RAZORPAY_SECRET_KEY = process.env.RAZORPAY_SECRET_KEY;
+// const RAZORPAY_API_KEY = process.env.RAZORPAY_API_KEY;
+// const RAZORPAY_SECRET_KEY = process.env.RAZORPAY_SECRET_KEY;
 
 export const capturePayment = async (req, res) => {
   console.log("Incoming capture request:", req.body);

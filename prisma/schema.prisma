@@ -102,6 +102,15 @@ model PeopleRegistry {
   Contact Contact[]
 }
 
+model PopulationStats {
+  PS_ID          Int      @id @default(autoincrement())
+  totalPopulation Int
+  familyCount     Int
+  createdAt      DateTime @default(now())
+  
+  @@map("POPULATION_STATS")
+}
+
 model DonationPayment {
   id        Int      @id @default(autoincrement())
   ENVIT_ID  Int

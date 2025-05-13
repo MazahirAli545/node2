@@ -37,9 +37,21 @@ const getUserStats = async (req, res) => {
         members,
       }));
 
+    const familyCount = families.length;
+
+    // Store the stats in database
+    await prisma.populationStats.create({
+      data: {
+        totalPopulation: totalUsers,
+        familyCount: familyCount,
+      },
+    });
+
     res.json({
       totalPopulation: totalUsers,
+      familyCount: familyCount,
       families,
+      message: "Statistics saved to database",
     });
   } catch (error) {
     console.error("Error generating user stats:", error);
