@@ -142,7 +142,7 @@ userRouter.post("/updateMobNam", updateProfile);
 
 userRouter.get("/by-mobile/:mobileNumber", getUsersByMobileNumber);
 userRouter.post("/capture-payment", capturePayment);
-router.post("/create-order", createOrder);
+userRouter.post("/create-order", createOrder);
 userRouter.get("/allDonationPayments", getAllDonationPayments);
 
 export default userRouter;
