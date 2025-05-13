@@ -187,14 +187,15 @@ export const getUserStats = async (req, res) => {
         PR_GENDER: true,
         PR_FATHER_ID: true,
         PR_MOTHER_ID: true,
+        PR_BUSS_INTER: true, // Added this field for business interest calculation
       },
     });
 
     let maleCount = 0;
     let femaleCount = 0;
     let childCount = 0;
+    let businessInterestCount = 0;
 
-    // For PR-based parent mapping
     const parentMapFromPeopleRegistry = new Map();
 
     allPeople.forEach((person) => {
@@ -230,6 +231,10 @@ export const getUserStats = async (req, res) => {
         if (person.PR_GENDER === "M") maleCount++;
         else if (person.PR_GENDER === "F") femaleCount++;
       }
+
+      if (person.PR_BUSS_INTER === "Y") {
+        businessInterestCount++;
+      }
     });
 
     const totalPopulation = maleCount + femaleCount + childCount;
@@ -243,11 +248,13 @@ export const getUserStats = async (req, res) => {
     const childPercentage = totalPopulation
       ? Math.round((childCount / totalPopulation) * 100)
       : 0;
+    const businessInterestPercentage = totalPopulation
+      ? Math.round((businessInterestCount / totalPopulation) * 100)
+      : 0;
 
-    // 🔹 1. From CHILD table
     const childrenFromChildTable = await prisma.child.findMany({
       select: {
-        userId: true, // parent PR_ID
+        userId: true,
       },
     });
 
@@ -288,7 +295,6 @@ export const getUserStats = async (req, res) => {
       fromPeopleRegistry: calcDistribution(parentMapFromPeopleRegistry),
     };
 
-    // 🔹 2. From DonationPayment table
     const donations = await prisma.donationPayment.findMany({
       select: {
         id: true,
@@ -324,6 +330,10 @@ export const getUserStats = async (req, res) => {
         totalDonations,
         totalDonationAmount,
         donationPercentageOfPopulation: `${donationPercentageOfPopulation}%`,
+      },
+      businessInterestStats: {
+        interestedCount: businessInterestCount,
+        percentageOfPopulation: `${businessInterestPercentage}%`,
       },
     };
 
