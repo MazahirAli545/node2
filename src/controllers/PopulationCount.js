@@ -22,17 +22,23 @@ export const getUserStats = async (req, res) => {
     const eighteenYearsAgo = new Date();
     eighteenYearsAgo.setFullYear(today.getFullYear() - 18);
 
-    // Fetch DOB and Gender from PeopleRegistry
+    // Fetch necessary fields from PeopleRegistry
     const allPeople = await prisma.peopleRegistry.findMany({
       select: {
+        PR_ID: true,
         PR_DOB: true,
         PR_GENDER: true,
+        PR_FATHER_ID: true,
+        PR_MOTHER_ID: true,
       },
     });
 
     let maleCount = 0;
     let femaleCount = 0;
     let childCount = 0;
+
+    // Step 1: Prepare parent-child map
+    const parentChildMap = new Map();
 
     allPeople.forEach((person) => {
       const dob = new Date(person.PR_DOB);
@@ -48,34 +54,37 @@ export const getUserStats = async (req, res) => {
 
       if (actualAge <= 18) {
         childCount++;
-      } else if (person.PR_GENDER === "M") {
-        maleCount++;
-      } else if (person.PR_GENDER === "F") {
-        femaleCount++;
+
+        // Add to father
+        if (person.PR_FATHER_ID) {
+          const fatherId = person.PR_FATHER_ID;
+          if (!parentChildMap.has(fatherId)) parentChildMap.set(fatherId, 0);
+          parentChildMap.set(fatherId, parentChildMap.get(fatherId) + 1);
+        }
+
+        // Add to mother
+        if (person.PR_MOTHER_ID) {
+          const motherId = person.PR_MOTHER_ID;
+          if (!parentChildMap.has(motherId)) parentChildMap.set(motherId, 0);
+          parentChildMap.set(motherId, parentChildMap.get(motherId) + 1);
+        }
+      } else {
+        if (person.PR_GENDER === "M") maleCount++;
+        else if (person.PR_GENDER === "F") femaleCount++;
       }
     });
 
     const totalPopulation = maleCount + femaleCount + childCount;
 
-    // Group by userId in child table to count number of children per family
-    const childrenGroup = await prisma.child.groupBy({
-      by: ["userId"],
-      _count: { userId: true },
-    });
-
+    // Step 2: Analyze parent-child map
     let familiesWith2Children = 0;
     let familiesWithMoreThan2Children = 0;
 
-    childrenGroup.forEach((group) => {
-      const childCount = group._count.userId;
-      if (childCount === 2) {
-        familiesWith2Children++;
-      } else if (childCount > 2) {
-        familiesWithMoreThan2Children++;
-      }
+    parentChildMap.forEach((count) => {
+      if (count === 2) familiesWith2Children++;
+      else if (count > 2) familiesWithMoreThan2Children++;
     });
 
-    // Gender + child distribution
     const malePercentage = totalPopulation
       ? Math.round((maleCount / totalPopulation) * 100)
       : 0;
@@ -86,7 +95,6 @@ export const getUserStats = async (req, res) => {
       ? Math.round((childCount / totalPopulation) * 100)
       : 0;
 
-    // Children distribution by family
     const totalFamiliesWithChildren =
       familiesWith2Children + familiesWithMoreThan2Children;
 
