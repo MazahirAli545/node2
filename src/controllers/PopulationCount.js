@@ -29,32 +29,6 @@ export const getUserStats = async (req, res) => {
 
     const familyCount = groupedMobile.length;
 
-    // ✅ Corrected table name to "PEOPLE_REGISTRY"
-    const familiesWith2ChildrenResult = await prisma.$queryRawUnsafe(`
-      SELECT COUNT(*) AS count FROM (
-        SELECT PR_MOBILE_NO
-        FROM \`PEOPLE_REGISTRY\`
-        GROUP BY PR_MOBILE_NO
-        HAVING COUNT(*) = 2
-      ) AS families;
-    `);
-
-    const familiesWithMoreThan2ChildrenResult = await prisma.$queryRawUnsafe(`
-      SELECT COUNT(*) AS count FROM (
-        SELECT PR_MOBILE_NO
-        FROM \`PEOPLE_REGISTRY\`
-        GROUP BY PR_MOBILE_NO
-        HAVING COUNT(*) > 2
-      ) AS families;
-    `);
-
-    const familiesWith2Children = Number(
-      familiesWith2ChildrenResult[0]?.count || 0
-    );
-    const familiesWithMoreThan2Children = Number(
-      familiesWithMoreThan2ChildrenResult[0]?.count || 0
-    );
-
     const eighteenYearsAgo = new Date();
     eighteenYearsAgo.setFullYear(eighteenYearsAgo.getFullYear() - 18);
 
@@ -64,6 +38,24 @@ export const getUserStats = async (req, res) => {
           gte: eighteenYearsAgo,
         },
       },
+    });
+
+    // ✅ Group by userId and count number of children per PR_ID (PeopleRegistry.PR_ID)
+    const childrenGroup = await prisma.child.groupBy({
+      by: ["userId"],
+      _count: { userId: true },
+    });
+
+    let familiesWith2Children = 0;
+    let familiesWithMoreThan2Children = 0;
+
+    childrenGroup.forEach((group) => {
+      const childCount = group._count.userId;
+      if (childCount === 2) {
+        familiesWith2Children++;
+      } else if (childCount > 2) {
+        familiesWithMoreThan2Children++;
+      }
     });
 
     const maleCount =
