@@ -53,11 +53,16 @@ export const getUserStats = async (req, res) => {
         ) as families
       `.then((result) => Number(result[0]?.count || 0)),
 
-      // Count of children aged 18 or younger from the child table
-      prisma.$queryRaw`
-        SELECT COUNT(*) as count FROM CHILD
-        WHERE TIMESTAMPDIFF(YEAR, dob, CURDATE()) <= 18
-      `.then((result) => Number(result[0]?.count || 0)),
+      // Count of children aged 18 or younger using Prisma ORM syntax
+      prisma.child.count({
+        where: {
+          dob: {
+            lte: new Date(
+              new Date().setFullYear(new Date().getFullYear() - 18)
+            ),
+          },
+        },
+      }),
     ]);
 
     // Calculate gender percentages
