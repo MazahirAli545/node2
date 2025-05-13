@@ -3,60 +3,84 @@ import prisma from "../db/prismaClient.js";
 
 export const getUserStats = async (req, res) => {
   try {
-    // 1. Total number of users
-    const totalUsers = await prisma.peopleRegistry.count();
+    // 1. Get all statistics in parallel for better performance
+    const [
+      totalPopulation,
+      genderCounts,
+      familyCount,
+      familiesWith2Children,
+      familiesWithMoreThan2Children,
+    ] = await Promise.all([
+      // Total population count
+      prisma.peopleRegistry.count(),
 
-    // 2. Fetch all users
-    const allUsers = await prisma.peopleRegistry.findMany({
-      select: {
-        PR_ID: true,
-        PR_FULL_NAME: true,
-        PR_MOBILE_NO: true,
-      },
-    });
+      // Male/Female counts
+      prisma.peopleRegistry.groupBy({
+        by: ["PR_GENDER"],
+        _count: { PR_GENDER: true },
+        where: {
+          PR_GENDER: { not: null },
+        },
+      }),
 
-    // 3. Group users by mobile number
-    const groupedFamilies = {};
-    for (const user of allUsers) {
-      const mobile = user.PR_MOBILE_NO;
-      if (!groupedFamilies[mobile]) {
-        groupedFamilies[mobile] = [];
-      }
-      groupedFamilies[mobile].push({
-        id: user.PR_ID,
-        name: user.PR_FULL_NAME,
-      });
-    }
+      // Family count (mobile numbers with >1 members)
+      prisma.peopleRegistry
+        .groupBy({
+          by: ["PR_MOBILE_NO"],
+          _count: { PR_MOBILE_NO: true },
+          having: { PR_MOBILE_NO: { _count: { gt: 1 } } },
+        })
+        .then((results) => results.length),
 
-    // 4. Only include mobile numbers with more than 1 member
-    const families = Object.entries(groupedFamilies)
-      .filter(([_, members]) => members.length > 1)
-      .map(([mobileNumber, members]) => ({
-        mobileNumber,
-        membersCount: members.length,
-        members,
-      }));
+      // Families with exactly 2 children
+      prisma.$queryRaw`
+        SELECT COUNT(*) as count FROM (
+          SELECT PR_MOBILE_NO 
+          FROM PEOPLE_REGISTRY
+          GROUP BY PR_MOBILE_NO
+          HAVING COUNT(*) = 2
+        ) as families
+      `.then((result) => Number(result[0]?.count || 0)),
 
-    const familyCount = families.length;
+      // Families with more than 2 children
+      prisma.$queryRaw`
+        SELECT COUNT(*) as count FROM (
+          SELECT PR_MOBILE_NO 
+          FROM PEOPLE_REGISTRY
+          GROUP BY PR_MOBILE_NO
+          HAVING COUNT(*) > 2
+        ) as families
+      `.then((result) => Number(result[0]?.count || 0)),
+    ]);
 
-    // Store the stats in database
-    await prisma.populationStats.create({
-      data: {
-        totalPopulation: totalUsers,
-        familyCount: familyCount,
-      },
-    });
+    // Format gender counts
+    const maleCount =
+      genderCounts.find((g) => g.PR_GENDER === "M")?._count?.PR_GENDER || 0;
+    const femaleCount =
+      genderCounts.find((g) => g.PR_GENDER === "F")?._count?.PR_GENDER || 0;
+    const otherGenderCount = genderCounts
+      .filter((g) => !["M", "F"].includes(g.PR_GENDER))
+      .reduce((sum, g) => sum + g._count.PR_GENDER, 0);
 
     res.json({
-      totalPopulation: totalUsers,
-      familyCount: familyCount,
-      families,
-      message: "Statistics saved to database",
+      totalPopulation,
+      genderDistribution: {
+        male: maleCount,
+        female: femaleCount,
+        other: otherGenderCount,
+      },
+      familyCount,
+      childrenDistribution: {
+        familiesWith2Children,
+        familiesWithMoreThan2Children,
+      },
     });
   } catch (error) {
-    console.error("Error generating user stats:", error);
+    console.error("Error generating population statistics:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+// export default getUserStats;
 
 export default getUserStats;
