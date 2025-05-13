@@ -64,10 +64,10 @@ import {
 import { getAllUsersBasicDetails } from "../controllers/RegisteredUser.controller.js";
 import { getUsersByMobileNumber } from "../controllers/UserFamily.controller.js";
 import { get } from "http";
-// import {
-//   capturePayment,
-//   createOrder,
-// } from "../controllers/Payment.controller.js";
+import {
+  capturePayment,
+  createOrder,
+} from "../controllers/Payment.controller.js";
 import { getAllDonationPayments } from "../controllers/UsersPaymentDetails.js";
 
 const userRouter = Router();
@@ -141,8 +141,8 @@ userRouter.delete("/child/:id", deleteChild);
 userRouter.post("/updateMobNam", updateProfile);
 
 userRouter.get("/by-mobile/:mobileNumber", getUsersByMobileNumber);
-// userRouter.post("/capture-payment", capturePayment);
-// userRouter.post("/create-order", createOrder);
+userRouter.post("/capture-payment", capturePayment);
+userRouter.post("/create-order", createOrder);
 userRouter.get("/allDonationPayments", getAllDonationPayments);
 
 export default userRouter;
