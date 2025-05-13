@@ -21,7 +21,12 @@ import {
   updateCity,
   deleteCity,
 } from "../controllers/city.controller.js";
-import { getEvents, createEvent, updateEvent, deleteEvent } from "../controllers/events.contoller.js";
+import {
+  getEvents,
+  createEvent,
+  updateEvent,
+  deleteEvent,
+} from "../controllers/events.contoller.js";
 import DirectoryController from "../controllers/Directory.controller.js";
 import upload from "../middlewares/upload.js";
 import getUserProfile from "../controllers/profile.controller.js";
@@ -59,7 +64,10 @@ import {
 import { getAllUsersBasicDetails } from "../controllers/RegisteredUser.controller.js";
 import { getUsersByMobileNumber } from "../controllers/UserFamily.controller.js";
 import { get } from "http";
-import { capturePayment } from "../controllers/Payment.controller.js";
+import {
+  capturePayment,
+  createOrder,
+} from "../controllers/Payment.controller.js";
 import { getAllDonationPayments } from "../controllers/UsersPaymentDetails.js";
 
 const userRouter = Router();
@@ -95,7 +103,7 @@ userRouter.get("/business", BusinessController);
 userRouter.get("/events", getEvents);
 userRouter.post("/events", createEvent);
 userRouter.put("/events/:ENVT_ID", updateEvent);
-userRouter.delete("/events/:ENVT_ID", deleteEvent)
+userRouter.delete("/events/:ENVT_ID", deleteEvent);
 
 // userRouter.get("/Hobbies", HobbiesController);
 userRouter.get("/hobbies", getHobbies);
@@ -134,6 +142,7 @@ userRouter.post("/updateMobNam", updateProfile);
 
 userRouter.get("/by-mobile/:mobileNumber", getUsersByMobileNumber);
 userRouter.post("/capture-payment", capturePayment);
+router.post("/create-order", createOrder);
 userRouter.get("/allDonationPayments", getAllDonationPayments);
 
 export default userRouter;
