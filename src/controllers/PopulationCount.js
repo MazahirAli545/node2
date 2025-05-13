@@ -1,4 +1,3 @@
-import { PrismaClient } from "@prisma/client";
 import prisma from "../db/prismaClient.js";
 
 export const getUserStats = async (req, res) => {
@@ -27,26 +26,34 @@ export const getUserStats = async (req, res) => {
         },
       },
     });
+
     const familyCount = groupedMobile.length;
 
-    // Replace previous $queryRaw calls with this:
+    // ✅ Corrected table name to "PEOPLE_REGISTRY"
     const familiesWith2ChildrenResult = await prisma.$queryRawUnsafe(`
-  SELECT COUNT(*) AS count FROM (
-    SELECT PR_MOBILE_NO
-    FROM \`PeopleRegistry\`
-    GROUP BY PR_MOBILE_NO
-    HAVING COUNT(*) = 2
-  ) AS families;
-`);
+      SELECT COUNT(*) AS count FROM (
+        SELECT PR_MOBILE_NO
+        FROM \`PEOPLE_REGISTRY\`
+        GROUP BY PR_MOBILE_NO
+        HAVING COUNT(*) = 2
+      ) AS families;
+    `);
 
     const familiesWithMoreThan2ChildrenResult = await prisma.$queryRawUnsafe(`
-  SELECT COUNT(*) AS count FROM (
-    SELECT PR_MOBILE_NO
-    FROM \`PeopleRegistry\`
-    GROUP BY PR_MOBILE_NO
-    HAVING COUNT(*) > 2
-  ) AS families;
-`);
+      SELECT COUNT(*) AS count FROM (
+        SELECT PR_MOBILE_NO
+        FROM \`PEOPLE_REGISTRY\`
+        GROUP BY PR_MOBILE_NO
+        HAVING COUNT(*) > 2
+      ) AS families;
+    `);
+
+    const familiesWith2Children = Number(
+      familiesWith2ChildrenResult[0]?.count || 0
+    );
+    const familiesWithMoreThan2Children = Number(
+      familiesWithMoreThan2ChildrenResult[0]?.count || 0
+    );
 
     const eighteenYearsAgo = new Date();
     eighteenYearsAgo.setFullYear(eighteenYearsAgo.getFullYear() - 18);
@@ -59,11 +66,11 @@ export const getUserStats = async (req, res) => {
       },
     });
 
-    // Gender Distribution Calculation
     const maleCount =
       genderCounts.find((g) => g.PR_GENDER === "M")?._count?.PR_GENDER || 0;
     const femaleCount =
       genderCounts.find((g) => g.PR_GENDER === "F")?._count?.PR_GENDER || 0;
+
     const totalGenderCount = maleCount + femaleCount;
 
     const malePercentage = totalGenderCount
