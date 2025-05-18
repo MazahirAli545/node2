@@ -114,6 +114,7 @@ model PopulationStats {
 model DonationPayment {
   id        Int      @id @default(autoincrement())
   ENVIT_ID  Int
+  
   PR_ID     Int 
    PR_FULL_NAME      String   
   paymentId String   @unique
@@ -145,7 +146,7 @@ model DonationPayment {
   createdAt DateTime @default(now())
   cate_id Int @default(0)
 
-
+Event      Events?   @relation(fields: [ENVIT_ID], references: [ENVT_ID])
 }
 
 enum PR_ROLE {
@@ -291,6 +292,8 @@ model Events {
   Category          Category @relation(fields: [ENVT_CATE_ID], references: [CATE_ID]) // ✅ Correct One-to-Many
   SubCategory         Category? @relation("SubCategory", fields: [ENVT_CATE_CATE_ID], references: [CATE_ID])
 
+
+  DonationPayment DonationPayment[]
 }
 
 
