@@ -270,14 +270,15 @@ export const getUserStats = async (req, res) => {
 
     // Adjust male and female distribution to ensure the total population is correct
     const totalPopulation = maleCount + femaleCount + childCount;
-    const expectedPopulation = 100; // Total expected population (for your example)
-    const remainingCount = expectedPopulation - totalPopulation;
+    // const expectedPopulation = 100; // Total expected population (for your example)
+    // const remainingCount = expectedPopulation - totalPopulation;
 
-    // If there are remaining people (like missing males or females)
-    if (remainingCount > 0) {
-      // By default, we are assigning the remaining people as males
-      maleCount += remainingCount;
-    }
+    // // If there are remaining people (like missing males or females)
+    // if (remainingCount > 0) {
+    //   // By default, we are assigning the remaining people as males
+    //   maleCount += remainingCount;
+    // }
+    const expectedPopulation = totalPopulation;
 
     const malePercentage = expectedPopulation
       ? Math.round((maleCount / expectedPopulation) * 100)
