@@ -144,7 +144,7 @@ userRouter.post("/updateMobNam", updateProfile);
 
 userRouter.get("/by-mobile/:mobileNumber", getUsersByMobileNumber);
 userRouter.post("/capture-payment", capturePayment);
-userRouter.post("/getDonationByDonar", getDonationsByDonor);
+userRouter.get("/getDonationByDonar/:PR_ID", getDonationsByDonor);
 
 // userRouter.post("/create-order", createOrder);
 userRouter.get("/allDonationPayments", getAllDonationPayments);
