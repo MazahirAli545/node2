@@ -66,6 +66,7 @@ import { getUsersByMobileNumber } from "../controllers/UserFamily.controller.js"
 import { get } from "http";
 import {
   capturePayment,
+  getDonationsByDonor,
   // createOrder,
 } from "../controllers/Payment.controller.js";
 import { getAllDonationPayments } from "../controllers/UsersPaymentDetails.js";
@@ -143,6 +144,8 @@ userRouter.post("/updateMobNam", updateProfile);
 
 userRouter.get("/by-mobile/:mobileNumber", getUsersByMobileNumber);
 userRouter.post("/capture-payment", capturePayment);
+userRouter.post("/getDonationByDonar", getDonationsByDonor);
+
 // userRouter.post("/create-order", createOrder);
 userRouter.get("/allDonationPayments", getAllDonationPayments);
 userRouter.get("/getStats", getUserStats);
