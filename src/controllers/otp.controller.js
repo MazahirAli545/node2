@@ -443,15 +443,44 @@ export const verifyotp = async (req, res) => {
     let memberNumber = "001";
 
     if (allUsersSameMobile.length > 0) {
-      // Use original family number
-      familyNumber = allUsersSameMobile[0].PR_FAMILY_NO || "001";
+      // Group users by location (state + district + city)
+      const locationGroups = allUsersSameMobile.reduce((groups, user) => {
+        const key = `${user.PR_STATE_CODE}-${user.PR_DISTRICT_CODE}-${user.PR_CITY_CODE}`;
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(user);
+        return groups;
+      }, {});
 
-      // Find max member number
-      const maxMember = allUsersSameMobile.reduce(
-        (max, user) => Math.max(max, parseInt(user.PR_MEMBER_NO) || 0),
-        0
-      );
-      memberNumber = (maxMember + 1).toString().padStart(3, "0");
+      // Create current user's location key
+      const currentLocationKey = `${PR_STATE_CODE}-${PR_DISTRICT_CODE}-${cityId}`;
+
+      if (locationGroups[currentLocationKey]) {
+        // Existing location group - use same family number
+        const familyGroup = locationGroups[currentLocationKey];
+        familyNumber = familyGroup[0].PR_FAMILY_NO;
+
+        // Find max member number in this family
+        const maxMember = Math.max(
+          ...familyGroup.map((user) => parseInt(user.PR_MEMBER_NO || "0"))
+        );
+        memberNumber = (maxMember + 1).toString().padStart(3, "0");
+      } else {
+        // New location group - get next family number for this location
+        const lastFamilyInLocation = await prisma.peopleRegistry.findFirst({
+          where: {
+            PR_STATE_CODE: PR_STATE_CODE || "",
+            PR_DISTRICT_CODE: PR_DISTRICT_CODE || "",
+            PR_CITY_CODE: cityId || null,
+          },
+          orderBy: { PR_FAMILY_NO: "desc" },
+        });
+
+        familyNumber = lastFamilyInLocation
+          ? (parseInt(lastFamilyInLocation.PR_FAMILY_NO) + 1)
+              .toString()
+              .padStart(3, "0")
+          : "001";
+      }
     } else {
       // New family - get next family number in location
       const lastFamily = await prisma.peopleRegistry.findFirst({
