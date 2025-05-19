@@ -453,8 +453,7 @@ export const verifyotp = async (req, res) => {
 
     if (allUsersSameMobile.length > 0) {
       // Always use the same family number as existing members
-      familyNumber =
-        allUsersSameMobile[allUsersSameMobile.length - 1].PR_FAMILY_NO || "001";
+      familyNumber = allUsersSameMobile[0].PR_FAMILY_NO || "001";
 
       // Calculate next member number by finding the highest existing member number
       const maxMemberNumber = allUsersSameMobile.reduce((max, user) => {
@@ -471,7 +470,7 @@ export const verifyotp = async (req, res) => {
           PR_DISTRICT_CODE: PR_DISTRICT_CODE || "",
           PR_CITY_CODE: cityId || null,
         },
-        orderBy: { PR_ID: "desc" },
+        orderBy: { PR_ID: "asc" },
       });
 
       if (lastFamily) {
