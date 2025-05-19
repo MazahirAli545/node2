@@ -592,13 +592,11 @@ async function EditProfile(req, res) {
           PR_PHOTO_URL = `${process.env.HOSTINGER_UPLOAD_API_URL}${uploadResponse.data.url}`;
         }
       } catch (uploadError) {
-        return res
-          .status(500)
-          .json({
-            message: "Upload failed",
-            error: uploadError.message,
-            success: false,
-          });
+        return res.status(500).json({
+          message: "Upload failed",
+          error: uploadError.message,
+          success: false,
+        });
       }
     }
 
@@ -697,11 +695,21 @@ async function EditProfile(req, res) {
         req.body.PR_DISTRICT_CODE || existingProfile.PR_DISTRICT_CODE;
       const newCityCode = req.body.PR_CITY_CODE || existingProfile.PR_CITY_CODE;
 
-      const familyNumber = await getNextFamilyNumber(
-        newStateCode,
-        newDistrictCode,
-        Number(newCityCode)
-      );
+      const sameMobileUsers = await prisma.peopleRegistry.findMany({
+        where: { PR_MOBILE_NO: req.body.PR_MOBILE_NO },
+        orderBy: { PR_ID: "asc" },
+      });
+
+      let familyNumber;
+      if (sameMobileUsers.length > 0) {
+        familyNumber = sameMobileUsers[0].PR_FAMILY_NO;
+      } else {
+        familyNumber = await getNextFamilyNumber(
+          newStateCode,
+          newDistrictCode,
+          Number(newCityCode)
+        );
+      }
       const allUsers = await prisma.peopleRegistry.findMany({
         where: {
           PR_STATE_CODE: newStateCode,
@@ -728,12 +736,10 @@ async function EditProfile(req, res) {
       .json({ message: "Profile updated", updatedProfile, success: true });
   } catch (error) {
     console.error("Profile update failed:", error);
-    return res
-      .status(500)
-      .json({
-        message: error.message || "Internal server error",
-        success: false,
-      });
+    return res.status(500).json({
+      message: error.message || "Internal server error",
+      success: false,
+    });
   }
 }
 
