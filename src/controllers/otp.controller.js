@@ -18,46 +18,6 @@ const twilioClient = twilio(
 );
 const API_KEY = "94587c48-8d46-11ea-9fa5-0200cd936042";
 const OTP_TEMPLATE_NAME = "OTP1";
-// export const generateotp = async (req, res) => {
-//   try {
-//     const { PR_MOBILE_NO } = req.body;
-
-//     const mobileNumberSchema = Joi.string()
-//       .pattern(/^[6-9]\d{9}$/)
-//       .required()
-//       .messages({ "string.pattern.base": "Invalid mobile number" });
-
-//     const { error } = mobileNumberSchema.validate(PR_MOBILE_NO);
-//     if (error) {
-//       return res
-//         .status(400)
-//         .json({ message: error.details[0].message, success: false });
-//     }
-
-//     const otp = "1234";
-
-//     console.log(`Static OTP for ${PR_MOBILE_NO}: ${otp}`);
-
-//     await prisma.otp.upsert({
-//       where: { PR_MOBILE_NO },
-//       update: { otp, expiresAt: new Date(Date.now() + 2 * 60 * 1000) },
-//       create: {
-//         PR_MOBILE_NO,
-//         otp,
-//         expiresAt: new Date(Date.now() + 2 * 60 * 1000),
-//       },
-//     });
-
-//     return res
-//       .status(200)
-//       .json({ message: "OTP sent successfully", success: true });
-//   } catch (error) {
-//     console.error("Error generating OTP:", error);
-//     return res
-//       .status(500)
-//       .json({ message: "Something went wrong", success: false });
-//   }
-// };
 
 export const generateotp = async (req, res) => {
   try {
@@ -382,7 +342,7 @@ export async function verifyFunc(PR_MOBILE_NO, otp) {
 
 // export const updateProfile = async (req, res) => {
 //   try {
-//     const { PR_ID, PR_MOBILE_NO, PR_FULL_NAME, otp } = req.body;
+//     const { PR_ID, PR_MOBILE_NO, PR_FULL_NAME, PR_DOB, otp } = req.body;
 
 //     // Validate input data
 //     const schema = Joi.object({
@@ -392,6 +352,7 @@ export async function verifyFunc(PR_MOBILE_NO, otp) {
 //         .required()
 //         .messages({ "string.pattern.base": "Invalid mobile number" }),
 //       PR_FULL_NAME: Joi.string().min(3).max(100).required(),
+//       PR_DOB: Joi.date().required(),
 //       otp: Joi.string().required(),
 //     });
 
@@ -399,6 +360,7 @@ export async function verifyFunc(PR_MOBILE_NO, otp) {
 //       PR_ID,
 //       PR_MOBILE_NO,
 //       PR_FULL_NAME,
+//       PR_DOB,
 //       otp,
 //     });
 
@@ -447,12 +409,16 @@ export async function verifyFunc(PR_MOBILE_NO, otp) {
 //       }
 //     }
 
+//     // Format the date as string (YYYY-MM-DD)
+//     const formattedDOB = new Date(PR_DOB).toISOString().split("T")[0];
+
 //     // Update user information
 //     const updatedUser = await prisma.peopleRegistry.update({
 //       where: { PR_ID: Number(PR_ID) },
 //       data: {
 //         PR_MOBILE_NO,
 //         PR_FULL_NAME,
+//         PR_DOB: formattedDOB,
 //       },
 //     });
 
@@ -530,27 +496,10 @@ export const updateProfile = async (req, res) => {
       });
     }
 
-    // Check if the new mobile number is already registered to another user
-    if (existingUser.PR_MOBILE_NO !== PR_MOBILE_NO) {
-      const userWithSameMobile = await prisma.peopleRegistry.findFirst({
-        where: {
-          PR_MOBILE_NO: PR_MOBILE_NO,
-          NOT: { PR_ID: Number(PR_ID) },
-        },
-      });
-
-      if (userWithSameMobile) {
-        return res.status(400).json({
-          message: "This mobile number is already registered to another user",
-          success: false,
-        });
-      }
-    }
-
     // Format the date as string (YYYY-MM-DD)
     const formattedDOB = new Date(PR_DOB).toISOString().split("T")[0];
 
-    // Update user information
+    // Update user information - no longer checking for mobile number conflicts
     const updatedUser = await prisma.peopleRegistry.update({
       where: { PR_ID: Number(PR_ID) },
       data: {
