@@ -453,7 +453,8 @@ export const verifyotp = async (req, res) => {
 
     if (allUsersSameMobile.length > 0) {
       // Always use the same family number as existing members
-      familyNumber = allUsersSameMobile[0].PR_FAMILY_NO || "001";
+      familyNumber =
+        allUsersSameMobile[allUsersSameMobile.length - 1].PR_FAMILY_NO || "001";
 
       // Calculate next member number by finding the highest existing member number
       const maxMemberNumber = allUsersSameMobile.reduce((max, user) => {
