@@ -493,6 +493,7 @@ async function EditProfile(req, res) {
           PR_STATE_CODE: newStateCode,
           PR_DISTRICT_CODE: newDistrictCode,
           PR_CITY_CODE: Number(newCityCode),
+          NOT: { PR_MOBILE_NO: existingProfile.PR_MOBILE_NO },
         },
         orderBy: { PR_UNIQUE_ID: "desc" },
       });
@@ -510,6 +511,25 @@ async function EditProfile(req, res) {
       const familyMembers = await prisma.peopleRegistry.findMany({
         where: { PR_MOBILE_NO: existingProfile.PR_MOBILE_NO },
         orderBy: { PR_ID: "asc" },
+      });
+
+      await prisma.$transaction(async (tx) => {
+        for (let i = 0; i < familyMembers.length; i++) {
+          const member = familyMembers[i];
+          const memberNumber = (i + 1).toString().padStart(3, "0");
+
+          await tx.peopleRegistry.update({
+            where: { PR_ID: member.PR_ID },
+            data: {
+              PR_UNIQUE_ID: `${newStateCode}${newDistrictCode}-${newCityCode}-${familyNumber}-${memberNumber}`,
+              PR_STATE_CODE: newStateCode,
+              PR_DISTRICT_CODE: newDistrictCode,
+              PR_CITY_CODE: Number(newCityCode),
+              PR_FAMILY_NO: familyNumber,
+              PR_MEMBER_NO: memberNumber,
+            },
+          });
+        }
       });
 
       const memberIndex = familyMembers.findIndex(
