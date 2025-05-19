@@ -550,31 +550,28 @@ app.use(express.json());
 async function EditProfile(req, res) {
   try {
     const PR_ID = req.headers.pr_id;
-    if (!PR_ID) {
+    if (!PR_ID)
       return res
         .status(400)
         .json({ message: "PR_ID is required", success: false });
-    }
 
     const existingProfile = await prisma.peopleRegistry.findUnique({
       where: { PR_ID: Number(PR_ID) },
     });
-    if (!existingProfile) {
+    if (!existingProfile)
       return res
         .status(404)
         .json({ message: "Profile not found", success: false });
-    }
 
     const cityCode = Number(req.body.PR_CITY_CODE);
     if (cityCode) {
       const cityExists = await prisma.city.findUnique({
         where: { CITY_ID: cityCode },
       });
-      if (!cityExists) {
+      if (!cityExists)
         return res
           .status(400)
           .json({ message: "Invalid city code", success: false });
-      }
     }
 
     let PR_PHOTO_URL = existingProfile.PR_PHOTO_URL;
@@ -585,14 +582,12 @@ async function EditProfile(req, res) {
         filename: req.file.originalname,
         contentType: req.file.mimetype,
       });
-
       try {
         const uploadResponse = await axios.post(
           process.env.HOSTINGER_UPLOAD_API_URL,
           formData,
           { headers: { ...formData.getHeaders() } }
         );
-
         if (uploadResponse.data?.status === "success") {
           PR_PHOTO_URL = `${process.env.HOSTINGER_UPLOAD_API_URL}${uploadResponse.data.url}`;
         }
@@ -626,7 +621,6 @@ async function EditProfile(req, res) {
         const existingChildren = await tx.child.findMany({
           where: { userId: Number(PR_ID) },
         });
-
         for (const child of childrenData) {
           if (!child.name || !child.dob) continue;
           const existingChild = existingChildren.find((c) => c.id === child.id);
@@ -708,21 +702,20 @@ async function EditProfile(req, res) {
         newDistrictCode,
         Number(newCityCode)
       );
-      const familyMembers = await prisma.peopleRegistry.findMany({
-        where: { PR_MOBILE_NO: existingProfile.PR_MOBILE_NO },
-        orderBy: { PR_ID: "asc" },
+      const allUsers = await prisma.peopleRegistry.findMany({
+        where: {
+          PR_STATE_CODE: newStateCode,
+          PR_DISTRICT_CODE: newDistrictCode,
+          PR_CITY_CODE: Number(newCityCode),
+          PR_FAMILY_NO: familyNumber,
+        },
       });
-      const memberIndex = familyMembers.findIndex(
-        (m) => m.PR_ID === Number(PR_ID)
-      );
-      const familyMemberNumber = (memberIndex + 1).toString().padStart(3, "0");
 
-      updateData.PR_UNIQUE_ID = `${newStateCode}${newDistrictCode}-${newCityCode}-${familyNumber}-${familyMemberNumber}`;
-      updateData.PR_STATE_CODE = newStateCode;
-      updateData.PR_DISTRICT_CODE = newDistrictCode;
-      updateData.PR_CITY_CODE = Number(newCityCode);
+      const memberNumber = (allUsers.length + 1).toString().padStart(3, "0");
+
+      updateData.PR_UNIQUE_ID = `${newStateCode}${newDistrictCode}-${newCityCode}-${familyNumber}-${memberNumber}`;
       updateData.PR_FAMILY_NO = familyNumber;
-      updateData.PR_MEMBER_NO = familyMemberNumber;
+      updateData.PR_MEMBER_NO = memberNumber;
     }
 
     const updatedProfile = await prisma.peopleRegistry.update({
