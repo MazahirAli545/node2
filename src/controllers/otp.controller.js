@@ -561,6 +561,36 @@ export const verifyotp = async (req, res) => {
   }
 };
 
+// export async function verifyFunc(PR_MOBILE_NO, otp) {
+//   try {
+//     const otpRecord = await prisma.otp.findFirst({
+//       where: { PR_MOBILE_NO, otp },
+//     });
+
+//     if (!otpRecord) {
+//       console.log("OTP not found for ${PR_MOBILE_NO}");
+
+//       return false;
+//     }
+
+//     if (otp !== otpRecord.otp) {
+//       console.log(`Incorrect OTP entered for ${PR_MOBILE_NO}`);
+//       return false;
+//     }
+
+//     if (new Date() > otpRecord.expiresAt) {
+//       console.log(`OTP expired for ${PR_MOBILE_NO}`);
+//       return false;
+//     }
+
+//     console.log(`OTP successfully verified and deleted for ${PR_MOBILE_NO}`);
+//     return true;
+//   } catch (error) {
+//     console.log("Error in OTP verification:", error);
+//     return false;
+//   }
+// }
+
 export async function verifyFunc(PR_MOBILE_NO, otp) {
   try {
     const otpRecord = await prisma.otp.findFirst({
@@ -584,6 +614,11 @@ export async function verifyFunc(PR_MOBILE_NO, otp) {
     }
 
     console.log(`OTP successfully verified and deleted for ${PR_MOBILE_NO}`);
+
+    await prisma.otp.delete({
+      where: { id: otpRecord.id },
+    });
+
     return true;
   } catch (error) {
     console.log("Error in OTP verification:", error);
