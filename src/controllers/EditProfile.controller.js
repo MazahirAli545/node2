@@ -701,12 +701,33 @@ async function EditProfile(req, res) {
         orderBy: { PR_ID: "asc" },
       });
 
-      // Use existing family number or create new if none exists
-      const familyNumber = familyMembers[0]?.PR_FAMILY_NO || "001";
+      let familyNumber;
+      let memberNumber;
 
-      // Get next member number in sequence
-      const memberNumber = familyMembers.length.toString().padStart(3, "0");
+      if (familyMembers.length > 0) {
+        // Use existing family number or create new if none exists
+        const familyNumber = familyMembers[0]?.PR_FAMILY_NO || "001";
 
+        // Get next member number in sequence
+        const memberNumber = familyMembers.length.toString().padStart(3, "0");
+      } else {
+        const lastFamilyInLocation = await prisma.peopleRegistry.findFirst({
+          where: {
+            PR_STATE_CODE: newStateCode,
+            PR_DISTRICT_CODE: newDistrictCode,
+            PR_CITY_CODE: Number(newCityCode),
+          },
+          orderBy: { PR_FAMILY_NO: "desc" },
+        });
+
+        familyNumber = lastFamilyInLocation
+          ? (parseInt(lastFamilyInLocation.PR_FAMILY_NO) + 1)
+              .toString()
+              .padStart(3, "0")
+          : "001";
+
+        memberNumber = "001";
+      }
       // Update only the current profile
       updateData.PR_UNIQUE_ID = `${newStateCode}${newDistrictCode}-${newCityCode}-${familyNumber}-${memberNumber}`;
       updateData.PR_STATE_CODE = newStateCode;
