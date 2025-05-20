@@ -918,24 +918,22 @@ export const getFamiliesByLocation = async (req, res) => {
 // 2. Get family members (with type conversion)
 export const getFamilyMembers = async (req, res) => {
   try {
-    const { districtCode, cityCode, familyNo } = req.params;
+    const districtCode = req.params.districtCode; // string
+    const cityCode = parseInt(req.params.cityCode, 10); // int
+    const familyNo = req.params.familyNo; // string
 
-    // Convert and validate numerical codes
-    const districtCodeNumber = parseInt(districtCode, 10);
-    const cityCodeNumber = parseInt(cityCode, 10);
-
-    if (isNaN(districtCodeNumber) || isNaN(cityCodeNumber)) {
+    if (!districtCode || isNaN(cityCode) || !familyNo) {
       return res.status(400).json({
         success: false,
-        message: "Invalid district or city code format",
+        message: "Invalid district, city, or family code format",
       });
     }
 
     const familyMembers = await prisma.peopleRegistry.findMany({
       where: {
-        PR_DISTRICT_CODE: districtCodeNumber,
-        PR_CITY_CODE: cityCodeNumber,
-        PR_FAMILY_NO: familyNo, // Keep as string if family numbers are alphanumeric
+        PR_DISTRICT_CODE: districtCode,
+        PR_CITY_CODE: cityCode,
+        PR_FAMILY_NO: familyNo,
       },
       include: {
         Children: true,
@@ -947,7 +945,9 @@ export const getFamilyMembers = async (req, res) => {
         Mother: true,
         Spouse: true,
       },
-      orderBy: { PR_ID: "asc" },
+      orderBy: {
+        PR_ID: "asc",
+      },
     });
 
     if (!familyMembers || familyMembers.length === 0) {
