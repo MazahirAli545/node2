@@ -60,7 +60,7 @@ import {
   updateStream,
   deleteStream,
 } from "../controllers/Stream.controller.js";
-import { getNextFamilyNumber } from "../controllers/utils/familyUtils.js";
+// import { getNextFamilyNumber } from "../controllers/utils/familyUtils.js";
 
 import { getAllUsersBasicDetails } from "../controllers/RegisteredUser.controller.js";
 import { getUsersByMobileNumber } from "../controllers/UserFamily.controller.js";
@@ -72,7 +72,7 @@ import {
 } from "../controllers/Payment.controller.js";
 import { getAllDonationPayments } from "../controllers/UsersPaymentDetails.js";
 import { getUserStats } from "../controllers/PopulationCount.js";
-
+import { family } from "../controllers/family.js";
 const userRouter = Router();
 
 userRouter.post("/register", registerUser);
@@ -150,5 +150,6 @@ userRouter.get("/getDonationByDonar/:PR_ID", getDonationsByDonor);
 // userRouter.post("/create-order", createOrder);
 userRouter.get("/allDonationPayments", getAllDonationPayments);
 userRouter.get("/getStats", getUserStats);
-userRouter.get("/getDetailsLast", getNextFamilyNumber);
+// userRouter.get("/getDetailsLast", getNextFamilyNumber);
+userRouter.get("/getDetailsss", family);
 export default userRouter;
