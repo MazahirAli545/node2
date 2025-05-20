@@ -77,7 +77,7 @@ import { getUserStats } from "../controllers/PopulationCount.js";
 import { getLastUserWithFamily } from "../controllers/user.controller.js";
 const userRouter = Router();
 
-router.get("/user/last", getLastUserWithFamily);
+userRouter.get("/user/last", getLastUserWithFamily);
 userRouter.post("/register", registerUser);
 userRouter.post("/protected", verifyToken, someProtectedRoute);
 userRouter.post("/login", LoginUser);
