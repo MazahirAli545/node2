@@ -697,7 +697,7 @@ async function EditProfile(req, res) {
         req.body.PR_DISTRICT_CODE || existingProfile.PR_DISTRICT_CODE;
       const newCityCode = req.body.PR_CITY_CODE || existingProfile.PR_CITY_CODE;
 
-      familyNumber = await getNextFamilyNumber(
+      let familyNumber = await getNextFamilyNumber(
         newStateCode,
         newDistrictCode,
         Number(newCityCode)
