@@ -697,40 +697,51 @@ async function EditProfile(req, res) {
         req.body.PR_DISTRICT_CODE || existingProfile.PR_DISTRICT_CODE;
       const newCityCode = req.body.PR_CITY_CODE || existingProfile.PR_CITY_CODE;
 
+      familyNumber = await getNextFamilyNumber(
+        newStateCode,
+        newDistrictCode,
+        Number(newCityCode)
+      );
+
       // Get all family members with same mobile number
       const familyMembers = await prisma.peopleRegistry.findMany({
         where: { PR_MOBILE_NO: existingProfile.PR_MOBILE_NO },
         orderBy: { PR_ID: "asc" },
       });
 
-      let familyNumber;
-      let memberNumber;
+      // let familyNumber;
+      // let memberNumber;
 
-      if (familyMembers.length > 0) {
-        // Use existing family number or create new if none exists
-        // familyNumber = familyMembers[0].PR_FAMILY_NO;
-        familyNumber = familyMembers[0].PR_FAMILY_NO || "001";
+      // if (familyMembers.length > 0) {
+      //   // Use existing family number or create new if none exists
+      //   // familyNumber = familyMembers[0].PR_FAMILY_NO;
+      //   familyNumber = familyMembers[0].PR_FAMILY_NO || "001";
 
-        // Get next member number in sequence
-        memberNumber = familyMembers.length.toString().padStart(3, "0");
-      } else {
-        const lastFamilyInLocation = await prisma.peopleRegistry.findFirst({
-          where: {
-            PR_STATE_CODE: newStateCode,
-            PR_DISTRICT_CODE: newDistrictCode,
-            PR_CITY_CODE: Number(newCityCode),
-          },
-          orderBy: { PR_FAMILY_NO: "desc" },
-        });
+      //   // Get next member number in sequence
+      //   memberNumber = familyMembers.length.toString().padStart(3, "0");
+      // } else {
+      //   const lastFamilyInLocation = await prisma.peopleRegistry.findFirst({
+      //     where: {
+      //       PR_STATE_CODE: newStateCode,
+      //       PR_DISTRICT_CODE: newDistrictCode,
+      //       PR_CITY_CODE: Number(newCityCode),
+      //     },
+      //     orderBy: { PR_FAMILY_NO: "desc" },
+      //   });
 
-        familyNumber = lastFamilyInLocation
-          ? (parseInt(lastFamilyInLocation.PR_FAMILY_NO) + 1)
-              .toString()
-              .padStart(3, "0")
-          : "001";
+      //   familyNumber = lastFamilyInLocation
+      //     ? (parseInt(lastFamilyInLocation.PR_FAMILY_NO) + 1)
+      //         .toString()
+      //         .padStart(3, "0")
+      //     : "001";
 
-        memberNumber = "001";
-      }
+      //   memberNumber = "001";
+      // }
+
+      const memberNumber = (familyMembers.length + 1)
+        .toString()
+        .padStart(3, "0");
+
       // Update only the current profile
       updateData.PR_UNIQUE_ID = `${newStateCode}${newDistrictCode}-${newCityCode}-${familyNumber}-${memberNumber}`;
       updateData.PR_STATE_CODE = newStateCode;
