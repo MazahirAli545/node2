@@ -804,7 +804,7 @@ async function EditProfile(req, res) {
     //   data: updateData,
     // });
 
-    await prisma.peopleRegistry.update({
+    const updatedProfile = await prisma.peopleRegistry.update({
       where: { PR_ID: existingProfile.PR_ID },
       data: updateData,
     });
