@@ -706,26 +706,44 @@ async function EditProfile(req, res) {
 
       if (familyMembers.length > 0) {
         // Use existing family number or create new if none exists
-        familyNumber = familyMembers[0].PR_FAMILY_NO;
+        // familyNumber = familyMembers[0].PR_FAMILY_NO;
+        familyNumber = familyMembers[0].PR_FAMILY_NO || "001";
 
         // Get next member number in sequence
         memberNumber = familyMembers.length.toString().padStart(3, "0");
       } else {
-        const lastFamilyInLocation = await prisma.peopleRegistry.findFirst({
+        // const lastFamilyInLocation = await prisma.peopleRegistry.findFirst({
+        //   where: {
+        //     PR_STATE_CODE: newStateCode,
+        //     PR_DISTRICT_CODE: newDistrictCode,
+        //     PR_CITY_CODE: Number(newCityCode),
+        //   },
+        //   orderBy: { PR_FAMILY_NO: "desc" },
+        // });
+
+        // familyNumber = lastFamilyInLocation
+        //   ? (parseInt(lastFamilyInLocation.PR_FAMILY_NO) + 1)
+        //       .toString()
+        //       .padStart(3, "0")
+        //   : "001";
+
+        // memberNumber = "001";
+
+        const families = await prisma.peopleRegistry.findMany({
           where: {
             PR_STATE_CODE: newStateCode,
             PR_DISTRICT_CODE: newDistrictCode,
             PR_CITY_CODE: Number(newCityCode),
           },
+          distinct: ["PR_FAMILY_NO"],
           orderBy: { PR_FAMILY_NO: "desc" },
         });
 
-        familyNumber = lastFamilyInLocation
-          ? (parseInt(lastFamilyInLocation.PR_FAMILY_NO) + 1)
-              .toString()
-              .padStart(3, "0")
-          : "001";
+        const lastFamilyNumber = families[0]?.PR_FAMILY_NO
+          ? parseInt(families[0].PR_FAMILY_NO)
+          : 0;
 
+        familyNumber = (lastFamilyNumber + 1).toString().padStart(4, "0");
         memberNumber = "001";
       }
       // Update only the current profile
