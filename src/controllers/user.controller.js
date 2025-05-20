@@ -860,3 +860,33 @@ export const LoginUser = async (req, res) => {
     });
   }
 };
+
+export const getLastUserWithFamily = async (req, res) => {
+  try {
+    const lastUser = await prisma.peopleRegistry.findFirst({
+      orderBy: {
+        PR_ID: "desc", // latest user
+      },
+      include: {
+        Children: true, // includes children from Child[] relation
+        Profession: true, // optional
+        City: true, // optional
+        BUSSINESS: true, // optional
+        Contact: true, // optional
+        // Get referenced family members
+        father: true,
+        mother: true,
+        spouse: true,
+      },
+    });
+
+    if (!lastUser) {
+      return res.status(404).json({ success: false, message: "No user found" });
+    }
+
+    return res.status(200).json({ success: true, data: lastUser });
+  } catch (error) {
+    console.error("Error fetching last user:", error);
+    return res.status(500).json({ success: false, message: "Server Error" });
+  }
+};

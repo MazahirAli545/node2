@@ -60,7 +60,6 @@ import {
   updateStream,
   deleteStream,
 } from "../controllers/Stream.controller.js";
-// import { getNextFamilyNumber } from "../controllers/utils/familyUtils.js";
 
 import { getAllUsersBasicDetails } from "../controllers/RegisteredUser.controller.js";
 import { getUsersByMobileNumber } from "../controllers/UserFamily.controller.js";
@@ -72,9 +71,13 @@ import {
 } from "../controllers/Payment.controller.js";
 import { getAllDonationPayments } from "../controllers/UsersPaymentDetails.js";
 import { getUserStats } from "../controllers/PopulationCount.js";
+// import { getNextFamilyNumber } from "../controllers/utils/familyUtils.js";
 // import { familyRoutes } from "../controllers/family.js";
+
+import { getLastUserWithFamily } from "../controllers/user.controller.js";
 const userRouter = Router();
 
+router.get("/user/last", getLastUserWithFamily);
 userRouter.post("/register", registerUser);
 userRouter.post("/protected", verifyToken, someProtectedRoute);
 userRouter.post("/login", LoginUser);
