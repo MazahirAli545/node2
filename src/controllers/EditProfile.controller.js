@@ -712,27 +712,24 @@ async function EditProfile(req, res) {
         familyNumber = familyMembers[0].PR_FAMILY_NO || "001";
 
         // Get next member number in sequence
-        memberNumber = familyMembers.length.toString().padStart(3, "0");
-      } else {
-        // const lastFamilyInLocation = await prisma.peopleRegistry.findFirst({
-        //   where: {
-        //     PR_STATE_CODE: newStateCode,
-        //     PR_DISTRICT_CODE: newDistrictCode,
-        //     PR_CITY_CODE: Number(newCityCode),
-        //   },
-        //   orderBy: { PR_FAMILY_NO: "desc" },
-        // });
 
-        // familyNumber = lastFamilyInLocation
-        //   ? (parseInt(lastFamilyInLocation.PR_FAMILY_NO) + 1)
-        //       .toString()
-        //       .padStart(3, "0")
-        //   : "001";
-        familyNumber = await getNextFamilyNumber(
-          newStateCode,
-          newDistrictCode,
-          Number(newCityCode)
-        );
+        memberNumber = familyMembers.length.toString().padStart(4, "0");
+      } else {
+        const lastFamilyInLocation = await prisma.peopleRegistry.findFirst({
+          where: {
+            PR_STATE_CODE: newStateCode,
+            PR_DISTRICT_CODE: newDistrictCode,
+            PR_CITY_CODE: Number(newCityCode),
+          },
+          orderBy: { PR_FAMILY_NO: "desc" },
+        });
+
+        familyNumber = lastFamilyInLocation
+          ? (parseInt(lastFamilyInLocation.PR_FAMILY_NO) + 1)
+              .toString()
+              .padStart(3, "0")
+          : "001";
+
         memberNumber = "001";
       }
       // Update only the current profile

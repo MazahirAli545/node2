@@ -15,13 +15,15 @@ export const getNextFamilyNumber = async (
   });
 
   let familyNumber = "001";
-  if (lastEntry && lastEntry.PR_UNIQUE_ID) {
-    const parts = lastEntry.PR_UNIQUE_ID.split("-");
-    if (parts.length === 4) {
-      const lastFamily = parseInt(parts[2]);
-      familyNumber = (lastFamily + 1).toString().padStart(3, "0");
-    }
-  }
+  console.log("TATAT", lastEntry);
+
+  // if (lastEntry && lastEntry.PR_UNIQUE_ID) {
+  //   const parts = lastEntry.PR_UNIQUE_ID.split("-");
+  //   if (parts.length === 4) {
+  //     const lastFamily = parseInt(parts[2]);
+  //     familyNumber = (lastFamily + 1).toString().padStart(4, "0");
+  //   }
+  // }
 
   return familyNumber;
 };
