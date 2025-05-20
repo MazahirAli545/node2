@@ -864,8 +864,15 @@ export const LoginUser = async (req, res) => {
 // 1. Get all families with same district and city code (with type conversion)
 export const getFamiliesByLocation = async (req, res) => {
   try {
-    const districtCode = req.params.districtCode.toString();
-    const cityCode = req.params.cityCode.toString();
+    const districtCode = req.params.districtCode;
+    const cityCode = parseInt(req.params.cityCode, 10);
+
+    if (!districtCode || isNaN(cityCode)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid district or city code format",
+      });
+    }
 
     const families = await prisma.peopleRegistry.findMany({
       where: {
@@ -887,10 +894,24 @@ export const getFamiliesByLocation = async (req, res) => {
       },
     });
 
-    res.status(200).json({ success: true, data: families });
+    if (!families || families.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No families found in this location",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: families.length,
+      data: families,
+    });
   } catch (error) {
     console.error("Error fetching families by location:", error);
-    res.status(500).json({ success: false, message: "Server Error" });
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
   }
 };
 
