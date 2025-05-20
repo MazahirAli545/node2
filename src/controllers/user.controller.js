@@ -864,19 +864,16 @@ export const LoginUser = async (req, res) => {
 export const getLastUserWithFamily = async (req, res) => {
   try {
     const lastUser = await prisma.peopleRegistry.findFirst({
-      orderBy: {
-        PR_ID: "desc", // latest user
-      },
+      orderBy: { PR_ID: "desc" },
       include: {
-        Children: true, // includes children from Child[] relation
-        Profession: true, // optional
-        City: true, // optional
-        BUSSINESS: true, // optional
-        Contact: true, // optional
-        // Get referenced family members
-        father: true,
-        mother: true,
-        spouse: true,
+        Children: true,
+        Profession: true,
+        City: true,
+        BUSSINESS: true,
+        Contact: true,
+        Father: true,
+        Mother: true,
+        Spouse: true,
       },
     });
 
