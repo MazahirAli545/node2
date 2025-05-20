@@ -861,22 +861,27 @@ export const LoginUser = async (req, res) => {
   }
 };
 
-// 1. Get all families with same district and city code
+// 1. Get all families with same district and city code (with type conversion)
 export const getFamiliesByLocation = async (req, res) => {
   try {
     const { districtCode, cityCode } = req.params;
 
-    if (!districtCode || !cityCode) {
+    // Convert to numbers and validate
+    const districtCodeNumber = parseInt(districtCode, 10);
+    const cityCodeNumber = parseInt(cityCode, 10);
+
+    if (isNaN(districtCodeNumber) || isNaN(cityCodeNumber)) {
       return res.status(400).json({
         success: false,
-        message: "District code and city code are required",
+        message:
+          "Invalid district or city code format - must be numerical values",
       });
     }
 
     const families = await prisma.peopleRegistry.findMany({
       where: {
-        PR_DISTRICT_CODE: districtCode,
-        PR_CITY_CODE: cityCode,
+        PR_DISTRICT_CODE: districtCodeNumber,
+        PR_CITY_CODE: cityCodeNumber,
       },
       include: {
         Children: true,
@@ -912,23 +917,27 @@ export const getFamiliesByLocation = async (req, res) => {
   }
 };
 
-// 2. Get all family members by family number in a specific location
+// 2. Get family members (with type conversion)
 export const getFamilyMembers = async (req, res) => {
   try {
     const { districtCode, cityCode, familyNo } = req.params;
 
-    if (!districtCode || !cityCode || !familyNo) {
+    // Convert and validate numerical codes
+    const districtCodeNumber = parseInt(districtCode, 10);
+    const cityCodeNumber = parseInt(cityCode, 10);
+
+    if (isNaN(districtCodeNumber) || isNaN(cityCodeNumber)) {
       return res.status(400).json({
         success: false,
-        message: "District code, city code and family number are required",
+        message: "Invalid district or city code format",
       });
     }
 
     const familyMembers = await prisma.peopleRegistry.findMany({
       where: {
-        PR_DISTRICT_CODE: districtCode,
-        PR_CITY_CODE: cityCode,
-        PR_FAMILY_NO: familyNo,
+        PR_DISTRICT_CODE: districtCodeNumber,
+        PR_CITY_CODE: cityCodeNumber,
+        PR_FAMILY_NO: familyNo, // Keep as string if family numbers are alphanumeric
       },
       include: {
         Children: true,
