@@ -19,7 +19,7 @@ export const getNextFamilyNumber = async (
     const parts = lastEntry.PR_UNIQUE_ID.split("-");
     if (parts.length === 4) {
       const lastFamily = parseInt(parts[2]);
-      familyNumber = (lastFamily + 1).toString().padStart(3, "0");
+      familyNumber = (lastFamily + 1).toString().padStart(4, "0");
     }
   }
 

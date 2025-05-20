@@ -861,10 +861,23 @@ export const LoginUser = async (req, res) => {
   }
 };
 
-export const getLastUserWithFamily = async (req, res) => {
+// 1. Get all families with same district and city code
+export const getFamiliesByLocation = async (req, res) => {
   try {
-    const lastUser = await prisma.peopleRegistry.findFirst({
-      orderBy: { PR_ID: "desc" },
+    const { districtCode, cityCode } = req.params;
+
+    if (!districtCode || !cityCode) {
+      return res.status(400).json({
+        success: false,
+        message: "District code and city code are required",
+      });
+    }
+
+    const families = await prisma.peopleRegistry.findMany({
+      where: {
+        PR_DISTRICT_CODE: districtCode,
+        PR_CITY_CODE: cityCode,
+      },
       include: {
         Children: true,
         Profession: true,
@@ -875,15 +888,78 @@ export const getLastUserWithFamily = async (req, res) => {
         Mother: true,
         Spouse: true,
       },
+      orderBy: { PR_FAMILY_NO: "asc" },
     });
 
-    if (!lastUser) {
-      return res.status(404).json({ success: false, message: "No user found" });
+    if (!families || families.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No families found in this location",
+      });
     }
 
-    return res.status(200).json({ success: true, data: lastUser });
+    return res.status(200).json({
+      success: true,
+      count: families.length,
+      data: families,
+    });
   } catch (error) {
-    console.error("Error fetching last user:", error);
-    return res.status(500).json({ success: false, message: "Server Error" });
+    console.error("Error fetching families by location:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
+
+// 2. Get all family members by family number in a specific location
+export const getFamilyMembers = async (req, res) => {
+  try {
+    const { districtCode, cityCode, familyNo } = req.params;
+
+    if (!districtCode || !cityCode || !familyNo) {
+      return res.status(400).json({
+        success: false,
+        message: "District code, city code and family number are required",
+      });
+    }
+
+    const familyMembers = await prisma.peopleRegistry.findMany({
+      where: {
+        PR_DISTRICT_CODE: districtCode,
+        PR_CITY_CODE: cityCode,
+        PR_FAMILY_NO: familyNo,
+      },
+      include: {
+        Children: true,
+        Profession: true,
+        City: true,
+        BUSSINESS: true,
+        Contact: true,
+        Father: true,
+        Mother: true,
+        Spouse: true,
+      },
+      orderBy: { PR_ID: "asc" },
+    });
+
+    if (!familyMembers || familyMembers.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No family members found with these details",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: familyMembers.length,
+      data: familyMembers,
+    });
+  } catch (error) {
+    console.error("Error fetching family members:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
   }
 };

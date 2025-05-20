@@ -74,10 +74,12 @@ import { getUserStats } from "../controllers/PopulationCount.js";
 // import { getNextFamilyNumber } from "../controllers/utils/familyUtils.js";
 // import { familyRoutes } from "../controllers/family.js";
 
-import { getLastUserWithFamily } from "../controllers/user.controller.js";
+import { getFamiliesByLocation } from "../controllers/user.controller.js";
+import { getFamilyMembers } from "../controllers/user.controller.js";
 const userRouter = Router();
 
-userRouter.get("/user/last", getLastUserWithFamily);
+userRouter.get("/families/:districtCode/:cityCode", getFamiliesByLocation);
+userRouter.get("/families/:districtCode/:cityCode/:familyNo", getFamilyMembers);
 userRouter.post("/register", registerUser);
 userRouter.post("/protected", verifyToken, someProtectedRoute);
 userRouter.post("/login", LoginUser);
@@ -153,6 +155,7 @@ userRouter.get("/getDonationByDonar/:PR_ID", getDonationsByDonor);
 // userRouter.post("/create-order", createOrder);
 userRouter.get("/allDonationPayments", getAllDonationPayments);
 userRouter.get("/getStats", getUserStats);
+
 // userRouter.get("/getDetailsLast", getNextFamilyNumber);
 // userRouter.get("/getDetailsss", familyRoutes);
 export default userRouter;
