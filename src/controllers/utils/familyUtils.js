@@ -48,11 +48,9 @@ export const getNextFamilyNumber = async (stateCode, districtCode, cityId) => {
     //   const lastFamilyNum = parseInt(lastUserInArea.PR_FAMILY_NO, 10);
     //   return (lastFamilyNum + 1).toString().padStart(3, "0");
     // }
-    if (lastUserInArea && lastFamily.PR_FAMILY_NO) {
-      const nextFamilyNo = (parseInt(lastFamily.PR_FAMILY_NO, 10) + 1)
-        .toString()
-        .padStart(3, "0");
-      return nextFamilyNo;
+    if (lastUserInArea) {
+      const lastFamilyNum = parseInt(lastUserInArea.PR_FAMILY_NO, 10);
+      return (lastFamilyNum + 1).toString().padStart(3, "0");
     }
 
     // If no existing users in this area, start with "001"

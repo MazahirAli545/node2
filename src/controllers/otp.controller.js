@@ -435,20 +435,30 @@ export const verifyotp = async (req, res) => {
     let memberNumber = "001";
 
     if (allUsersSameMobile.length > 0) {
-      const lastUser = allUsersSameMobile[0];
-      const lastUniqueIdParts = lastUser.PR_UNIQUE_ID?.split("-") || [];
+      const lastUser = allUsersSameMobile[0].PR_FAMILY_NO || "001";
+      const lastUniqueIdParts = (allUsersSameMobile.length + 1)
+        .toString()
+        .padStart(3, "0");
 
-      if (lastUniqueIdParts.length === 4) {
-        familyNumber = lastUser.PR_FAMILY_NO;
-        const lastMemberNumber = parseInt(lastUniqueIdParts[3]);
-        memberNumber = (lastMemberNumber + 1).toString().padStart(3, "0");
-      }
+      // if (lastUniqueIdParts.length === 4) {
+      //   familyNumber = lastUser.PR_FAMILY_NO;
+      //   const lastMemberNumber = parseInt(lastUniqueIdParts[3]);
+      //   memberNumber = (lastMemberNumber + 1).toString().padStart(3, "0");
+      // }
+      familyNumber = existingFamilyNumber;
+      memberNumber = memberNumber;
     } else {
+      // familyNumber = await getNextFamilyNumber(
+      //   PR_STATE_CODE,
+      //   PR_DISTRICT_CODE,
+      //   cityId
+      // );
       familyNumber = await getNextFamilyNumber(
         PR_STATE_CODE,
         PR_DISTRICT_CODE,
         cityId
       );
+      memberNumber = "001";
     }
 
     const uniqueId =
