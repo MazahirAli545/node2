@@ -428,7 +428,7 @@ export const verifyotp = async (req, res) => {
 
     const allUsersSameMobile = await prisma.peopleRegistry.findMany({
       where: { PR_MOBILE_NO },
-      orderBy: { PR_ID: "asc" },
+      orderBy: { PR_ID: "desc" },
     });
 
     let familyNumber = "001";
@@ -440,25 +440,17 @@ export const verifyotp = async (req, res) => {
         .toString()
         .padStart(3, "0");
 
-      // if (lastUniqueIdParts.length === 4) {
-      //   familyNumber = lastUser.PR_FAMILY_NO;
-      //   const lastMemberNumber = parseInt(lastUniqueIdParts[3]);
-      //   memberNumber = (lastMemberNumber + 1).toString().padStart(3, "0");
-      // }
-      familyNumber = existingFamilyNumber;
-      memberNumber = memberNumber;
+      if (lastUniqueIdParts.length === 4) {
+        familyNumber = lastUser.PR_FAMILY_NO;
+        const lastMemberNumber = parseInt(lastUniqueIdParts[3]);
+        memberNumber = (lastMemberNumber + 1).toString().padStart(3, "0");
+      }
     } else {
-      // familyNumber = await getNextFamilyNumber(
-      //   PR_STATE_CODE,
-      //   PR_DISTRICT_CODE,
-      //   cityId
-      // );
       familyNumber = await getNextFamilyNumber(
         PR_STATE_CODE,
         PR_DISTRICT_CODE,
         cityId
       );
-      memberNumber = "001";
     }
 
     const uniqueId =
