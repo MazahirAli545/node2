@@ -102,10 +102,6 @@ model PeopleRegistry {
   Contact Contact[]
 }
 
-model FamilyCounter {
-  id      Int    @id @default(1) // Only one row
-  lastNo  Int
-}
 
 
 model PopulationStats {
