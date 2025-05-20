@@ -695,68 +695,25 @@ async function EditProfile(req, res) {
         req.body.PR_DISTRICT_CODE || existingProfile.PR_DISTRICT_CODE;
       const newCityCode = req.body.PR_CITY_CODE || existingProfile.PR_CITY_CODE;
 
-      // Get ALL family members (same mobile number across all locations)
-      const allFamilyMembers = await prisma.peopleRegistry.findMany({
+      // Get all family members with same mobile number
+      const familyMembers = await prisma.peopleRegistry.findMany({
         where: { PR_MOBILE_NO: existingProfile.PR_MOBILE_NO },
-        orderBy: { PR_ID: "asc" }, // Oldest first
+        orderBy: { PR_ID: "asc" },
       });
 
-      // Use the family number from the FIRST registration
-      const familyNumber =
-        allFamilyMembers.length > 0
-          ? allFamilyMembers[0].PR_FAMILY_NO
-          : await getNextFamilyNumber(
-              newStateCode,
-              newDistrictCode,
-              Number(newCityCode)
-            );
+      // Use existing family number or create new if none exists
+      const familyNumber = familyMembers[0]?.PR_FAMILY_NO || "001";
 
-      // Count members in the NEW location with this family number
-      const membersInNewLocation = await prisma.peopleRegistry.findMany({
-        where: {
-          PR_STATE_CODE: newStateCode,
-          PR_DISTRICT_CODE: newDistrictCode,
-          PR_CITY_CODE: Number(newCityCode),
-          PR_FAMILY_NO: familyNumber,
-        },
-      });
+      // Get next member number in sequence
+      const memberNumber = familyMembers.length.toString().padStart(3, "0");
 
-      // Update ALL family members if mobile number hasn't changed
-      if (req.body.PR_MOBILE_NO === existingProfile.PR_MOBILE_NO) {
-        await prisma.$transaction(async (tx) => {
-          for (let i = 0; i < allFamilyMembers.length; i++) {
-            await tx.peopleRegistry.update({
-              where: { PR_ID: allFamilyMembers[i].PR_ID },
-              data: {
-                PR_UNIQUE_ID: `${newStateCode}${newDistrictCode}-${newCityCode}-${familyNumber}-${(
-                  i + 1
-                )
-                  .toString()
-                  .padStart(3, "0")}`,
-                PR_STATE_CODE: newStateCode,
-                PR_DISTRICT_CODE: newDistrictCode,
-                PR_CITY_CODE: Number(newCityCode),
-                PR_FAMILY_NO: familyNumber,
-                PR_MEMBER_NO: (i + 1).toString().padStart(3, "0"),
-              },
-            });
-          }
-        });
-      }
-
-      // Update current profile's data
-      updateData.PR_UNIQUE_ID = `${newStateCode}${newDistrictCode}-${newCityCode}-${familyNumber}-${(
-        membersInNewLocation.length + 1
-      )
-        .toString()
-        .padStart(3, "0")}`;
+      // Update only the current profile
+      updateData.PR_UNIQUE_ID = `${newStateCode}${newDistrictCode}-${newCityCode}-${familyNumber}-${memberNumber}`;
       updateData.PR_STATE_CODE = newStateCode;
       updateData.PR_DISTRICT_CODE = newDistrictCode;
       updateData.PR_CITY_CODE = Number(newCityCode);
       updateData.PR_FAMILY_NO = familyNumber;
-      updateData.PR_MEMBER_NO = (membersInNewLocation.length + 1)
-        .toString()
-        .padStart(3, "0");
+      updateData.PR_MEMBER_NO = memberNumber;
     }
 
     const updatedProfile = await prisma.peopleRegistry.update({
