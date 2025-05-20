@@ -14,22 +14,22 @@ export const getNextFamilyNumber = async (
     orderBy: { PR_UNIQUE_ID: "desc" },
   });
 
-  let familyNumber = "001";
+  // let familyNumber = "001";
   console.log("TATAT", lastEntry);
 
-  // if (lastEntry && lastEntry.PR_UNIQUE_ID) {
-  //   const parts = lastEntry.PR_UNIQUE_ID.split("-");
-  //   if (parts.length === 4) {
-  //     const lastFamily = parseInt(parts[2]);
-  //     familyNumber = (lastFamily + 1).toString().padStart(4, "0");
-  //   }
-  // }
+  let nextFamilyNumber = "0001"; // Default starting number
 
-  //  return familyNumber;
+  if (lastEntry?.PR_FAMILY_NO) {
+    const lastFamily = parseInt(lastEntry.PR_FAMILY_NO, 10);
+    nextFamilyNumber = (lastFamily + 1).toString().padStart(4, "0");
+  }
 
-  return res.status(200).json({
-    message: "Users fetched successfully",
-    success: true,
-    lastEntry,
-  });
+  return nextFamilyNumber;
 };
+
+// return res.status(200).json({
+//   message: "Users fetched successfully",
+//   success: true,
+//   lastEntry,
+// });
+// };
