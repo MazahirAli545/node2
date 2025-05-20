@@ -728,7 +728,7 @@ async function EditProfile(req, res) {
               .toString()
               .padStart(3, "0")
           : "001";
-        familyNumber = "001";
+
         memberNumber = "001";
       }
       // Update only the current profile
