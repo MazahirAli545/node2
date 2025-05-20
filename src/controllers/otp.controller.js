@@ -426,13 +426,13 @@ export const verifyotp = async (req, res) => {
 
     const formattedDOB = new Date(PR_DOB).toISOString().split("T")[0];
 
-    let familyNumber = "001";
-    let memberNumber = "001";
-
     const allUsersSameMobile = await prisma.peopleRegistry.findMany({
       where: { PR_MOBILE_NO },
       orderBy: { PR_ID: "asc" },
     });
+
+    let familyNumber = "001";
+    let memberNumber = "001";
 
     if (allUsersSameMobile.length > 0) {
       const lastUser = allUsersSameMobile[0].PR_FAMILY_NO || "001";
