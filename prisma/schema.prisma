@@ -87,6 +87,19 @@ model PeopleRegistry {
   PR_UPDATED_AT    DateTime?
     PR_ROLE          PR_ROLE    @default(End_User) 
   // Hobbies PR_Hobbies[]  
+
+  // Children         Child[] @relation("UserChildren")
+  // Contact          Contact[]
+
+  // Self-referencing relations for family
+  Father           PeopleRegistry? @relation("FatherRelation", fields: [PR_FATHER_ID], references: [PR_ID])
+  Mother           PeopleRegistry? @relation("MotherRelation", fields: [PR_MOTHER_ID], references: [PR_ID])
+  Spouse           PeopleRegistry? @relation("SpouseRelation", fields: [PR_SPOUSE_ID], references: [PR_ID])
+
+  FatherOf         PeopleRegistry[] @relation("FatherRelation")
+  MotherOf         PeopleRegistry[] @relation("MotherRelation")
+  SpouseOf         PeopleRegistry[] @relation("SpouseRelation")
+
  
   @@unique([PR_MOBILE_NO, PR_FULL_NAME])
   
