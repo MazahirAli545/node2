@@ -756,26 +756,6 @@ app.use(express.json());
 //     });
 //   }
 // }
-async function getNextFamilyNumber(stateCode, districtCode, cityCode) {
-  // Find the highest family number in this location
-  const lastFamilyInLocation = await prisma.peopleRegistry.findFirst({
-    where: {
-      PR_STATE_CODE: stateCode,
-      PR_DISTRICT_CODE: districtCode,
-      PR_CITY_CODE: Number(cityCode),
-    },
-    orderBy: { PR_FAMILY_NO: "desc" },
-  });
-
-  // If no families exist yet in this location, start with 001
-  if (!lastFamilyInLocation || !lastFamilyInLocation.PR_FAMILY_NO) {
-    return "001";
-  }
-
-  // Increment the highest family number
-  const nextFamilyNum = parseInt(lastFamilyInLocation.PR_FAMILY_NO) + 1;
-  return nextFamilyNum.toString().padStart(3, "0");
-}
 
 async function EditProfile(req, res) {
   try {
@@ -955,7 +935,7 @@ async function EditProfile(req, res) {
         familyNumber = await getNextFamilyNumber(
           newStateCode,
           newDistrictCode,
-          newCityCode
+          Number(newCityCode)
         );
       }
 
@@ -1026,7 +1006,5 @@ async function EditProfile(req, res) {
     });
   }
 }
-
-// export default EditProfile;
 
 export default EditProfile;
