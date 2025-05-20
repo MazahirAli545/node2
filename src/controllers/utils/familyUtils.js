@@ -25,5 +25,11 @@ export const getNextFamilyNumber = async (
   //   }
   // }
 
-  return familyNumber;
+  //  return familyNumber;
+
+  return res.status(200).json({
+    message: "Users fetched successfully",
+    success: true,
+    lastEntry,
+  });
 };
