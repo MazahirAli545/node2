@@ -43,12 +43,8 @@ export const getNextFamilyNumber = async (stateCode, districtCode, cityId) => {
       },
     });
 
-    // if (lastUserInArea) {
-    //   // Parse family number as integer and increment
-    //   const lastFamilyNum = parseInt(lastUserInArea.PR_FAMILY_NO, 10);
-    //   return (lastFamilyNum + 1).toString().padStart(3, "0");
-    // }
     if (lastUserInArea) {
+      // Parse family number as integer and increment
       const lastFamilyNum = parseInt(lastUserInArea.PR_FAMILY_NO, 10);
       return (lastFamilyNum + 1).toString().padStart(3, "0");
     }
