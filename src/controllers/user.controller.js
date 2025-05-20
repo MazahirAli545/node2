@@ -864,24 +864,13 @@ export const LoginUser = async (req, res) => {
 // 1. Get all families with same district and city code (with type conversion)
 export const getFamiliesByLocation = async (req, res) => {
   try {
-    const { districtCode, cityCode } = req.params;
-
-    // Convert to numbers and validate
-    const districtCodeNumber = parseInt(districtCode, 10);
-    const cityCodeNumber = parseInt(cityCode, 10);
-
-    if (isNaN(districtCodeNumber) || isNaN(cityCodeNumber)) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Invalid district or city code format - must be numerical values",
-      });
-    }
+    const districtCode = req.params.districtCode.toString();
+    const cityCode = req.params.cityCode.toString();
 
     const families = await prisma.peopleRegistry.findMany({
       where: {
-        PR_DISTRICT_CODE: districtCodeNumber,
-        PR_CITY_CODE: cityCodeNumber,
+        PR_DISTRICT_CODE: districtCode,
+        PR_CITY_CODE: cityCode,
       },
       include: {
         Children: true,
@@ -893,27 +882,15 @@ export const getFamiliesByLocation = async (req, res) => {
         Mother: true,
         Spouse: true,
       },
-      orderBy: { PR_FAMILY_NO: "asc" },
+      orderBy: {
+        PR_FAMILY_NO: "asc",
+      },
     });
 
-    if (!families || families.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "No families found in this location",
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      count: families.length,
-      data: families,
-    });
+    res.status(200).json({ success: true, data: families });
   } catch (error) {
     console.error("Error fetching families by location:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Server Error",
-    });
+    res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
