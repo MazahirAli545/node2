@@ -706,10 +706,10 @@ async function EditProfile(req, res) {
 
       if (familyMembers.length > 0) {
         // Use existing family number or create new if none exists
-        const familyNumber = familyMembers[0]?.PR_FAMILY_NO || "001";
+        familyNumber = familyMembers[0]?.PR_FAMILY_NO || "001";
 
         // Get next member number in sequence
-        const memberNumber = familyMembers.length.toString().padStart(3, "0");
+        memberNumber = familyMembers.length.toString().padStart(3, "0");
       } else {
         const lastFamilyInLocation = await prisma.peopleRegistry.findFirst({
           where: {
