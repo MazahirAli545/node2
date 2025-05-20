@@ -383,34 +383,34 @@ export const registerUser = async (req, res) => {
     // 📌 Fetch existing users with this mobile number
     const existingUsers = await prisma.peopleRegistry.findMany({
       where: { PR_MOBILE_NO: PR_MOBILE_NO },
-      orderBy: { PR_ID: "desc" },
+      orderBy: { PR_ID: "asc" },
     });
 
     let familyNumber = "001";
     let memberNumber = "001";
 
     if (existingUsers.length > 0) {
-      const latestUser = existingUsers[0];
-      familyNumber = latestUser.PR_FAMILY_NO;
+      // const latestUser = existingUsers[0];
+      familyNumber = existingUsers[0].PR_FAMILY_NO;
 
       const familyMembers = await prisma.peopleRegistry.findMany({
         where: {
           PR_MOBILE_NO: PR_MOBILE_NO,
           PR_FAMILY_NO: familyNumber,
-          PR_CITY_CODE: cityId,
+          // PR_CITY_CODE: cityId,
         },
       });
 
-      let maxMember = 0;
-      familyMembers.forEach((member) => {
-        const parts = member.PR_UNIQUE_ID.split("-");
-        if (parts.length === 4) {
-          const num = parseInt(parts[3]);
-          if (num > maxMember) maxMember = num;
-        }
-      });
+      // let maxMember = 0;
+      // familyMembers.forEach((member) => {
+      //   const parts = member.PR_UNIQUE_ID.split("-");
+      //   if (parts.length === 4) {
+      //     const num = parseInt(parts[3]);
+      //     if (num > maxMember) maxMember = num;
+      //   }
+      // });
 
-      memberNumber = (maxMember + 1).toString().padStart(3, "0");
+      memberNumber = (familyMembers.length + 1).toString().padStart(3, "0");
     } else {
       familyNumber = await getNextFamilyNumber(
         PR_STATE_CODE,

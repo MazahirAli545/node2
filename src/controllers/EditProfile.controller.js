@@ -696,20 +696,18 @@ async function EditProfile(req, res) {
       const newCityCode = req.body.PR_CITY_CODE || existingProfile.PR_CITY_CODE;
 
       const sameMobileUsers = await prisma.peopleRegistry.findMany({
-        where: { PR_MOBILE_NO: req.body.PR_MOBILE_NO },
+        where: { PR_MOBILE_NO: existingProfile.PR_MOBILE_NO },
         orderBy: { PR_ID: "asc" },
       });
 
-      let familyNumber;
-      if (sameMobileUsers.length > 0) {
-        familyNumber = sameMobileUsers[0].PR_FAMILY_NO;
-      } else {
-        familyNumber = await getNextFamilyNumber(
-          newStateCode,
-          newDistrictCode,
-          Number(newCityCode)
-        );
-      }
+      familyNumber =
+        sameMobileUsers.length > 0
+          ? sameMobileUsers[0].PR_FAMILY_NO
+          : await getNextFamilyNumber(
+              newStateCode,
+              newDistrictCode,
+              Number(newCityCode)
+            );
       const allUsers = await prisma.peopleRegistry.findMany({
         where: {
           PR_STATE_CODE: newStateCode,
