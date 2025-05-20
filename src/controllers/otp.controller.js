@@ -435,10 +435,8 @@ export const verifyotp = async (req, res) => {
     let memberNumber = "001";
 
     if (allUsersSameMobile.length > 0) {
-      const lastUser = allUsersSameMobile[0].PR_FAMILY_NO || "001";
-      const lastUniqueIdParts = (allUsersSameMobile.length + 1)
-        .toString()
-        .padStart(3, "0");
+      const lastUser = allUsersSameMobile[0];
+      const lastUniqueIdParts = lastUser.PR_UNIQUE_ID?.split("-") || [];
 
       if (lastUniqueIdParts.length === 4) {
         familyNumber = lastUser.PR_FAMILY_NO;
@@ -504,7 +502,6 @@ export const verifyotp = async (req, res) => {
     });
   }
 };
-
 export async function verifyFunc(PR_MOBILE_NO, otp) {
   try {
     const otpRecord = await prisma.otp.findFirst({
