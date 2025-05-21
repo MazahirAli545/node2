@@ -187,7 +187,17 @@ export async function generateFamilyId(
     if (duplicateUser) {
       // Reuse the family number and assign next member number
       familyNumber = duplicateUser.PR_FAMILY_NO || "0001";
-      memberNumber = (existingUsers.length + 1).toString().padStart(4, "0");
+      // memberNumber = (existingUsers.length + 1).toString().padStart(4, "0");
+      const currentFamilyMembers = await prisma.peopleRegistry.count({
+        where: {
+          PR_FAMILY_NO: familyNumber,
+          PR_STATE_CODE: stateCode,
+          PR_DISTRICT_CODE: districtCode,
+          PR_CITY_CODE: cityCode,
+        },
+      });
+
+      memberNumber = (currentFamilyMembers + 1).toString().padStart(4, "0");
     } else {
       // Different name => treat as new family in same location
       const lastFamilyInLocation = await prisma.peopleRegistry.findFirst({
