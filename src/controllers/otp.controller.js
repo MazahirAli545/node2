@@ -636,7 +636,7 @@ export const verifyotp = async (req, res) => {
           },
         });
       }
-      cityId = city?.CITY_ID || 0;
+      cityId = city?.CITY_ID;
     }
 
     // Format the date as string (YYYY-MM-DD)
@@ -647,7 +647,7 @@ export const verifyotp = async (req, res) => {
       PR_MOBILE_NO,
       PR_STATE_CODE || "00",
       PR_DISTRICT_CODE || "00",
-      cityId || 0,
+      cityId,
       PR_FULL_NAME
     );
 
