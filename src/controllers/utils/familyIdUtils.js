@@ -250,7 +250,7 @@ export async function generateFamilyId(
   PR_DISTRICT_CODE,
   PR_CITY_CODE
 ) {
-  // Step 1: Check if this mobile number already exists in the database
+  // Step 1: Check if this mobile number already has a family
   const existingFamilyMember = await prisma.peopleRegistry.findFirst({
     where: { PR_MOBILE_NO },
     orderBy: { PR_ID: "asc" },
@@ -263,7 +263,7 @@ export async function generateFamilyId(
     // ✅ Use existing family number
     familyNumber = existingFamilyMember.PR_FAMILY_NO;
 
-    // Count how many members exist in this family (by mobile + family)
+    // Count existing members with same mobile and family number
     const existingMembers = await prisma.peopleRegistry.count({
       where: {
         PR_MOBILE_NO,
@@ -273,7 +273,7 @@ export async function generateFamilyId(
 
     memberNumber = String(existingMembers + 1).padStart(4, "0");
   } else {
-    // 🆕 Generate a new family number (independent of location)
+    // 🆕 New mobile → assign a new family number
     const lastFamily = await prisma.peopleRegistry.findFirst({
       orderBy: {
         PR_FAMILY_NO: "desc",
@@ -290,7 +290,11 @@ export async function generateFamilyId(
 
   const PR_UNIQUE_ID = `${PR_STATE_CODE}-${PR_DISTRICT_CODE}-${familyNumber}-${memberNumber}`;
 
-  return { PR_UNIQUE_ID, PR_FAMILY_NO: familyNumber };
+  return {
+    PR_UNIQUE_ID,
+    PR_FAMILY_NO: familyNumber,
+    PR_MEMBER_NO: memberNumber,
+  };
 }
 
 /**
@@ -303,27 +307,15 @@ export async function regenerateIdForNewLocation(
   newCityCode,
   PR_ID
 ) {
+  // Get all members with the same mobile
   const familyMembers = await prisma.peopleRegistry.findMany({
     where: { PR_MOBILE_NO },
     orderBy: { PR_ID: "asc" },
   });
 
-  const lastFamilyInLocation = await prisma.peopleRegistry.findFirst({
-    where: {
-      PR_STATE_CODE: newStateCode,
-      PR_DISTRICT_CODE: newDistrictCode,
-      PR_CITY_CODE: newCityCode,
-      NOT: { PR_MOBILE_NO },
-    },
-    orderBy: { PR_FAMILY_NO: "desc" },
-  });
-
-  let familyNumber = "0001";
-  if (lastFamilyInLocation?.PR_FAMILY_NO) {
-    familyNumber = (parseInt(lastFamilyInLocation.PR_FAMILY_NO) + 1)
-      .toString()
-      .padStart(4, "0");
-  }
+  // Reuse the family number from the first registered member with this mobile
+  const existingFamilyMember = familyMembers[0];
+  const familyNumber = existingFamilyMember.PR_FAMILY_NO;
 
   const memberIndex = familyMembers.findIndex((m) => m.PR_ID === PR_ID);
   const memberNumber = (
@@ -333,7 +325,7 @@ export async function regenerateIdForNewLocation(
     .padStart(4, "0");
 
   return {
-    PR_UNIQUE_ID: `${newStateCode}${newDistrictCode}-${newCityCode}-${familyNumber}-${memberNumber}`,
+    PR_UNIQUE_ID: `${newStateCode}-${newDistrictCode}-${familyNumber}-${memberNumber}`,
     PR_FAMILY_NO: familyNumber,
     PR_MEMBER_NO: memberNumber,
   };
