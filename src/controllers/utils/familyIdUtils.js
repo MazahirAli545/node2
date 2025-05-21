@@ -151,6 +151,99 @@ import prisma from "../../db/prismaClient.js";
  * @param {string} [PR_FULL_NAME] - Optional full name for duplicate checking
  * @returns {Promise<{PR_UNIQUE_ID: string, PR_FAMILY_NO: string, PR_MEMBER_NO: string}>}
  */
+// export async function generateFamilyId(
+//   PR_MOBILE_NO,
+//   PR_STATE_CODE,
+//   PR_DISTRICT_CODE,
+//   PR_CITY_CODE,
+//   PR_FULL_NAME = null
+// ) {
+//   const stateCode = PR_STATE_CODE || "00";
+//   const districtCode = PR_DISTRICT_CODE || "00";
+//   const cityCode = PR_CITY_CODE;
+
+//   // 1. Fetch existing users with same mobile and location
+//   const existingUsers = await prisma.peopleRegistry.findMany({
+//     where: {
+//       PR_MOBILE_NO,
+//       PR_STATE_CODE: stateCode,
+//       PR_DISTRICT_CODE: districtCode,
+//       PR_CITY_CODE: cityCode,
+//     },
+//     orderBy: { PR_ID: "asc" },
+//   });
+
+//   let familyNumber = "0001";
+//   let memberNumber = "0001";
+
+//   if (existingUsers.length > 0) {
+//     // Check if the same full name already exists
+//     const duplicateUser = PR_FULL_NAME
+//       ? existingUsers.find(
+//           (u) => u.PR_FULL_NAME?.toLowerCase() === PR_FULL_NAME.toLowerCase()
+//         )
+//       : null;
+
+//     if (duplicateUser) {
+//       // Reuse the family number and assign next member number
+//       familyNumber = duplicateUser.PR_FAMILY_NO || "0001";
+//       // memberNumber = (existingUsers.length + 1).toString().padStart(4, "0");
+//       const currentFamilyMembers = await prisma.peopleRegistry.count({
+//         where: {
+//           PR_FAMILY_NO: familyNumber,
+//           PR_STATE_CODE: stateCode,
+//           PR_DISTRICT_CODE: districtCode,
+//           PR_CITY_CODE: cityCode,
+//         },
+//       });
+
+//       memberNumber = (currentFamilyMembers + 1).toString().padStart(4, "0");
+//     } else {
+//       // Different name => treat as new family in same location
+//       const lastFamilyInLocation = await prisma.peopleRegistry.findFirst({
+//         where: {
+//           PR_STATE_CODE: stateCode,
+//           PR_DISTRICT_CODE: districtCode,
+//           PR_CITY_CODE: cityCode,
+//         },
+//         orderBy: { PR_FAMILY_NO: "desc" },
+//       });
+
+//       familyNumber = lastFamilyInLocation?.PR_FAMILY_NO
+//         ? (parseInt(lastFamilyInLocation.PR_FAMILY_NO) + 1)
+//             .toString()
+//             .padStart(4, "0")
+//         : "0001";
+//       memberNumber = "0001";
+//     }
+//   } else {
+//     // New mobile number or no user in this location — assign new family
+//     const lastFamilyInLocation = await prisma.peopleRegistry.findFirst({
+//       where: {
+//         PR_STATE_CODE: stateCode,
+//         PR_DISTRICT_CODE: districtCode,
+//         PR_CITY_CODE: cityCode,
+//       },
+//       orderBy: { PR_FAMILY_NO: "desc" },
+//     });
+
+//     familyNumber = lastFamilyInLocation?.PR_FAMILY_NO
+//       ? (parseInt(lastFamilyInLocation.PR_FAMILY_NO) + 1)
+//           .toString()
+//           .padStart(4, "0")
+//       : "0001";
+//     memberNumber = "0001";
+//   }
+
+//   const PR_UNIQUE_ID = `${stateCode}${districtCode}-${cityCode}-${familyNumber}-${memberNumber}`;
+
+//   return {
+//     PR_UNIQUE_ID,
+//     PR_FAMILY_NO: familyNumber,
+//     PR_MEMBER_NO: memberNumber,
+//   };
+// }
+
 export async function generateFamilyId(
   PR_MOBILE_NO,
   PR_STATE_CODE,
@@ -162,7 +255,10 @@ export async function generateFamilyId(
   const districtCode = PR_DISTRICT_CODE || "00";
   const cityCode = PR_CITY_CODE;
 
-  // 1. Fetch existing users with same mobile and location
+  let familyNumber = "0001";
+  let memberNumber = "0001";
+
+  // Step 1: Check if this mobile number exists in the location
   const existingUsers = await prisma.peopleRegistry.findMany({
     where: {
       PR_MOBILE_NO,
@@ -173,51 +269,23 @@ export async function generateFamilyId(
     orderBy: { PR_ID: "asc" },
   });
 
-  let familyNumber = "0001";
-  let memberNumber = "0001";
-
   if (existingUsers.length > 0) {
-    // Check if the same full name already exists
-    const duplicateUser = PR_FULL_NAME
-      ? existingUsers.find(
-          (u) => u.PR_FULL_NAME?.toLowerCase() === PR_FULL_NAME.toLowerCase()
-        )
-      : null;
+    // ✅ Reuse family number from any existing user (ignore name)
+    familyNumber = existingUsers[0].PR_FAMILY_NO || "0001";
 
-    if (duplicateUser) {
-      // Reuse the family number and assign next member number
-      familyNumber = duplicateUser.PR_FAMILY_NO || "0001";
-      // memberNumber = (existingUsers.length + 1).toString().padStart(4, "0");
-      const currentFamilyMembers = await prisma.peopleRegistry.count({
-        where: {
-          PR_FAMILY_NO: familyNumber,
-          PR_STATE_CODE: stateCode,
-          PR_DISTRICT_CODE: districtCode,
-          PR_CITY_CODE: cityCode,
-        },
-      });
+    // 🔢 Count how many members are already in this family
+    const currentFamilyMembers = await prisma.peopleRegistry.count({
+      where: {
+        PR_STATE_CODE: stateCode,
+        PR_DISTRICT_CODE: districtCode,
+        PR_CITY_CODE: cityCode,
+        PR_FAMILY_NO: familyNumber,
+      },
+    });
 
-      memberNumber = (currentFamilyMembers + 1).toString().padStart(4, "0");
-    } else {
-      // Different name => treat as new family in same location
-      const lastFamilyInLocation = await prisma.peopleRegistry.findFirst({
-        where: {
-          PR_STATE_CODE: stateCode,
-          PR_DISTRICT_CODE: districtCode,
-          PR_CITY_CODE: cityCode,
-        },
-        orderBy: { PR_FAMILY_NO: "desc" },
-      });
-
-      familyNumber = lastFamilyInLocation?.PR_FAMILY_NO
-        ? (parseInt(lastFamilyInLocation.PR_FAMILY_NO) + 1)
-            .toString()
-            .padStart(4, "0")
-        : "0001";
-      memberNumber = "0001";
-    }
+    memberNumber = (currentFamilyMembers + 1).toString().padStart(4, "0");
   } else {
-    // New mobile number or no user in this location — assign new family
+    // 🔍 New mobile number in this location, create new family
     const lastFamilyInLocation = await prisma.peopleRegistry.findFirst({
       where: {
         PR_STATE_CODE: stateCode,
@@ -232,6 +300,7 @@ export async function generateFamilyId(
           .toString()
           .padStart(4, "0")
       : "0001";
+
     memberNumber = "0001";
   }
 
