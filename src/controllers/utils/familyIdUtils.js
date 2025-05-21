@@ -250,9 +250,9 @@ export async function generateFamilyId(
   PR_DISTRICT_CODE,
   PR_CITY_CODE
 ) {
-  // Check if any family member exists with the same mobile
+  // Step 1: Check if this mobile number already exists in the database
   const existingFamilyMember = await prisma.peopleRegistry.findFirst({
-    where: { PR_MOBILE_NO, PR_STATE_CODE, PR_DISTRICT_CODE, PR_CITY_CODE },
+    where: { PR_MOBILE_NO },
     orderBy: { PR_ID: "asc" },
   });
 
@@ -260,30 +260,21 @@ export async function generateFamilyId(
   let memberNumber;
 
   if (existingFamilyMember) {
-    // Use the same family number
+    // ✅ Use existing family number
     familyNumber = existingFamilyMember.PR_FAMILY_NO;
 
-    // Count existing members in the same family
+    // Count how many members exist in this family (by mobile + family)
     const existingMembers = await prisma.peopleRegistry.count({
       where: {
         PR_MOBILE_NO,
         PR_FAMILY_NO: familyNumber,
-        PR_STATE_CODE,
-        PR_DISTRICT_CODE,
-        PR_CITY_CODE,
       },
     });
 
     memberNumber = String(existingMembers + 1).padStart(4, "0");
   } else {
-    // Generate new family number based on last one in the same location
+    // 🆕 Generate a new family number (independent of location)
     const lastFamily = await prisma.peopleRegistry.findFirst({
-      where: {
-        PR_MOBILE_NO,
-        PR_STATE_CODE,
-        PR_DISTRICT_CODE,
-        PR_CITY_CODE,
-      },
       orderBy: {
         PR_FAMILY_NO: "desc",
       },
