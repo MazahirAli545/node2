@@ -234,7 +234,7 @@ import prisma from "../db/prismaClient.js";
 import {
   generateFamilyId,
   regenerateIdForNewLocation,
-} from "./utils/familyIdUtils.js";
+} from "../controllers/utils/familyIdUtils.js";
 
 const app = express();
 

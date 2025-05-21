@@ -11,7 +11,7 @@ import axios from "axios";
 import {
   generateFamilyId,
   regenerateIdForNewLocation,
-} from "../utils/familyIdUtils.js";
+} from "../controllers/utils/familyIdUtils.js";
 
 dotenv.config();
 
