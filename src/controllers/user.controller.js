@@ -461,7 +461,7 @@ const checkMobileVerified = async (mobile, otp) => {
 
 // export const LoginUser = async (req, res) => {
 //   try {
-//     const { PR_MOBILE_NO, otp = "1234", selectedUserId } = req.body;
+//     const { PR_MOBILE_NO, otp, selectedUserId } = req.body;
 
 //     // Validate mobile number format
 //     const mobileNumberSchema = Joi.string()
@@ -478,7 +478,7 @@ const checkMobileVerified = async (mobile, otp) => {
 
 //     // Step 1: First check if OTP is provided
 //     if (!otp) {
-//       // Check if mobile number exists in database (but don't return users yet)
+//       // Check if mobile number exists in database
 //       const userCount = await prisma.peopleRegistry.count({
 //         where: { PR_MOBILE_NO },
 //       });
@@ -490,16 +490,44 @@ const checkMobileVerified = async (mobile, otp) => {
 //         });
 //       }
 
-//       // For any case (single or multiple users), first require OTP verification
+//       // Create a mock request object for generateotp
+//       const mockReq = {
+//         body: { PR_MOBILE_NO },
+//       };
+
+//       // Create a mock response object to capture generateotp's response
+//       let otpResponse;
+//       const mockRes = {
+//         json: (data) => {
+//           otpResponse = data;
+//           return data;
+//         },
+//         status: (code) => ({
+//           json: (data) => {
+//             otpResponse = { ...data, statusCode: code };
+//             return data;
+//           },
+//         }),
+//       };
+
+//       // Call generateotp with mock request/response
+//       await generateotp(mockReq, mockRes);
+
+//       if (!otpResponse?.success) {
+//         return res.status(otpResponse?.statusCode || 500).json({
+//           message: otpResponse?.message || "Failed to send OTP",
+//           success: false,
+//         });
+//       }
+
 //       return res.status(200).json({
 //         message: "OTP sent successfully",
 //         success: true,
 //         otpRequired: true,
-//         debugOtp: "1234", // Remove in production
 //       });
 //     }
 
-//     // Step 2: Verify OTP (skip if using default in development)
+//     // Step 2: Verify OTP
 //     const isVerified = await checkMobileVerified(PR_MOBILE_NO, otp);
 //     if (!isVerified) {
 //       return res.status(400).json({
@@ -593,6 +621,11 @@ const checkMobileVerified = async (mobile, otp) => {
 //       },
 //       Children: user.Children || [],
 //     };
+
+//     // Step 6: Delete the used OTP record
+//     await prisma.otp.deleteMany({
+//       where: { PR_MOBILE_NO },
+//     });
 
 //     return res.status(200).json({
 //       message: "Login successful",
@@ -789,6 +822,76 @@ export const LoginUser = async (req, res) => {
     return res.status(500).json({
       message: "Something went wrong",
       success: false,
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+};
+
+// Update user profile function - needs location-aware ID regeneration
+export const updateUserProfile = async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId, 10);
+    const updateData = req.body;
+
+    // Get current user data
+    const currentUser = await prisma.peopleRegistry.findUnique({
+      where: { PR_ID: userId },
+    });
+
+    if (!currentUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Check if location data is being updated
+    const isLocationChange =
+      (updateData.PR_STATE_CODE &&
+        updateData.PR_STATE_CODE !== currentUser.PR_STATE_CODE) ||
+      (updateData.PR_DISTRICT_CODE &&
+        updateData.PR_DISTRICT_CODE !== currentUser.PR_DISTRICT_CODE) ||
+      (updateData.PR_CITY_CODE &&
+        updateData.PR_CITY_CODE !== currentUser.PR_CITY_CODE);
+
+    // If location is changing, regenerate ID
+    if (isLocationChange) {
+      const { PR_UNIQUE_ID, PR_FAMILY_NO, PR_MEMBER_NO } =
+        await regenerateIdForNewLocation(
+          currentUser.PR_MOBILE_NO,
+          updateData.PR_STATE_CODE || currentUser.PR_STATE_CODE,
+          updateData.PR_DISTRICT_CODE || currentUser.PR_DISTRICT_CODE,
+          updateData.PR_CITY_CODE || currentUser.PR_CITY_CODE,
+          userId
+        );
+
+      // Add the new IDs to the update data
+      updateData.PR_UNIQUE_ID = PR_UNIQUE_ID;
+      updateData.PR_FAMILY_NO = PR_FAMILY_NO;
+      updateData.PR_MEMBER_NO = PR_MEMBER_NO;
+    }
+
+    // Update the user
+    const updatedUser = await prisma.peopleRegistry.update({
+      where: { PR_ID: userId },
+      data: updateData,
+      include: {
+        Children: true,
+        Profession: true,
+        City: true,
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      data: updatedUser,
+    });
+  } catch (error) {
+    console.error("Error updating user profile:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update profile",
       error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
