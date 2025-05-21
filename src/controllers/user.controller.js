@@ -8,7 +8,7 @@ import twilio from "twilio";
 import dotenv from "dotenv";
 import otpGenerator from "otp-generator";
 import { generateToken } from "../middlewares/jwt.js";
-import { getNextFamilyNumber } from "../controllers/utils/familyUtils.js";
+// import { getNextFamilyNumber } from "../controllers/utils/familyUtils.js";
 
 dotenv.config();
 
@@ -386,8 +386,8 @@ export const registerUser = async (req, res) => {
       orderBy: { PR_ID: "asc" },
     });
 
-    let familyNumber = "001";
-    let memberNumber = "001";
+    let familyNumber = "0001";
+    let memberNumber = "0001";
 
     if (existingUsers.length > 0) {
       // const latestUser = existingUsers[0];
@@ -410,7 +410,7 @@ export const registerUser = async (req, res) => {
       //   }
       // });
 
-      memberNumber = (familyMembers.length + 1).toString().padStart(3, "0");
+      memberNumber = (familyMembers.length + 1).toString().padStart(4, "0");
     } else {
       familyNumber = await getNextFamilyNumber(
         PR_STATE_CODE,
