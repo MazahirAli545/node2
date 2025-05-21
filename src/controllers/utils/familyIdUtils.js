@@ -1,5 +1,5 @@
 // utils/familyIdUtils.js
-import prisma from "../db/prismaClient.js";
+import prisma from "../../db/prismaClient";
 
 /**
  * Generates PR_UNIQUE_ID based on business rules
