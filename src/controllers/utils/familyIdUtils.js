@@ -250,67 +250,66 @@ export async function generateFamilyId(
   PR_DISTRICT_CODE,
   PR_CITY_CODE
 ) {
-  const stateCode = PR_STATE_CODE || "00";
-  const districtCode = PR_DISTRICT_CODE || "00";
-  const cityCode = PR_CITY_CODE;
+  try {
+    const stateCode = PR_STATE_CODE || "00";
+    const districtCode = PR_DISTRICT_CODE || "00";
+    const cityCode = PR_CITY_CODE;
 
-  let familyNumber = "0001";
-  let memberNumber = "0001";
+    let familyNumber = "0001";
+    let memberNumber = "0001";
 
-  // ✅ Step 1: Does this mobile already exist in this location? (regardless of PR_FAMILY_NO)
-  const existingFamilyMember = await prisma.peopleRegistry.findFirst({
-    where: {
-      PR_MOBILE_NO,
-      PR_STATE_CODE: stateCode,
-      PR_DISTRICT_CODE: districtCode,
-      PR_CITY_CODE: cityCode,
-    },
-    orderBy: { PR_ID: "asc" }, // Oldest user first
-  });
-
-  if (existingFamilyMember) {
-    // 🟢 Mobile already registered: use the same family number
-    familyNumber = existingFamilyMember.PR_FAMILY_NO;
-
-    // 🧮 Count members in this family
-    const membersInFamily = await prisma.peopleRegistry.count({
+    const existingFamilyMember = await prisma.peopleRegistry.findFirst({
       where: {
-        PR_FAMILY_NO: familyNumber,
+        PR_MOBILE_NO,
         PR_STATE_CODE: stateCode,
         PR_DISTRICT_CODE: districtCode,
         PR_CITY_CODE: cityCode,
       },
+      orderBy: { PR_ID: "asc" },
     });
 
-    memberNumber = (membersInFamily + 1).toString().padStart(4, "0");
-  } else {
-    // 🆕 New mobile number: assign next available family number
-    const lastFamily = await prisma.peopleRegistry.findFirst({
-      where: {
-        PR_STATE_CODE: stateCode,
-        PR_DISTRICT_CODE: districtCode,
-        PR_CITY_CODE: cityCode,
-      },
-      orderBy: {
-        PR_FAMILY_NO: "desc",
-      },
-    });
+    if (existingFamilyMember) {
+      familyNumber = existingFamilyMember.PR_FAMILY_NO || "0001";
 
-    const nextFamilyNo = lastFamily?.PR_FAMILY_NO
-      ? (parseInt(lastFamily.PR_FAMILY_NO) + 1).toString().padStart(4, "0")
-      : "0001";
+      const membersInFamily = await prisma.peopleRegistry.count({
+        where: {
+          PR_FAMILY_NO: familyNumber,
+          PR_STATE_CODE: stateCode,
+          PR_DISTRICT_CODE: districtCode,
+          PR_CITY_CODE: cityCode,
+        },
+      });
 
-    familyNumber = nextFamilyNo;
-    memberNumber = "0001";
+      memberNumber = (membersInFamily + 1).toString().padStart(4, "0");
+    } else {
+      const lastFamily = await prisma.peopleRegistry.findMany({
+        where: {
+          PR_STATE_CODE: stateCode,
+          PR_DISTRICT_CODE: districtCode,
+          PR_CITY_CODE: cityCode,
+        },
+      });
+
+      const maxFamily = lastFamily.reduce((max, r) => {
+        const no = parseInt(r.PR_FAMILY_NO || "0", 10);
+        return no > max ? no : max;
+      }, 0);
+
+      familyNumber = (maxFamily + 1).toString().padStart(4, "0");
+      memberNumber = "0001";
+    }
+
+    const PR_UNIQUE_ID = `${stateCode}${districtCode}-${cityCode}-${familyNumber}-${memberNumber}`;
+
+    return {
+      PR_UNIQUE_ID,
+      PR_FAMILY_NO: familyNumber,
+      PR_MEMBER_NO: memberNumber,
+    };
+  } catch (error) {
+    console.error("generateFamilyId error:", error);
+    throw new Error("Failed to generate PR_UNIQUE_ID");
   }
-
-  const PR_UNIQUE_ID = `${stateCode}${districtCode}-${cityCode}-${familyNumber}-${memberNumber}`;
-
-  return {
-    PR_UNIQUE_ID,
-    PR_FAMILY_NO: familyNumber,
-    PR_MEMBER_NO: memberNumber,
-  };
 }
 
 /**
