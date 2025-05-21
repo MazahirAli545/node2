@@ -709,7 +709,7 @@ async function EditProfile(req, res) {
       if (familyMembers.length > 0) {
         // Use existing family number or create new if none exists
         // familyNumber = familyMembers[0].PR_FAMILY_NO;
-        familyNumber = familyMembers[0].PR_FAMILY_NO || "001";
+        familyNumber = familyMembers[0].PR_FAMILY_NO || "0001";
 
         // Get next member number in sequence
 
@@ -727,10 +727,10 @@ async function EditProfile(req, res) {
         familyNumber = lastFamilyInLocation
           ? (parseInt(lastFamilyInLocation.PR_FAMILY_NO) + 1)
               .toString()
-              .padStart(3, "0")
-          : "001";
+              .padStart(4, "0")
+          : "0001";
 
-        memberNumber = "001";
+        memberNumber = "0001";
       }
       // Update only the current profile
       updateData.PR_UNIQUE_ID = `${newStateCode}${newDistrictCode}-${newCityCode}-${familyNumber}-${memberNumber}`;

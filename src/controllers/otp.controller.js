@@ -210,8 +210,8 @@ export const verifyotp = async (req, res) => {
     });
 
     // Generate family and member numbers
-    let familyNumber = "001";
-    let memberNumber = "001";
+    let familyNumber = "0001";
+    let memberNumber = "0001";
 
     if (allUsersSameMobile.length > 0) {
       // If users exist with same mobile number, use same family number and increment member number
@@ -221,7 +221,7 @@ export const verifyotp = async (req, res) => {
       if (lastUniqueIdParts.length === 4) {
         familyNumber = lastUniqueIdParts[2];
         const lastMemberNumber = parseInt(lastUniqueIdParts[3]);
-        memberNumber = (lastMemberNumber + 1).toString().padStart(3, "0");
+        memberNumber = (lastMemberNumber + 1).toString().padStart(4, "0");
       }
     } else {
       // For new family (new mobile number), find the next available family number
