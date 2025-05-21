@@ -20,7 +20,7 @@ export async function generateFamilyId(
   // Default values for missing location info
   const stateCode = PR_STATE_CODE || "00";
   const districtCode = PR_DISTRICT_CODE || "00";
-  const cityCode = PR_CITY_CODE || null;
+  const cityCode = PR_CITY_CODE;
 
   // 1. Check for existing users with same mobile number
   const existingUsers = await prisma.peopleRegistry.findMany({
