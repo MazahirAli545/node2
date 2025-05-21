@@ -244,7 +244,7 @@ import prisma from "../../db/prismaClient.js";
 //   };
 // }
 
-export async function generatePrUniqueId(
+export async function generateFamilyId(
   PR_MOBILE_NO,
   PR_STATE_CODE,
   PR_DISTRICT_CODE,
