@@ -61,7 +61,7 @@ model PeopleRegistry {
   City             City? @relation(fields: [PR_CITY_CODE], references: [CITY_ID], onDelete: SetNull)
   PR_STATE_CODE    String?   @db.Char(20)
   PR_DISTRICT_CODE String?   @db.Char(20)      
-  PR_FAMILY_NO     String?   @db.Char(3)
+  PR_FAMILY_NO     String?   @db.Char(4)
   PR_MEMBER_NO     String?   @db.Char(3)
   PR_FATHER_ID     Int?     
   PR_MOTHER_ID     Int?     
