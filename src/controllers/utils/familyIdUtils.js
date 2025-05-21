@@ -279,6 +279,7 @@ export async function generateFamilyId(
     // Generate new family number based on last one in the same location
     const lastFamily = await prisma.peopleRegistry.findFirst({
       where: {
+        PR_MOBILE_NO,
         PR_STATE_CODE,
         PR_DISTRICT_CODE,
         PR_CITY_CODE,
