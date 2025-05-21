@@ -252,7 +252,7 @@ export async function generateFamilyId(
 ) {
   // Check if any family member exists with the same mobile
   const existingFamilyMember = await prisma.peopleRegistry.findFirst({
-    where: { PR_MOBILE_NO },
+    where: { PR_MOBILE_NO, PR_STATE_CODE, PR_DISTRICT_CODE, PR_CITY_CODE },
     orderBy: { PR_ID: "asc" },
   });
 
@@ -265,7 +265,13 @@ export async function generateFamilyId(
 
     // Count existing members in the same family
     const existingMembers = await prisma.peopleRegistry.count({
-      where: { PR_MOBILE_NO, PR_FAMILY_NO: familyNumber },
+      where: {
+        PR_MOBILE_NO,
+        PR_FAMILY_NO: familyNumber,
+        PR_STATE_CODE,
+        PR_DISTRICT_CODE,
+        PR_CITY_CODE,
+      },
     });
 
     memberNumber = String(existingMembers + 1).padStart(4, "0");
