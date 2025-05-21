@@ -9,10 +9,6 @@ import dotenv from "dotenv";
 import otpGenerator from "otp-generator";
 import { generateToken } from "../middlewares/jwt.js";
 // import { getNextFamilyNumber } from "../controllers/utils/familyUtils.js";
-import {
-  generateFamilyId,
-  regenerateIdForNewLocation,
-} from "../utils/familyIdUtils.js";
 
 dotenv.config();
 
@@ -22,229 +18,6 @@ const twilioClient = twilio(
   process.env.Twillo_Account_SID,
   process.env.Twillo_Auth_Token
 );
-
-// export const registerUser = async (req, res) => {
-//   try {
-//     const {
-//       PR_FULL_NAME,
-//       PR_DOB,
-//       PR_GENDER,
-//       PR_MOBILE_NO,
-//       PR_PROFESSION_ID,
-//       PR_PROFESSION,
-//       PR_PROFESSION_DETA,
-//       PR_EDUCATION,
-//       PR_EDUCATION_DESC,
-//       PR_ADDRESS,
-//       PR_AREA_NAME,
-//       PR_PIN_CODE,
-//       PR_CITY_NAME,
-//       PR_STATE_NAME,
-//       PR_STATE_CODE,
-//       PR_DISTRICT_NAME,
-//       PR_DISTRICT_CODE,
-//       PR_FATHER_ID,
-//       PR_MOTHER_ID,
-//       PR_SPOUSE_ID,
-//       PR_MARRIED_YN,
-//       PR_FATHER_NAME,
-//       PR_MOTHER_NAME,
-//       PR_SPOUSE_NAME,
-//       PR_PHOTO_URL,
-//       PR_IS_COMPLETED,
-//       PR_BUSS_INTER,
-//       PR_BUSS_STREAM,
-//       PR_BUSS_TYPE,
-//       PR_HOBBY,
-//       otp = "1234",
-//       Children,
-//     } = req.body;
-
-//     const mobileNumberSchema = Joi.string()
-//       .pattern(/^[6-9]\d{9}$/)
-//       .required()
-//       .messages({ "string.pattern.base": "Invalid mobile number" });
-
-//     const { error } = mobileNumberSchema.validate(PR_MOBILE_NO);
-//     if (error) {
-//       return res
-//         .status(400)
-//         .json({ message: error.details[0].message, success: false });
-//     }
-
-//     const isMobileVerified = await checkMobileVerified(PR_MOBILE_NO, otp);
-//     if (!isMobileVerified) {
-//       return res.status(400).json({
-//         message: "Please verify your mobile number first",
-//         success: false,
-//       });
-//     }
-
-//     // 🔁 Get City
-//     let city = await prisma.city.findFirst({
-//       where: {
-//         CITY_NAME: PR_CITY_NAME,
-//         CITY_DS_CODE: PR_DISTRICT_CODE,
-//         CITY_ST_CODE: PR_STATE_CODE,
-//       },
-//     });
-
-//     if (!city) {
-//       city = await prisma.city.create({
-//         data: {
-//           CITY_NAME: PR_CITY_NAME,
-//           CITY_DS_CODE: PR_DISTRICT_CODE,
-//           CITY_ST_CODE: PR_STATE_CODE,
-//           CITY_PIN_CODE: PR_PIN_CODE || "",
-//           CITY_DS_NAME: PR_DISTRICT_NAME || "",
-//           CITY_ST_NAME: PR_STATE_NAME || "",
-//         },
-//       });
-//     }
-
-//     const cityId = city?.CITY_ID;
-
-//     let business = await prisma.bUSSINESS.findFirst({
-//       where: {
-//         BUSS_STREM: PR_BUSS_STREAM,
-//         BUSS_TYPE: PR_BUSS_TYPE,
-//       },
-//     });
-
-//     if (!business) {
-//       business = await prisma.bUSSINESS.create({
-//         data: {
-//           BUSS_STREM: PR_BUSS_STREAM,
-//           BUSS_TYPE: PR_BUSS_TYPE,
-//           CITY_CREATED_BY: 1,
-//         },
-//       });
-//     }
-
-//     // 📌 Fetch existing users with this mobile number
-//     const existingUsers = await prisma.peopleRegistry.findMany({
-//       where: { PR_MOBILE_NO: PR_MOBILE_NO },
-//       orderBy: { PR_ID: "asc" },
-//     });
-
-//     let familyNumber = "0001";
-//     let memberNumber = "0001";
-
-//     if (existingUsers.length > 0) {
-//       // const latestUser = existingUsers[0];
-//       familyNumber = existingUsers[0].PR_FAMILY_NO;
-
-//       const familyMembers = await prisma.peopleRegistry.findMany({
-//         where: {
-//           PR_MOBILE_NO: PR_MOBILE_NO,
-//           PR_FAMILY_NO: familyNumber,
-//           // PR_CITY_CODE: cityId,
-//         },
-//       });
-
-//       // let maxMember = 0;
-//       // familyMembers.forEach((member) => {
-//       //   const parts = member.PR_UNIQUE_ID.split("-");
-//       //   if (parts.length === 4) {
-//       //     const num = parseInt(parts[3]);
-//       //     if (num > maxMember) maxMember = num;
-//       //   }
-//       // });
-
-//       memberNumber = (familyMembers.length + 1).toString().padStart(4, "0");
-//     } else {
-//       familyNumber = await getNextFamilyNumber(
-//         PR_STATE_CODE,
-//         PR_DISTRICT_CODE,
-//         cityId
-//       );
-//     }
-
-//     const professionId =
-//       PR_PROFESSION_ID && PR_PROFESSION_ID !== 0 ? PR_PROFESSION_ID : null;
-
-//     const isCompleted =
-//       PR_FULL_NAME &&
-//       PR_DOB &&
-//       PR_MOBILE_NO &&
-//       PR_PIN_CODE &&
-//       PR_AREA_NAME &&
-//       PR_ADDRESS &&
-//       PR_FATHER_NAME &&
-//       PR_MOTHER_NAME
-//         ? "Y"
-//         : "N";
-
-//     const newUser = await prisma.peopleRegistry.create({
-//       data: {
-//         PR_UNIQUE_ID: `${PR_STATE_CODE}${PR_DISTRICT_CODE}-${cityId}-${familyNumber}-${memberNumber}`,
-//         PR_FULL_NAME,
-//         PR_DOB: new Date(PR_DOB).toLocaleDateString(),
-//         PR_MOBILE_NO,
-//         PR_GENDER,
-//         PR_PROFESSION_ID: professionId,
-//         PR_PROFESSION,
-//         PR_PROFESSION_DETA,
-//         PR_EDUCATION,
-//         PR_EDUCATION_DESC,
-//         PR_ADDRESS,
-//         PR_AREA_NAME,
-//         PR_PIN_CODE,
-//         PR_CITY_CODE: cityId,
-//         PR_STATE_CODE,
-//         PR_DISTRICT_CODE,
-//         PR_FAMILY_NO: familyNumber,
-//         PR_MEMBER_NO: memberNumber,
-//         PR_FATHER_ID,
-//         PR_MOTHER_ID,
-//         PR_SPOUSE_ID,
-//         PR_MARRIED_YN,
-//         PR_FATHER_NAME,
-//         PR_MOTHER_NAME,
-//         PR_SPOUSE_NAME,
-//         PR_PHOTO_URL,
-//         PR_BUSS_CODE: business.BUSS_ID,
-//         PR_BUSS_INTER,
-//         PR_BUSS_STREAM,
-//         PR_BUSS_TYPE,
-//         PR_HOBBY,
-//         PR_IS_COMPLETED: isCompleted,
-//       },
-//     });
-
-//     if (Array.isArray(Children) && Children.length > 0) {
-//       const childPromises = Children.filter(
-//         (child) => child.name && child.dob
-//       ).map(async (child) => {
-//         return prisma.child.create({
-//           data: {
-//             name: child.name,
-//             dob: new Date(child.dob),
-//             userId: newUser.PR_ID,
-//           },
-//         });
-//       });
-//       await Promise.all(childPromises);
-//     }
-
-//     const user = await prisma.peopleRegistry.findUnique({
-//       where: { PR_ID: newUser.PR_ID },
-//       include: { Children: true },
-//     });
-
-//     return res.status(201).json({
-//       message: "User registered successfully",
-//       success: true,
-//       user,
-//     });
-//   } catch (error) {
-//     console.log("Error registering User:", error);
-//     return res.status(500).json({
-//       message: "Something went wrong",
-//       success: false,
-//     });
-//   }
-// };
 
 export const registerUser = async (req, res) => {
   try {
@@ -344,14 +117,44 @@ export const registerUser = async (req, res) => {
       });
     }
 
-    // Use the familyIdUtils to generate the family ID
-    const { PR_UNIQUE_ID, PR_FAMILY_NO, PR_MEMBER_NO } = await generateFamilyId(
-      PR_MOBILE_NO,
-      PR_STATE_CODE,
-      PR_DISTRICT_CODE,
-      cityId,
-      PR_FULL_NAME
-    );
+    // 📌 Fetch existing users with this mobile number
+    const existingUsers = await prisma.peopleRegistry.findMany({
+      where: { PR_MOBILE_NO: PR_MOBILE_NO },
+      orderBy: { PR_ID: "asc" },
+    });
+
+    let familyNumber = "0001";
+    let memberNumber = "0001";
+
+    if (existingUsers.length > 0) {
+      // const latestUser = existingUsers[0];
+      familyNumber = existingUsers[0].PR_FAMILY_NO;
+
+      const familyMembers = await prisma.peopleRegistry.findMany({
+        where: {
+          PR_MOBILE_NO: PR_MOBILE_NO,
+          PR_FAMILY_NO: familyNumber,
+          // PR_CITY_CODE: cityId,
+        },
+      });
+
+      // let maxMember = 0;
+      // familyMembers.forEach((member) => {
+      //   const parts = member.PR_UNIQUE_ID.split("-");
+      //   if (parts.length === 4) {
+      //     const num = parseInt(parts[3]);
+      //     if (num > maxMember) maxMember = num;
+      //   }
+      // });
+
+      memberNumber = (familyMembers.length + 1).toString().padStart(4, "0");
+    } else {
+      familyNumber = await getNextFamilyNumber(
+        PR_STATE_CODE,
+        PR_DISTRICT_CODE,
+        cityId
+      );
+    }
 
     const professionId =
       PR_PROFESSION_ID && PR_PROFESSION_ID !== 0 ? PR_PROFESSION_ID : null;
@@ -370,7 +173,7 @@ export const registerUser = async (req, res) => {
 
     const newUser = await prisma.peopleRegistry.create({
       data: {
-        PR_UNIQUE_ID,
+        PR_UNIQUE_ID: `${PR_STATE_CODE}${PR_DISTRICT_CODE}-${cityId}-${familyNumber}-${memberNumber}`,
         PR_FULL_NAME,
         PR_DOB: new Date(PR_DOB).toLocaleDateString(),
         PR_MOBILE_NO,
@@ -386,8 +189,8 @@ export const registerUser = async (req, res) => {
         PR_CITY_CODE: cityId,
         PR_STATE_CODE,
         PR_DISTRICT_CODE,
-        PR_FAMILY_NO: PR_FAMILY_NO,
-        PR_MEMBER_NO: PR_MEMBER_NO,
+        PR_FAMILY_NO: familyNumber,
+        PR_MEMBER_NO: memberNumber,
         PR_FATHER_ID,
         PR_MOTHER_ID,
         PR_SPOUSE_ID,
@@ -438,6 +241,7 @@ export const registerUser = async (req, res) => {
     });
   }
 };
+
 const checkMobileVerified = async (mobile, otp) => {
   // For development, bypass OTP verification with default "1234"
   // if (otp === "1234") {
@@ -461,7 +265,7 @@ const checkMobileVerified = async (mobile, otp) => {
 
 // export const LoginUser = async (req, res) => {
 //   try {
-//     const { PR_MOBILE_NO, otp, selectedUserId } = req.body;
+//     const { PR_MOBILE_NO, otp = "1234", selectedUserId } = req.body;
 
 //     // Validate mobile number format
 //     const mobileNumberSchema = Joi.string()
@@ -478,7 +282,7 @@ const checkMobileVerified = async (mobile, otp) => {
 
 //     // Step 1: First check if OTP is provided
 //     if (!otp) {
-//       // Check if mobile number exists in database
+//       // Check if mobile number exists in database (but don't return users yet)
 //       const userCount = await prisma.peopleRegistry.count({
 //         where: { PR_MOBILE_NO },
 //       });
@@ -490,44 +294,16 @@ const checkMobileVerified = async (mobile, otp) => {
 //         });
 //       }
 
-//       // Create a mock request object for generateotp
-//       const mockReq = {
-//         body: { PR_MOBILE_NO },
-//       };
-
-//       // Create a mock response object to capture generateotp's response
-//       let otpResponse;
-//       const mockRes = {
-//         json: (data) => {
-//           otpResponse = data;
-//           return data;
-//         },
-//         status: (code) => ({
-//           json: (data) => {
-//             otpResponse = { ...data, statusCode: code };
-//             return data;
-//           },
-//         }),
-//       };
-
-//       // Call generateotp with mock request/response
-//       await generateotp(mockReq, mockRes);
-
-//       if (!otpResponse?.success) {
-//         return res.status(otpResponse?.statusCode || 500).json({
-//           message: otpResponse?.message || "Failed to send OTP",
-//           success: false,
-//         });
-//       }
-
+//       // For any case (single or multiple users), first require OTP verification
 //       return res.status(200).json({
 //         message: "OTP sent successfully",
 //         success: true,
 //         otpRequired: true,
+//         debugOtp: "1234", // Remove in production
 //       });
 //     }
 
-//     // Step 2: Verify OTP
+//     // Step 2: Verify OTP (skip if using default in development)
 //     const isVerified = await checkMobileVerified(PR_MOBILE_NO, otp);
 //     if (!isVerified) {
 //       return res.status(400).json({
@@ -621,11 +397,6 @@ const checkMobileVerified = async (mobile, otp) => {
 //       },
 //       Children: user.Children || [],
 //     };
-
-//     // Step 6: Delete the used OTP record
-//     await prisma.otp.deleteMany({
-//       where: { PR_MOBILE_NO },
-//     });
 
 //     return res.status(200).json({
 //       message: "Login successful",
@@ -822,76 +593,6 @@ export const LoginUser = async (req, res) => {
     return res.status(500).json({
       message: "Something went wrong",
       success: false,
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
-    });
-  }
-};
-
-// Update user profile function - needs location-aware ID regeneration
-export const updateUserProfile = async (req, res) => {
-  try {
-    const userId = parseInt(req.params.userId, 10);
-    const updateData = req.body;
-
-    // Get current user data
-    const currentUser = await prisma.peopleRegistry.findUnique({
-      where: { PR_ID: userId },
-    });
-
-    if (!currentUser) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    // Check if location data is being updated
-    const isLocationChange =
-      (updateData.PR_STATE_CODE &&
-        updateData.PR_STATE_CODE !== currentUser.PR_STATE_CODE) ||
-      (updateData.PR_DISTRICT_CODE &&
-        updateData.PR_DISTRICT_CODE !== currentUser.PR_DISTRICT_CODE) ||
-      (updateData.PR_CITY_CODE &&
-        updateData.PR_CITY_CODE !== currentUser.PR_CITY_CODE);
-
-    // If location is changing, regenerate ID
-    if (isLocationChange) {
-      const { PR_UNIQUE_ID, PR_FAMILY_NO, PR_MEMBER_NO } =
-        await regenerateIdForNewLocation(
-          currentUser.PR_MOBILE_NO,
-          updateData.PR_STATE_CODE || currentUser.PR_STATE_CODE,
-          updateData.PR_DISTRICT_CODE || currentUser.PR_DISTRICT_CODE,
-          updateData.PR_CITY_CODE || currentUser.PR_CITY_CODE,
-          userId
-        );
-
-      // Add the new IDs to the update data
-      updateData.PR_UNIQUE_ID = PR_UNIQUE_ID;
-      updateData.PR_FAMILY_NO = PR_FAMILY_NO;
-      updateData.PR_MEMBER_NO = PR_MEMBER_NO;
-    }
-
-    // Update the user
-    const updatedUser = await prisma.peopleRegistry.update({
-      where: { PR_ID: userId },
-      data: updateData,
-      include: {
-        Children: true,
-        Profession: true,
-        City: true,
-      },
-    });
-
-    return res.status(200).json({
-      success: true,
-      message: "Profile updated successfully",
-      data: updatedUser,
-    });
-  } catch (error) {
-    console.error("Error updating user profile:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to update profile",
       error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
