@@ -647,7 +647,7 @@ export const verifyotp = async (req, res) => {
       PR_MOBILE_NO,
       PR_STATE_CODE || "00",
       PR_DISTRICT_CODE || "00",
-      cityId,
+      cityId || null,
       PR_FULL_NAME
     );
 
