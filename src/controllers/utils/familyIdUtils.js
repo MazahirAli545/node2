@@ -24,7 +24,12 @@ export async function generateFamilyId(
 
   // 1. Check for existing users with same mobile number
   const existingUsers = await prisma.peopleRegistry.findMany({
-    where: { PR_MOBILE_NO },
+    where: {
+      PR_MOBILE_NO,
+      PR_STATE_CODE: stateCode,
+      PR_DISTRICT_CODE: districtCode,
+      PR_CITY_CODE: cityCode,
+    },
     orderBy: { PR_ID: "asc" },
   });
 
