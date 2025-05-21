@@ -613,7 +613,7 @@ export const verifyotp = async (req, res) => {
     }
 
     // Handle city information
-    let cityId = 0;
+    let cityId;
     if (PR_CITY_NAME && PR_DISTRICT_CODE && PR_STATE_CODE) {
       // Find or create city to get CITY_ID
       let city = await prisma.city.findFirst({
