@@ -9,6 +9,10 @@ import dotenv from "dotenv";
 import otpGenerator from "otp-generator";
 import { generateToken } from "../middlewares/jwt.js";
 // import { getNextFamilyNumber } from "../controllers/utils/familyUtils.js";
+import {
+  generateFamilyId,
+  regenerateIdForNewLocation,
+} from "../utils/familyIdUtils.js";
 
 dotenv.config();
 
@@ -22,7 +26,6 @@ const twilioClient = twilio(
 // export const registerUser = async (req, res) => {
 //   try {
 //     const {
-//       PR_UNIQUE_ID,
 //       PR_FULL_NAME,
 //       PR_DOB,
 //       PR_GENDER,
@@ -57,8 +60,6 @@ const twilioClient = twilio(
 //       Children,
 //     } = req.body;
 
-//     console.log("-------reqbody------", req.body);
-
 //     const mobileNumberSchema = Joi.string()
 //       .pattern(/^[6-9]\d{9}$/)
 //       .required()
@@ -72,7 +73,6 @@ const twilioClient = twilio(
 //     }
 
 //     const isMobileVerified = await checkMobileVerified(PR_MOBILE_NO, otp);
-//     console.log(PR_MOBILE_NO, otp);
 //     if (!isMobileVerified) {
 //       return res.status(400).json({
 //         message: "Please verify your mobile number first",
@@ -80,26 +80,29 @@ const twilioClient = twilio(
 //       });
 //     }
 
+//     // 🔁 Get City
 //     let city = await prisma.city.findFirst({
 //       where: {
-//         CITY_ID: CITY_ID,
+//         CITY_NAME: PR_CITY_NAME,
+//         CITY_DS_CODE: PR_DISTRICT_CODE,
+//         CITY_ST_CODE: PR_STATE_CODE,
 //       },
 //     });
 
-//     // if (!city) {
-//     //   city = await prisma.city.create({
-//     //     data: {
-//     //       CITY_PIN_CODE: PR_PIN_CODE,
-//     //       CITY_NAME: PR_CITY_NAME,
-//     //       CITY_DS_CODE: PR_DISTRICT_CODE,
-//     //       CITY_DS_NAME: PR_DISTRICT_NAME,
-//     //       CITY_ST_CODE: PR_STATE_CODE,
-//     //       CITY_ST_NAME: PR_STATE_NAME,
-//     //     },
-//     //   });
-//     // }
+//     if (!city) {
+//       city = await prisma.city.create({
+//         data: {
+//           CITY_NAME: PR_CITY_NAME,
+//           CITY_DS_CODE: PR_DISTRICT_CODE,
+//           CITY_ST_CODE: PR_STATE_CODE,
+//           CITY_PIN_CODE: PR_PIN_CODE || "",
+//           CITY_DS_NAME: PR_DISTRICT_NAME || "",
+//           CITY_ST_NAME: PR_STATE_NAME || "",
+//         },
+//       });
+//     }
 
-//     console.log("City Created/Fetched: ", city);
+//     const cityId = city?.CITY_ID;
 
 //     let business = await prisma.bUSSINESS.findFirst({
 //       where: {
@@ -116,99 +119,65 @@ const twilioClient = twilio(
 //           CITY_CREATED_BY: 1,
 //         },
 //       });
-
-//       await prisma.bUSSINESS.update({
-//         where: { BUSS_ID: business.BUSS_ID },
-//         data: { BUSS_ID: business.BUSS_ID },
-//       });
 //     }
 
-//     // Check for existing users with same mobile number
+//     // 📌 Fetch existing users with this mobile number
 //     const existingUsers = await prisma.peopleRegistry.findMany({
 //       where: { PR_MOBILE_NO: PR_MOBILE_NO },
-//       orderBy: { PR_ID: "desc" },
+//       orderBy: { PR_ID: "asc" },
 //     });
 
-//     let familyNumber = "001";
-//     let memberNumber = "001";
+//     let familyNumber = "0001";
+//     let memberNumber = "0001";
 
 //     if (existingUsers.length > 0) {
-//       // Check if user with same name exists
-//       // const existingUserWithSameName = existingUsers.find(
-//       //   (user) => user.PR_FULL_NAME.toLowerCase() === PR_FULL_NAME.toLowerCase()
-//       // );
+//       // const latestUser = existingUsers[0];
+//       familyNumber = existingUsers[0].PR_FAMILY_NO;
 
-//       // if (existingUserWithSameName) {
-//       //   return res.status(400).json({
-//       //     message: "User with this mobile and name already exists",
-//       //     success: false,
-//       //   });
-//       // }
-
-//       // Get the latest user with this mobile to get family number
-//       const latestUser = existingUsers[0];
-//       const existingIdParts = latestUser.PR_UNIQUE_ID.split("-");
-
-//       if (existingIdParts.length === 4) {
-//         familyNumber = existingIdParts[2];
-//         // Find the highest member number for this family
-//         const familyMembers = await prisma.peopleRegistry.findMany({
-//           where: {
-//             PR_UNIQUE_ID: {
-//               startsWith: `${PR_STATE_CODE}${PR_DISTRICT_CODE}-${city.CITY_ID}-${familyNumber}-`,
-//             },
-//           },
-//         });
-
-//         let maxMemberNumber = 0;
-//         familyMembers.forEach((member) => {
-//           const parts = member.PR_UNIQUE_ID.split("-");
-//           if (parts.length === 4) {
-//             const num = parseInt(parts[3]);
-//             if (num > maxMemberNumber) maxMemberNumber = num;
-//           }
-//         });
-
-//         memberNumber = (maxMemberNumber + 1).toString().padStart(3, "0");
-//       }
-//     } else {
-//       // New mobile number - find the next available family number
-//       const lastUserInArea = await prisma.peopleRegistry.findFirst({
+//       const familyMembers = await prisma.peopleRegistry.findMany({
 //         where: {
-//           PR_STATE_CODE: PR_STATE_CODE,
-//           PR_DISTRICT_CODE: PR_DISTRICT_CODE,
-//           PR_CITY_CODE: city.CITY_ID,
+//           PR_MOBILE_NO: PR_MOBILE_NO,
+//           PR_FAMILY_NO: familyNumber,
+//           // PR_CITY_CODE: cityId,
 //         },
-//         orderBy: { PR_ID: "desc" },
 //       });
 
-//       if (lastUserInArea) {
-//         const lastIdParts = lastUserInArea.PR_UNIQUE_ID.split("-");
-//         if (lastIdParts.length === 4) {
-//           const lastFamilyNum = parseInt(lastIdParts[2]);
-//           familyNumber = (lastFamilyNum + 1).toString().padStart(3, "0");
-//         }
-//       }
+//       // let maxMember = 0;
+//       // familyMembers.forEach((member) => {
+//       //   const parts = member.PR_UNIQUE_ID.split("-");
+//       //   if (parts.length === 4) {
+//       //     const num = parseInt(parts[3]);
+//       //     if (num > maxMember) maxMember = num;
+//       //   }
+//       // });
+
+//       memberNumber = (familyMembers.length + 1).toString().padStart(4, "0");
+//     } else {
+//       familyNumber = await getNextFamilyNumber(
+//         PR_STATE_CODE,
+//         PR_DISTRICT_CODE,
+//         cityId
+//       );
 //     }
 
 //     const professionId =
 //       PR_PROFESSION_ID && PR_PROFESSION_ID !== 0 ? PR_PROFESSION_ID : null;
 
 //     const isCompleted =
-//       req?.body?.PR_FULL_NAME &&
-//       req?.body?.PR_DOB &&
-//       req?.body?.PR_MOBILE_NO &&
-//       req?.body?.PR_PIN_CODE &&
-//       req?.body?.PR_AREA_NAME &&
-//       req?.body?.PR_ADDRESS &&
-//       req?.body?.PR_FATHER_NAME &&
-//       req?.body?.PR_MOTHER_NAME
+//       PR_FULL_NAME &&
+//       PR_DOB &&
+//       PR_MOBILE_NO &&
+//       PR_PIN_CODE &&
+//       PR_AREA_NAME &&
+//       PR_ADDRESS &&
+//       PR_FATHER_NAME &&
+//       PR_MOTHER_NAME
 //         ? "Y"
 //         : "N";
 
 //     const newUser = await prisma.peopleRegistry.create({
 //       data: {
-//         PR_UNIQUE_ID: `${PR_STATE_CODE}${PR_DISTRICT_CODE}-${city.CITY_ID}-${familyNumber}-${memberNumber}`,
+//         PR_UNIQUE_ID: `${PR_STATE_CODE}${PR_DISTRICT_CODE}-${cityId}-${familyNumber}-${memberNumber}`,
 //         PR_FULL_NAME,
 //         PR_DOB: new Date(PR_DOB).toLocaleDateString(),
 //         PR_MOBILE_NO,
@@ -221,12 +190,11 @@ const twilioClient = twilio(
 //         PR_ADDRESS,
 //         PR_AREA_NAME,
 //         PR_PIN_CODE,
-//         PR_CITY_CODE: city?.CITY_ID,
+//         PR_CITY_CODE: cityId,
 //         PR_STATE_CODE,
 //         PR_DISTRICT_CODE,
-//         PR_FAMILY_NO: familyNumber, // Added family number
-//         PR_MEMBER_NO: memberNumber, // Added member number
-
+//         PR_FAMILY_NO: familyNumber,
+//         PR_MEMBER_NO: memberNumber,
 //         PR_FATHER_ID,
 //         PR_MOTHER_ID,
 //         PR_SPOUSE_ID,
@@ -256,12 +224,8 @@ const twilioClient = twilio(
 //           },
 //         });
 //       });
-//       console.log("Childrennsssssss", Children);
 //       await Promise.all(childPromises);
 //     }
-
-//     const childrens = await prisma.child.findMany();
-//     console.log(childrens);
 
 //     const user = await prisma.peopleRegistry.findUnique({
 //       where: { PR_ID: newUser.PR_ID },
@@ -380,44 +344,14 @@ export const registerUser = async (req, res) => {
       });
     }
 
-    // 📌 Fetch existing users with this mobile number
-    const existingUsers = await prisma.peopleRegistry.findMany({
-      where: { PR_MOBILE_NO: PR_MOBILE_NO },
-      orderBy: { PR_ID: "asc" },
-    });
-
-    let familyNumber = "0001";
-    let memberNumber = "0001";
-
-    if (existingUsers.length > 0) {
-      // const latestUser = existingUsers[0];
-      familyNumber = existingUsers[0].PR_FAMILY_NO;
-
-      const familyMembers = await prisma.peopleRegistry.findMany({
-        where: {
-          PR_MOBILE_NO: PR_MOBILE_NO,
-          PR_FAMILY_NO: familyNumber,
-          // PR_CITY_CODE: cityId,
-        },
-      });
-
-      // let maxMember = 0;
-      // familyMembers.forEach((member) => {
-      //   const parts = member.PR_UNIQUE_ID.split("-");
-      //   if (parts.length === 4) {
-      //     const num = parseInt(parts[3]);
-      //     if (num > maxMember) maxMember = num;
-      //   }
-      // });
-
-      memberNumber = (familyMembers.length + 1).toString().padStart(4, "0");
-    } else {
-      familyNumber = await getNextFamilyNumber(
-        PR_STATE_CODE,
-        PR_DISTRICT_CODE,
-        cityId
-      );
-    }
+    // Use the familyIdUtils to generate the family ID
+    const { PR_UNIQUE_ID, PR_FAMILY_NO, PR_MEMBER_NO } = await generateFamilyId(
+      PR_MOBILE_NO,
+      PR_STATE_CODE,
+      PR_DISTRICT_CODE,
+      cityId,
+      PR_FULL_NAME
+    );
 
     const professionId =
       PR_PROFESSION_ID && PR_PROFESSION_ID !== 0 ? PR_PROFESSION_ID : null;
@@ -436,7 +370,7 @@ export const registerUser = async (req, res) => {
 
     const newUser = await prisma.peopleRegistry.create({
       data: {
-        PR_UNIQUE_ID: `${PR_STATE_CODE}${PR_DISTRICT_CODE}-${cityId}-${familyNumber}-${memberNumber}`,
+        PR_UNIQUE_ID,
         PR_FULL_NAME,
         PR_DOB: new Date(PR_DOB).toLocaleDateString(),
         PR_MOBILE_NO,
@@ -452,8 +386,8 @@ export const registerUser = async (req, res) => {
         PR_CITY_CODE: cityId,
         PR_STATE_CODE,
         PR_DISTRICT_CODE,
-        PR_FAMILY_NO: familyNumber,
-        PR_MEMBER_NO: memberNumber,
+        PR_FAMILY_NO: PR_FAMILY_NO,
+        PR_MEMBER_NO: PR_MEMBER_NO,
         PR_FATHER_ID,
         PR_MOTHER_ID,
         PR_SPOUSE_ID,
@@ -504,7 +438,6 @@ export const registerUser = async (req, res) => {
     });
   }
 };
-
 const checkMobileVerified = async (mobile, otp) => {
   // For development, bypass OTP verification with default "1234"
   // if (otp === "1234") {
