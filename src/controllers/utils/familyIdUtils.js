@@ -288,7 +288,7 @@ export async function generateFamilyId(
     memberNumber = "0001";
   }
 
-  const PR_UNIQUE_ID = `${PR_STATE_CODE}-${PR_DISTRICT_CODE}-${familyNumber}-${memberNumber}`;
+  const PR_UNIQUE_ID = `${PR_STATE_CODE}${PR_DISTRICT_CODE}-${PR_CITY_CODE}-${familyNumber}-${memberNumber}`;
 
   return {
     PR_UNIQUE_ID,
