@@ -703,11 +703,20 @@ async function EditProfile(req, res) {
         );
 
         // Convert BigInt to Number for arithmetic operations
-        const maxFamily =
-          typeof familyResult[0].max_family === "bigint"
-            ? Number(familyResult[0].max_family)
-            : familyResult[0].max_family;
-        const nextFamily = (maxFamily || 0) + 1;
+        // const maxFamily =
+        //   typeof familyResult[0].max_family === "bigint"
+        //     ? Number(familyResult[0].max_family)
+        //     : familyResult[0].max_family;
+        // const nextFamily = (maxFamily || 0) + 1;
+        // familyNumber = String(nextFamily).padStart(4, "0");
+        // memberNumber = "0001";
+        // prUniqueId = `${prefix}-${familyNumber}-${memberNumber}`;
+        const uniqueFamilyCount =
+          typeof familyResult[0].unique_family_count === "bigint"
+            ? Number(familyResult[0].unique_family_count)
+            : familyResult[0].unique_family_count;
+
+        const nextFamily = (uniqueFamilyCount || 0) + 1;
         familyNumber = String(nextFamily).padStart(4, "0");
         memberNumber = "0001";
         prUniqueId = `${prefix}-${familyNumber}-${memberNumber}`;
