@@ -904,7 +904,7 @@ async function EditProfile(req, res) {
       const prefix = `${newStateCode}${newDistrictCode}-${newCityCode}`;
 
       // Check existing records with same prefix and mobile
-      const [existing] = await prisma.$queryRaw`
+      const existing = await prisma.$queryRaw`
         SELECT PR_UNIQUE_ID FROM PEOPLE_REGISTRY
         WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_bin
         AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}
@@ -913,33 +913,30 @@ async function EditProfile(req, res) {
 
       let prUniqueId, familyNumber, memberNumber;
 
-      if (existing) {
+      if (existing.length > 0) {
         // Get max member number in existing family
-        const [memberResult] = await prisma.$queryRaw`
+        const memberResult = await prisma.$queryRaw`
           SELECT 
             SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 3), '-', -1) AS family,
             MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', -1) AS UNSIGNED)) AS max_member
           FROM PEOPLE_REGISTRY
-         WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_bin
+          WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_bin
+          AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}
           GROUP BY family
         `;
 
-        familyNumber = memberResult.family;
-        const nextMember = Number(memberResult.max_member) + 1;
+        familyNumber = memberResult[0].family;
+        const nextMember = Number(memberResult[0].max_member) + 1;
         memberNumber = String(nextMember).padStart(4, "0");
       } else {
-        // Get next available family number
-        const [familyResult] = await prisma.$queryRaw`
-          SELECT MAX(
-            CAST(
-              SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 3), '-', -1
-            ) AS UNSIGNED
-          ) AS max_family 
+        // Get next available family number - Fixed query
+        const familyResult = await prisma.$queryRaw`
+          SELECT MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 3), '-', -1) AS UNSIGNED)) AS max_family 
           FROM PEOPLE_REGISTRY
           WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_bin
         `;
 
-        const nextFamily = (familyResult.max_family || 0) + 1;
+        const nextFamily = (Number(familyResult[0]?.max_family) || 0) + 1;
         familyNumber = String(nextFamily).padStart(4, "0");
         memberNumber = "0001";
       }
