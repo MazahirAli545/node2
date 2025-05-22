@@ -692,7 +692,7 @@ async function EditProfile(req, res) {
           -- FROM PEOPLE_REGISTRY
           -- WHERE PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_unicode_ci;
 
-          SELECT COUNT(DISTINCT SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 3)) AS unique_family_count FROM PEOPLE_REGISTRY WHERE PR_UNIQUE_ID LIKE ${prefix}'-%';
+          SELECT COUNT(DISTINCT SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 3)) AS unique_family_count FROM PEOPLE_REGISTRY WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%');
 
         `;
 
