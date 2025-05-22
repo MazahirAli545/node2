@@ -832,6 +832,35 @@ async function EditProfile(req, res) {
       }
     }
 
+    // if (Array.isArray(childrenData)) {
+    //   await prisma.$transaction(async (tx) => {
+    //     const existingChildren = await tx.child.findMany({
+    //       where: { userId: Number(PR_ID) },
+    //     });
+
+    //     for (const child of childrenData) {
+    //       if (!child.name || !child.dob) continue;
+
+    //       if (child.id) {
+    //         await tx.child.update({
+    //           where: { id: child.id },
+    //           data: { name: child.name, dob: new Date(child.dob) },
+    //         });
+    //       } else {
+    //         await tx.child.create({
+    //           data: {
+    //             name: child.name,
+    //             dob: new Date(child.dob),
+    //             userId: Number(PR_ID),
+    //           },
+    //         });
+    //       }
+    //     }
+    //   });
+    // }
+
+    // Determine profile completion status
+
     if (Array.isArray(childrenData)) {
       await prisma.$transaction(async (tx) => {
         const existingChildren = await tx.child.findMany({
@@ -842,14 +871,23 @@ async function EditProfile(req, res) {
           if (!child.name || !child.dob) continue;
 
           if (child.id) {
-            // await tx.child.update({
-            //   where: { id: child.id },
-            //   data: { name: child.name, dob: new Date(child.dob) },
-            // });
-            await tx.child.update({
-              where: { id: String(child.id) },
-              data: { name: child.name, dob: new Date(child.dob) },
-            });
+            // First check if the child exists
+            const childExists = existingChildren.some((c) => c.id === child.id);
+            if (childExists) {
+              await tx.child.update({
+                where: { id: child.id },
+                data: { name: child.name, dob: new Date(child.dob) },
+              });
+            } else {
+              // If child with this ID doesn't exist, create a new one
+              await tx.child.create({
+                data: {
+                  name: child.name,
+                  dob: new Date(child.dob),
+                  userId: Number(PR_ID),
+                },
+              });
+            }
           } else {
             await tx.child.create({
               data: {
@@ -863,7 +901,6 @@ async function EditProfile(req, res) {
       });
     }
 
-    // Determine profile completion status
     const isCompleted = [
       "PR_FULL_NAME",
       "PR_DOB",
