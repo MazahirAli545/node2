@@ -695,12 +695,6 @@ async function EditProfile(req, res) {
         //   SELECT COUNT(DISTINCT SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 3)) AS unique_family_count FROM PEOPLE_REGISTRY WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%');
 
         // `;
-        const familyResult = await prisma.$queryRaw(
-          `SELECT COUNT(DISTINCT SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 3)) AS unique_family_count
-   FROM PEOPLE_REGISTRY
-   WHERE PR_UNIQUE_ID LIKE CONCAT(?, '-%')`,
-          prefix
-        );
 
         // Convert BigInt to Number for arithmetic operations
         // const maxFamily =
@@ -711,6 +705,12 @@ async function EditProfile(req, res) {
         // familyNumber = String(nextFamily).padStart(4, "0");
         // memberNumber = "0001";
         // prUniqueId = `${prefix}-${familyNumber}-${memberNumber}`;
+        const familyResult = await prisma.$queryRaw`
+  SELECT COUNT(DISTINCT SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 3)) AS unique_family_count
+  FROM PEOPLE_REGISTRY
+  WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%')
+`;
+
         const uniqueFamilyCount =
           typeof familyResult[0].unique_family_count === "bigint"
             ? Number(familyResult[0].unique_family_count)
