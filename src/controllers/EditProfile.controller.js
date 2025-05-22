@@ -842,8 +842,12 @@ async function EditProfile(req, res) {
           if (!child.name || !child.dob) continue;
 
           if (child.id) {
+            // await tx.child.update({
+            //   where: { id: child.id },
+            //   data: { name: child.name, dob: new Date(child.dob) },
+            // });
             await tx.child.update({
-              where: { id: child.id },
+              where: { id: String(child.id) },
               data: { name: child.name, dob: new Date(child.dob) },
             });
           } else {
