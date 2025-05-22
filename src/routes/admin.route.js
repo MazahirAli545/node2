@@ -2,6 +2,7 @@ import { Router } from "express";
 import { generateUserOtp, verifyUserOtp } from "../controllers/admin/adminOTP.controller.js";
 import { getAllUsers } from "../controllers/admin/getAllUsers.controller.js";
 import { getCategories } from "../controllers/admin/category.controller.js";
+import { createBusiness, deleteBusiness,  updateBusiness} from "../controllers/admin/adminBusiness.controller.js";
 
 
 const router = Router();
@@ -19,6 +20,11 @@ router.get("/users", getAllUsers)
 
 // Get catogeries
 router.get("/categories", getCategories)
+
+// Business
+router.post("/business", createBusiness)
+router.put("/business/:id", updateBusiness)
+router.delete("/business/:id", deleteBusiness)
 
 
 
