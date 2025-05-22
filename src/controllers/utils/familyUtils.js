@@ -1,4 +1,4 @@
-import prisma from "../../../db/prismaClient.js";
+import prisma from "../../db/prismaClient.js";
 
 export async function getNextFamilyNumber(stateCode, districtCode, cityCode) {
   const prefix = `${stateCode}${districtCode}-${cityCode}`;
