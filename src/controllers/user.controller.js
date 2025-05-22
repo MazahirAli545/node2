@@ -9,7 +9,7 @@ import dotenv from "dotenv";
 import otpGenerator from "otp-generator";
 import { generateToken } from "../middlewares/jwt.js";
 import { getNextFamilyNumber } from "../controllers/utils/familyUtils.js";
-import { generateotp } from "./otp.controller.js";
+// import { generateotp } from "./otp.controller.js";
 
 dotenv.config();
 
