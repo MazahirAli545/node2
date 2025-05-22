@@ -1,17 +1,17 @@
-import { PrismaClient } from "@prisma/client";
-import { error, log } from "console";
-import express from "express";
-import multer from "multer";
-import fs from "fs";
-import axios from "axios";
-import FormData from "form-data";
-import prisma from "../db/prismaClient.js";
+// import { PrismaClient } from "@prisma/client";
+// import { error, log } from "console";
+// import express from "express";
+// import multer from "multer";
+// import fs from "fs";
+// import axios from "axios";
+// import FormData from "form-data";
+// import prisma from "../db/prismaClient.js";
+// // import { getNextFamilyNumber } from "../controllers/utils/familyUtils.js";
 // import { getNextFamilyNumber } from "../controllers/utils/familyUtils.js";
-import { getNextFamilyNumber } from "../controllers/utils/familyUtils.js";
 
-const app = express();
+// const app = express();
 
-app.use(express.json());
+// app.use(express.json());
 
 // async function EditProfile(req, res) {
 //   try {
@@ -149,68 +149,13 @@ app.use(express.json());
 //       PR_IS_COMPLETED: isCompleted,
 //     };
 
-//     // const locationChanged =
-//     //   req.body.PR_STATE_CODE !== existingProfile.PR_STATE_CODE ||
-//     //   req.body.PR_DISTRICT_CODE !== existingProfile.PR_DISTRICT_CODE ||
-//     //   req.body.PR_CITY_CODE !== existingProfile.PR_CITY_CODE;
-
-//     // if (locationChanged) {
-//     //   const newStateCode =
-//     //     req.body.PR_STATE_CODE || existingProfile.PR_STATE_CODE;
-//     //   const newDistrictCode =
-//     //     req.body.PR_DISTRICT_CODE || existingProfile.PR_DISTRICT_CODE;
-//     //   const newCityCode = req.body.PR_CITY_CODE || existingProfile.PR_CITY_CODE;
-
-//     //   // Get all family members with same mobile number
-//     //   const familyMembers = await prisma.peopleRegistry.findMany({
-//     //     where: { PR_MOBILE_NO: existingProfile.PR_MOBILE_NO },
-//     //     orderBy: { PR_ID: "asc" },
-//     //   });
-
-//     //   let familyNumber;
-//     //   let memberNumber;
-
-//     //   if (familyMembers.length > 0) {
-//     //     // Use existing family number or create new if none exists
-//     //     // familyNumber = familyMembers[0].PR_FAMILY_NO;
-//     //     familyNumber = familyMembers[0].PR_FAMILY_NO || "0001";
-
-//     //     // Get next member number in sequence
-
-//     //     memberNumber = familyMembers.length.toString().padStart(4, "0");
-//     //   } else {
-//     //     const lastFamilyInLocation = await prisma.peopleRegistry.findFirst({
-//     //       where: {
-//     //         PR_STATE_CODE: newStateCode,
-//     //         PR_DISTRICT_CODE: newDistrictCode,
-//     //         PR_CITY_CODE: Number(newCityCode),
-//     //       },
-//     //       orderBy: { PR_FAMILY_NO: "desc" },
-//     //     });
-
-//     //     familyNumber = lastFamilyInLocation
-//     //       ? (parseInt(lastFamilyInLocation.PR_FAMILY_NO) + 1)
-//     //           .toString()
-//     //           .padStart(4, "0")
-//     //       : "0001";
-
-//     //     memberNumber = "0001";
-//     //   }
-//     //   // Update only the current profile
-//     //   updateData.PR_UNIQUE_ID = `${newStateCode}${newDistrictCode}-${newCityCode}-${familyNumber}-${memberNumber}`;
-//     //   updateData.PR_STATE_CODE = newStateCode;
-//     //   updateData.PR_DISTRICT_CODE = newDistrictCode;
-//     //   updateData.PR_CITY_CODE = Number(newCityCode);
-//     //   updateData.PR_FAMILY_NO = familyNumber;
-//     //   updateData.PR_MEMBER_NO = memberNumber;
-//     // }
-
 //     const locationChanged =
 //       req.body.PR_STATE_CODE !== existingProfile.PR_STATE_CODE ||
 //       req.body.PR_DISTRICT_CODE !== existingProfile.PR_DISTRICT_CODE ||
 //       req.body.PR_CITY_CODE !== existingProfile.PR_CITY_CODE;
 
-//     if (locationChanged) {
+//     // Only regenerate PR_UNIQUE_ID if location changed AND profile is not completed
+//     if (locationChanged && existingProfile.PR_IS_COMPLETED !== "Y") {
 //       const newStateCode =
 //         req.body.PR_STATE_CODE || existingProfile.PR_STATE_CODE;
 //       const newDistrictCode =
@@ -221,25 +166,25 @@ app.use(express.json());
 //       const mobile = existingProfile.PR_MOBILE_NO;
 
 //       const existing = await prisma.$queryRaw`
-//     SELECT PR_UNIQUE_ID
-//     FROM PEOPLE_REGISTRY
-//     WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%')
-//     AND PR_MOBILE_NO = ${mobile}
-//     LIMIT 1;
-//   `;
+//         SELECT PR_UNIQUE_ID
+//         FROM PEOPLE_REGISTRY
+//         WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%')
+//         AND PR_MOBILE_NO = ${mobile}
+//         LIMIT 1;
+//       `;
 
 //       let prUniqueId, familyNumber, memberNumber;
 
 //       if (existing.length > 0) {
 //         const memberResult = await prisma.$queryRaw`
-//       SELECT
-//         SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 4), '-', -1) AS family,
-//         MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', -1) AS UNSIGNED)) AS max_member
-//       FROM PEOPLE_REGISTRY
-//       WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%')
-//       AND PR_MOBILE_NO = ${mobile}
-//       GROUP BY family;
-//     `;
+//           SELECT
+//             SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 4), '-', -1) AS family,
+//             MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', -1) AS UNSIGNED)) AS max_member
+//           FROM PEOPLE_REGISTRY
+//           WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%')
+//           AND PR_MOBILE_NO = ${mobile}
+//           GROUP BY family;
+//         `;
 
 //         familyNumber = memberResult[0].family;
 //         const nextMember = Number(memberResult[0].max_member) + 1;
@@ -247,11 +192,11 @@ app.use(express.json());
 //         prUniqueId = `${prefix}-${familyNumber}-${memberNumber}`;
 //       } else {
 //         const familyResult = await prisma.$queryRaw`
-//       SELECT
-//         MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 4), '-', -1) AS UNSIGNED)) AS max_family
-//       FROM PEOPLE_REGISTRY
-//       WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%');
-//     `;
+//           SELECT
+//             MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 4), '-', -1) AS UNSIGNED)) AS max_family
+//           FROM PEOPLE_REGISTRY
+//           WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%');
+//         `;
 
 //         const nextFamily = (familyResult[0].max_family || 0) + 1;
 //         familyNumber = String(nextFamily).padStart(4, "0");
@@ -265,6 +210,17 @@ app.use(express.json());
 //       updateData.PR_CITY_CODE = Number(newCityCode);
 //       updateData.PR_FAMILY_NO = familyNumber;
 //       updateData.PR_MEMBER_NO = memberNumber;
+//     } else if (locationChanged && existingProfile.PR_IS_COMPLETED === "Y") {
+//       // If profile is completed, only update the location fields but keep existing PR_UNIQUE_ID
+//       updateData.PR_STATE_CODE =
+//         req.body.PR_STATE_CODE || existingProfile.PR_STATE_CODE;
+//       updateData.PR_DISTRICT_CODE =
+//         req.body.PR_DISTRICT_CODE || existingProfile.PR_DISTRICT_CODE;
+//       updateData.PR_CITY_CODE =
+//         Number(req.body.PR_CITY_CODE) || existingProfile.PR_CITY_CODE;
+
+//       // Keep existing unique ID and family/member numbers
+//       // Don't update PR_UNIQUE_ID, PR_FAMILY_NO, PR_MEMBER_NO
 //     }
 
 //     const updatedProfile = await prisma.peopleRegistry.update({
@@ -285,6 +241,21 @@ app.use(express.json());
 // }
 
 // export default EditProfile;
+
+import { PrismaClient } from "@prisma/client";
+import { error, log } from "console";
+import express from "express";
+import multer from "multer";
+import fs from "fs";
+import axios from "axios";
+import FormData from "form-data";
+import prisma from "../db/prismaClient.js";
+// import { getNextFamilyNumber } from "../controllers/utils/familyUtils.js";
+import { getNextFamilyNumber } from "../controllers/utils/familyUtils.js";
+
+const app = express();
+
+app.use(express.json());
 
 async function EditProfile(req, res) {
   try {
@@ -438,10 +409,11 @@ async function EditProfile(req, res) {
       const prefix = `${newStateCode}${newDistrictCode}-${newCityCode}`;
       const mobile = existingProfile.PR_MOBILE_NO;
 
+      // Fix collation issue by using COLLATE clause
       const existing = await prisma.$queryRaw`
         SELECT PR_UNIQUE_ID
         FROM PEOPLE_REGISTRY
-        WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%')
+        WHERE PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_unicode_ci
         AND PR_MOBILE_NO = ${mobile}
         LIMIT 1;
       `;
@@ -454,7 +426,7 @@ async function EditProfile(req, res) {
             SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 4), '-', -1) AS family,
             MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', -1) AS UNSIGNED)) AS max_member
           FROM PEOPLE_REGISTRY
-          WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%')
+          WHERE PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_unicode_ci
           AND PR_MOBILE_NO = ${mobile}
           GROUP BY family;
         `;
@@ -468,7 +440,7 @@ async function EditProfile(req, res) {
           SELECT 
             MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 4), '-', -1) AS UNSIGNED)) AS max_family
           FROM PEOPLE_REGISTRY
-          WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%');
+          WHERE PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_unicode_ci;
         `;
 
         const nextFamily = (familyResult[0].max_family || 0) + 1;
