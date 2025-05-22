@@ -656,11 +656,11 @@ async function EditProfile(req, res) {
 
       // Fix collation issue by using COLLATE clause
       const existing = await prisma.$queryRaw`
-        SELECT PR_UNIQUE_ID
-        FROM PEOPLE_REGISTRY
-        WHERE PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_unicode_ci
-        AND PR_MOBILE_NO = ${mobile}
-        LIMIT 1;
+          SELECT PR_UNIQUE_ID
+          FROM PEOPLE_REGISTRY
+          WHERE PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_unicode_ci
+          AND PR_MOBILE_NO = ${mobile}
+          LIMIT 1;
       `;
 
       let prUniqueId, familyNumber, memberNumber;
@@ -687,10 +687,13 @@ async function EditProfile(req, res) {
         prUniqueId = `${prefix}-${familyNumber}-${memberNumber}`;
       } else {
         const familyResult = await prisma.$queryRaw`
-          SELECT 
-            MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 4), '-', -1) AS UNSIGNED)) AS max_family
-          FROM PEOPLE_REGISTRY
-          WHERE PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_unicode_ci;
+          -- SELECT 
+          --   MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 4), '-', -1) AS UNSIGNED)) AS max_family
+          -- FROM PEOPLE_REGISTRY
+          -- WHERE PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_unicode_ci;
+
+          SELECT COUNT(DISTINCT SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 3)) AS unique_family_count FROM PEOPLE_REGISTRY WHERE PR_UNIQUE_ID LIKE ${prefix}'-%';
+
         `;
 
         // Convert BigInt to Number for arithmetic operations
