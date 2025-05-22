@@ -1,4 +1,3 @@
-// routes/admin.route.js
 import { Router } from "express";
 import { generateUserOtp, verifyUserOtp } from "../controllers/admin/adminOTP.controller.js";
 import { getAllUsers } from "../controllers/admin/getAllUsers.controller.js";
@@ -20,5 +19,7 @@ router.get("/users", getAllUsers)
 
 // Get catogeries
 router.get("/categories", getCategories)
+
+
 
 export default router;
