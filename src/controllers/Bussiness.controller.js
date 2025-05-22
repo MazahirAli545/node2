@@ -12,10 +12,10 @@ async function BusinessController(req, res) {
         BUSS_ID: true,
         BUSS_STREM: true,
         BUSS_TYPE: true,
-        CITY_CREATED_BY: true,
-        CITY_CREATED_AT: true,
-        CITY_UPDATED_BY: true,
-        CITY_UPDATED_AT: true,
+        BUSS_CREATED_BY: true,
+        BUSS_CREATED_AT: true,
+        BUSS_UPDATED_BY: true,
+        BUSS_UPDATED_AT: true,
       },
     });
 

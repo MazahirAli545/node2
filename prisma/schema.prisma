@@ -213,10 +213,10 @@ model BUSSINESS {
   BUSS_STREM   String?  @db.VarChar(20)
   BUSS_TYPE   String?  @db.VarChar(20)                
   // BUSS_INTER       String?  @db.Char(1)
-  CITY_CREATED_BY Int?
-  CITY_CREATED_AT DateTime @default(now())
-  CITY_UPDATED_BY Int?
-  CITY_UPDATED_AT DateTime?
+  BUSS_CREATED_BY Int?
+  BUSS_CREATED_AT DateTime @default(now())
+  BUSS_UPDATED_BY Int?
+  BUSS_UPDATED_AT DateTime?
 
 
 

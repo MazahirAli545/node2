@@ -4,11 +4,11 @@ import prisma from "../../db/prismaClient.js";
 
 export const createBusiness = async (req, res) => {
   try {
-    const { BUSS_STREM, BUSS_TYPE, CITY_CREATED_BY } = req.body;
+    const { BUSS_STREM, BUSS_TYPE, BUSS_CREATED_BY } = req.body;
 
-    if (!BUSS_STREM || !CITY_CREATED_BY) {
+    if (!BUSS_STREM || !BUSS_CREATED_BY) {
       return res.status(400).json({
-        message: "BUSS_STREM and CITY_CREATED_BY are required",
+        message: "BUSS_STREM and BUSS_CREATED_BY are required",
         success: false,
       });
     }
@@ -17,10 +17,10 @@ export const createBusiness = async (req, res) => {
       data: {
         BUSS_STREM,
         BUSS_TYPE: BUSS_TYPE || null,
-        CITY_CREATED_BY,
-        CITY_CREATED_AT: new Date(),
-        CITY_UPDATED_BY: null,
-        CITY_UPDATED_AT: null,
+        BUSS_CREATED_BY,
+        BUSS_CREATED_AT: new Date(),
+        BUSS_UPDATED_BY: null,
+        BUSS_UPDATED_AT: null,
       },
     });
 
@@ -43,7 +43,7 @@ export const createBusiness = async (req, res) => {
 export const updateBusiness = async (req, res) => {
   try {
     const { id } = req.params;
-    const { BUSS_STREM, BUSS_TYPE, CITY_UPDATED_BY } = req.body;
+    const { BUSS_STREM, BUSS_TYPE, BUSS_UPDATED_BY } = req.body;
 
     const parsedId = parseInt(id, 10);
 
@@ -54,9 +54,9 @@ export const updateBusiness = async (req, res) => {
       });
     }
 
-    if (!CITY_UPDATED_BY) {
+    if (!BUSS_UPDATED_BY) {
       return res.status(400).json({
-        message: "CITY_UPDATED_BY is required",
+        message: "BUSS_UPDATED_BY is required",
         success: false,
       });
     }
@@ -68,8 +68,8 @@ export const updateBusiness = async (req, res) => {
       data: {
         BUSS_STREM,
         BUSS_TYPE: BUSS_TYPE || null,
-        CITY_UPDATED_BY,
-        CITY_UPDATED_AT: new Date(),
+        BUSS_UPDATED_BY,
+        BUSS_UPDATED_AT: new Date(),
       },
     });
 
