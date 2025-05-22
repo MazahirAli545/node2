@@ -7,8 +7,63 @@ import axios from "axios";
 
 dotenv.config();
 
-const API_KEY = process.env.OTP_API_KEY;
-const OTP_TEMPLATE_NAME = process.env.OTP_TEMPLATE_NAME;
+// const API_KEY = process.env.OTP_API_KEY;
+// const OTP_TEMPLATE_NAME = process.env.OTP_TEMPLATE_NAME;
+
+// export const generateUserOtp = async (req, res) => {
+//   try {
+//     const { PR_MOBILE_NO } = req.body;
+
+//     const mobileNumberSchema = Joi.string()
+//       .pattern(/^[6-9]\d{9}$/)
+//       .required()
+//       .messages({ "string.pattern.base": "Invalid mobile number" });
+
+//     const { error } = mobileNumberSchema.validate(PR_MOBILE_NO);
+//     if (error) {
+//       return res
+//         .status(400)
+//         .json({ message: error.details[0].message, success: false });
+//     }
+
+//     // Generate 4-digit OTP
+//     const otp = otpGenerator.generate(4, {
+//       upperCaseAlphabets: false,
+//       specialChars: false,
+//       lowerCaseAlphabets: false,
+//       digits: true,
+//     });
+
+//     // Save OTP in DB
+//     await prisma.otp.upsert({
+//       where: { PR_MOBILE_NO },
+//       update: { otp, expiresAt: new Date(Date.now() + 5 * 60 * 1000) },
+//       create: {
+//         PR_MOBILE_NO,
+//         otp,
+//         expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+//       },
+//     });
+
+//     // Send OTP using 2Factor API
+//     const url = `https://2factor.in/API/V1/${API_KEY}/SMS/${PR_MOBILE_NO}/${otp}/${OTP_TEMPLATE_NAME}`;
+//     const response = await axios.get(url);
+
+//     console.log(`OTP ${otp} sent to ${PR_MOBILE_NO}:`, response.data);
+
+//     return res
+//       .status(200)
+//       .json({ message: "OTP sent successfully", success: true });
+//   } catch (error) {
+//     console.error("Error generating OTP:", error.message);
+//     return res
+//       .status(500)
+//       .json({ message: "Something went wrong", success: false });
+//   }
+// };
+
+const API_KEY = "94587c48-8d46-11ea-9fa5-0200cd936042";
+const OTP_TEMPLATE_NAME = "OTP1";
 
 export const generateUserOtp = async (req, res) => {
   try {
@@ -61,7 +116,6 @@ export const generateUserOtp = async (req, res) => {
       .json({ message: "Something went wrong", success: false });
   }
 };
-
 
 export const verifyUserOtp = async (req, res) => {
   try {
