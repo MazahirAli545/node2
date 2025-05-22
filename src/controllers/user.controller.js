@@ -8,7 +8,7 @@ import twilio from "twilio";
 import dotenv from "dotenv";
 import otpGenerator from "otp-generator";
 import { generateToken } from "../middlewares/jwt.js";
-import { getNextFamilyNumber } from "../controllers/utils/familyUtils.js";
+// import { getNextFamilyNumber } from "../controllers/utils/familyUtils.js";
 
 dotenv.config();
 
