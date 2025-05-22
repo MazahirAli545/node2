@@ -6,7 +6,7 @@ import fs from "fs";
 import axios from "axios";
 import FormData from "form-data";
 import prisma from "../db/prismaClient.js";
-import { getNextFamilyNumber } from "./utils/PrUnique.js";
+import { getNextFamilyNumber } from "../controllers/utils/familyUtils.js";
 
 const app = express();
 
