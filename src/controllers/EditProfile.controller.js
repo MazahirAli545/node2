@@ -686,15 +686,21 @@ async function EditProfile(req, res) {
         memberNumber = String(nextMember).padStart(4, "0");
         prUniqueId = `${prefix}-${familyNumber}-${memberNumber}`;
       } else {
-        const familyResult = await prisma.$queryRaw`
-          -- SELECT 
-          --   MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 4), '-', -1) AS UNSIGNED)) AS max_family
-          -- FROM PEOPLE_REGISTRY
-          -- WHERE PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_unicode_ci;
+        // const familyResult = await prisma.$queryRaw`
+        //   -- SELECT
+        //   --   MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 4), '-', -1) AS UNSIGNED)) AS max_family
+        //   -- FROM PEOPLE_REGISTRY
+        //   -- WHERE PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_unicode_ci;
 
-          SELECT COUNT(DISTINCT SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 3)) AS unique_family_count FROM PEOPLE_REGISTRY WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%');
+        //   SELECT COUNT(DISTINCT SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 3)) AS unique_family_count FROM PEOPLE_REGISTRY WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%');
 
-        `;
+        // `;
+        const familyResult = await prisma.$queryRaw(
+          `SELECT COUNT(DISTINCT SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 3)) AS unique_family_count
+   FROM PEOPLE_REGISTRY
+   WHERE PR_UNIQUE_ID LIKE CONCAT(?, '-%')`,
+          prefix
+        );
 
         // Convert BigInt to Number for arithmetic operations
         const maxFamily =
