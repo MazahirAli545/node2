@@ -78,6 +78,7 @@ export const verifyUserOtp = async (req, res) => {
       PR_ADDRESS,
       PR_FATHER_NAME,
       PR_MOTHER_NAME,
+      PR_ROLE, 
     } = req.body;
  
     // Validate input data
@@ -97,6 +98,7 @@ export const verifyUserOtp = async (req, res) => {
       PR_ADDRESS: Joi.string().allow("").optional(),
       PR_FATHER_NAME: Joi.string().allow("").optional(),
       PR_MOTHER_NAME: Joi.string().allow("").optional(),
+      PR_ROLE: Joi.string().valid("Admin", "Master", "End User").optional()
     });
  
     const { error } = schema.validate({
@@ -260,6 +262,7 @@ export const verifyUserOtp = async (req, res) => {
       PR_CITY_CODE: cityId,
       PR_FATHER_NAME: PR_FATHER_NAME || "",
       PR_MOTHER_NAME: PR_MOTHER_NAME || "",
+      PR_ROLE: PR_ROLE || "End User",
     };
  
     // Create or update user
