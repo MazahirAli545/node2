@@ -876,7 +876,7 @@ async function EditProfile(req, res) {
     const updateData = {
       ...Object.fromEntries(
         Object.entries(req.body)
-          .filter(([key]) => key.startsWith("PR_"))
+          .filter(([key]) => key.startsWith("PR_") && key !== "PR_ID")
           .map(([key, value]) => [
             key,
             key === "PR_PROFESSION_ID" ? Number(value) : value,
