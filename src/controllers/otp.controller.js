@@ -501,36 +501,46 @@ export const updateProfile = async (req, res) => {
       });
     }
 
-    // Check if mobile number is being changed
-    if (existingUser.PR_MOBILE_NO !== PR_MOBILE_NO) {
-      // Check if the new mobile number already exists for any other user
-      const mobileExists = await prisma.peopleRegistry.findFirst({
-        where: {
-          PR_MOBILE_NO: PR_MOBILE_NO,
-          PR_ID: {
-            not: Number(PR_ID), // Exclude current user
-          },
-        },
-      });
-
-      if (mobileExists) {
-        return res.status(400).json({
-          message:
-            "This mobile number is already registered with another account",
-          success: false,
-        });
-      }
-    }
-
     // Format the date as string (YYYY-MM-DD)
     const formattedDOB = new Date(PR_DOB).toISOString().split("T")[0];
 
-    // Prepare update data
+    // Prepare update data - only update name, dob, and mobile
     const updateData = {
       PR_FULL_NAME,
       PR_DOB: formattedDOB,
       PR_MOBILE_NO,
     };
+
+    let transferredFromUser = null;
+
+    // Check if mobile number is being changed to a new number
+    if (existingUser.PR_MOBILE_NO !== PR_MOBILE_NO) {
+      // Find user with the new mobile number
+      const userWithNewMobile = await prisma.peopleRegistry.findFirst({
+        where: {
+          PR_MOBILE_NO: PR_MOBILE_NO,
+          NOT: { PR_ID: Number(PR_ID) },
+        },
+      });
+
+      if (userWithNewMobile) {
+        // Store info about the user losing the mobile number
+        transferredFromUser = {
+          userId: userWithNewMobile.PR_ID,
+          userName: userWithNewMobile.PR_FULL_NAME,
+        };
+
+        // Clear the mobile number from the other user
+        await prisma.peopleRegistry.update({
+          where: { PR_ID: userWithNewMobile.PR_ID },
+          data: { PR_MOBILE_NO: null },
+        });
+
+        console.log(
+          `Mobile number ${PR_MOBILE_NO} transferred from user ${userWithNewMobile.PR_ID} to ${PR_ID}`
+        );
+      }
+    }
 
     // Update user information
     const updatedUser = await prisma.peopleRegistry.update({
@@ -538,20 +548,73 @@ export const updateProfile = async (req, res) => {
       data: updateData,
     });
 
+    // Prepare response message
+    let responseMessage = "Profile updated successfully";
+    if (transferredFromUser) {
+      responseMessage += ". Mobile number was transferred from another user.";
+    }
+
     return res.status(200).json({
-      message: "Profile updated successfully",
+      message: responseMessage,
       success: true,
       user: updatedUser,
+      mobileTransferred: transferredFromUser
+        ? {
+            message: `Mobile number was previously registered to ${transferredFromUser.userName}`,
+            previousUserId: transferredFromUser.userId,
+          }
+        : null,
     });
   } catch (error) {
     console.error("Error in profile update:", error);
 
-    // Handle Prisma unique constraint error
+    // Handle Prisma unique constraint error (backup in case the above logic fails)
     if (error.code === "P2002") {
-      return res.status(400).json({
-        message: "Mobile number already registered",
-        success: false,
-      });
+      try {
+        // Find the conflicting user and clear their mobile number
+        const conflictingUser = await prisma.peopleRegistry.findFirst({
+          where: {
+            PR_MOBILE_NO: PR_MOBILE_NO,
+            NOT: { PR_ID: Number(PR_ID) },
+          },
+        });
+
+        if (conflictingUser) {
+          // Clear mobile number from conflicting user
+          await prisma.peopleRegistry.update({
+            where: { PR_ID: conflictingUser.PR_ID },
+            data: { PR_MOBILE_NO: null },
+          });
+
+          console.log(
+            `Resolved P2002 error: Cleared mobile number from user ${conflictingUser.PR_ID}`
+          );
+        }
+
+        // Retry the update
+        const updatedUser = await prisma.peopleRegistry.update({
+          where: { PR_ID: Number(PR_ID) },
+          data: updateData,
+        });
+
+        return res.status(200).json({
+          message: "Profile updated successfully (resolved mobile conflict)",
+          success: true,
+          user: updatedUser,
+          mobileTransferred: conflictingUser
+            ? {
+                message: `Mobile number was transferred from ${conflictingUser.PR_FULL_NAME}`,
+                previousUserId: conflictingUser.PR_ID,
+              }
+            : null,
+        });
+      } catch (retryError) {
+        console.error("Failed to resolve mobile number conflict:", retryError);
+        return res.status(500).json({
+          message: "Failed to resolve mobile number conflict",
+          success: false,
+        });
+      }
     }
 
     return res.status(500).json({
