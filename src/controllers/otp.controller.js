@@ -396,90 +396,32 @@ export async function verifyFunc(PR_MOBILE_NO, otp) {
 //     // Format the date as string (YYYY-MM-DD)
 //     const formattedDOB = new Date(PR_DOB).toISOString().split("T")[0];
 
-//     // Prepare update data
+//     // Prepare update data - only update name, dob, and mobile
 //     const updateData = {
 //       PR_FULL_NAME,
 //       PR_DOB: formattedDOB,
+//       PR_MOBILE_NO, // Mobile number will be updated but PR_UNIQUE_ID remains the same
 //     };
 
-//     // Check if mobile number is being changed
+//     // Check if mobile number is being changed to a new number
 //     if (existingUser.PR_MOBILE_NO !== PR_MOBILE_NO) {
-//       // Get all family members with old mobile number
-//       const oldFamilyMembers = await prisma.peopleRegistry.findMany({
-//         where: { PR_MOBILE_NO: existingUser.PR_MOBILE_NO },
-//         orderBy: { PR_ID: "asc" },
-//       });
-
-//       // Get all family members with new mobile number
-//       const newFamilyMembers = await prisma.peopleRegistry.findMany({
-//         where: { PR_MOBILE_NO: PR_MOBILE_NO },
-//         orderBy: { PR_ID: "asc" },
-//       });
-
-//       // If moving to a new family (new mobile number)
-//       if (newFamilyMembers.length === 0) {
-//         // Find the last family in the same location
-//         const lastFamilyInLocation = await prisma.peopleRegistry.findFirst({
-//           where: {
-//             PR_STATE_CODE: existingUser.PR_STATE_CODE,
-//             PR_DISTRICT_CODE: existingUser.PR_DISTRICT_CODE,
-//             PR_CITY_CODE: existingUser.PR_CITY_CODE,
-//             NOT: { PR_MOBILE_NO: PR_MOBILE_NO },
-//           },
-//           orderBy: { PR_UNIQUE_ID: "desc" },
-//         });
-
-//         let familyNumber = "001";
-//         if (lastFamilyInLocation) {
-//           const parts = lastFamilyInLocation.PR_UNIQUE_ID?.split("-");
-//           if (parts?.length === 4) {
-//             const lastFamilyNum = parseInt(parts[2]);
-//             familyNumber = (lastFamilyNum + 1).toString().padStart(3, "0");
-//           }
+//       // Verify if the new mobile number is already registered to another user
+//       const userWithNewMobile = await prisma.peopleRegistry.findFirst({
+//         where: {
+//           PR_MOBILE_NO: PR_MOBILE_NO,
+//           NOT: { PR_ID: Number(PR_ID) }
 //         }
+//       });
 
-//         // Update the user's mobile number and unique ID
-//         updateData.PR_MOBILE_NO = PR_MOBILE_NO;
-//         updateData.PR_UNIQUE_ID = `${existingUser.PR_STATE_CODE}${existingUser.PR_DISTRICT_CODE}-${existingUser.PR_CITY_CODE}-${familyNumber}-001`;
-//         updateData.PR_FAMILY_NO = familyNumber;
-//         updateData.PR_MEMBER_NO = "001";
-//       } else {
-//         // If joining an existing family (mobile number already exists)
-//         const memberNumber = (newFamilyMembers.length + 1)
-//           .toString()
-//           .padStart(3, "0");
-//         const familyNumber = newFamilyMembers[0].PR_FAMILY_NO || "001";
-
-//         updateData.PR_MOBILE_NO = PR_MOBILE_NO;
-//         updateData.PR_UNIQUE_ID = `${newFamilyMembers[0].PR_STATE_CODE}${newFamilyMembers[0].PR_DISTRICT_CODE}-${newFamilyMembers[0].PR_CITY_CODE}-${familyNumber}-${memberNumber}`;
-//         updateData.PR_FAMILY_NO = familyNumber;
-//         updateData.PR_MEMBER_NO = memberNumber;
-//       }
-
-//       // If this was part of a family, update remaining members' member numbers
-//       if (oldFamilyMembers.length > 1) {
-//         await prisma.$transaction(async (tx) => {
-//           for (let i = 0; i < oldFamilyMembers.length; i++) {
-//             const member = oldFamilyMembers[i];
-//             if (member.PR_ID !== existingUser.PR_ID) {
-//               const memberNumber = (i + 1).toString().padStart(3, "0");
-//               await tx.peopleRegistry.update({
-//                 where: { PR_ID: member.PR_ID },
-//                 data: {
-//                   PR_MEMBER_NO: memberNumber,
-//                   PR_UNIQUE_ID: `${member.PR_STATE_CODE}${member.PR_DISTRICT_CODE}-${member.PR_CITY_CODE}-${member.PR_FAMILY_NO}-${memberNumber}`,
-//                 },
-//               });
-//             }
-//           }
+//       if (userWithNewMobile) {
+//         return res.status(400).json({
+//           message: "Mobile number already registered to another user",
+//           success: false,
 //         });
 //       }
-//     } else {
-//       // Mobile number not changing, just update other fields
-//       updateData.PR_MOBILE_NO = PR_MOBILE_NO;
 //     }
 
-//     // Update user information
+//     // Update user information - PR_UNIQUE_ID remains unchanged
 //     const updatedUser = await prisma.peopleRegistry.update({
 //       where: { PR_ID: Number(PR_ID) },
 //       data: updateData,
@@ -559,60 +501,38 @@ export const updateProfile = async (req, res) => {
       });
     }
 
-    // Format the date as string (YYYY-MM-DD)
-    const formattedDOB = new Date(PR_DOB).toISOString().split("T")[0];
-
-    // Prepare update data - only update name, dob, and mobile
-    const updateData = {
-      PR_FULL_NAME,
-      PR_DOB: formattedDOB,
-      PR_MOBILE_NO, // Mobile number will be updated but PR_UNIQUE_ID remains the same
-    };
-
-    // Check if mobile number is being changed to a new number
-    // if (existingUser.PR_MOBILE_NO !== PR_MOBILE_NO) {
-    //   // Verify if the new mobile number is already registered to another user
-    //   const userWithNewMobile = await prisma.peopleRegistry.findFirst({
-    //     where: {
-    //       PR_MOBILE_NO: PR_MOBILE_NO,
-    //       NOT: { PR_ID: Number(PR_ID) }
-    //     }
-    //   });
-
-    //   if (userWithNewMobile) {
-    //     return res.status(400).json({
-    //       message: "Mobile number already registered to another user",
-    //       success: false,
-    //     });
-    //   }
-    // }
-
+    // Check if mobile number is being changed
     if (existingUser.PR_MOBILE_NO !== PR_MOBILE_NO) {
-      // Verify if the new mobile number is already registered to another user
-      const userWithNewMobile = await prisma.peopleRegistry.findFirst({
+      // Check if the new mobile number already exists for any other user
+      const mobileExists = await prisma.peopleRegistry.findFirst({
         where: {
           PR_MOBILE_NO: PR_MOBILE_NO,
-          NOT: { PR_ID: Number(PR_ID) },
+          PR_ID: {
+            not: Number(PR_ID), // Exclude current user
+          },
         },
       });
 
-      if (userWithNewMobile) {
-        // Check if the full name is the same
-        if (userWithNewMobile.PR_FULL_NAME === PR_FULL_NAME) {
-          return res.status(400).json({
-            message: "That user is already registered",
-            success: false,
-          });
-        } else {
-          return res.status(400).json({
-            message: "Mobile number already registered to another user",
-            success: false,
-          });
-        }
+      if (mobileExists) {
+        return res.status(400).json({
+          message:
+            "This mobile number is already registered with another account",
+          success: false,
+        });
       }
     }
 
-    // Update user information - PR_UNIQUE_ID remains unchanged
+    // Format the date as string (YYYY-MM-DD)
+    const formattedDOB = new Date(PR_DOB).toISOString().split("T")[0];
+
+    // Prepare update data
+    const updateData = {
+      PR_FULL_NAME,
+      PR_DOB: formattedDOB,
+      PR_MOBILE_NO,
+    };
+
+    // Update user information
     const updatedUser = await prisma.peopleRegistry.update({
       where: { PR_ID: Number(PR_ID) },
       data: updateData,
@@ -626,6 +546,7 @@ export const updateProfile = async (req, res) => {
   } catch (error) {
     console.error("Error in profile update:", error);
 
+    // Handle Prisma unique constraint error
     if (error.code === "P2002") {
       return res.status(400).json({
         message: "Mobile number already registered",
