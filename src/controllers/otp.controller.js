@@ -538,16 +538,6 @@ export const updateProfile = async (req, res) => {
       });
     }
 
-    // Verify OTP
-    const isOtpValid = await verifyFunc(PR_MOBILE_NO, otp);
-    if (!isOtpValid) {
-      return res.status(400).json({
-        message: "OTP is expired or invalid",
-        success: false,
-      });
-    }
-
-    // Check if user exists
     const existingUser = await prisma.peopleRegistry.findUnique({
       where: { PR_ID: Number(PR_ID) },
     });
@@ -559,6 +549,17 @@ export const updateProfile = async (req, res) => {
       });
     }
 
+    // Verify OTP
+    const isOtpValid = await verifyFunc(PR_MOBILE_NO, otp);
+    if (!isOtpValid) {
+      return res.status(400).json({
+        message: "OTP is expired or invalid",
+        success: false,
+      });
+    }
+
+    // Check if user exists
+
     // Format the date as string (YYYY-MM-DD)
     const formattedDOB = new Date(PR_DOB).toISOString().split("T")[0];
 
@@ -566,7 +567,7 @@ export const updateProfile = async (req, res) => {
     const updateData = {
       PR_FULL_NAME,
       PR_DOB: formattedDOB,
-      PR_MOBILE_NO, // Mobile number will be updated but PR_UNIQUE_ID remains the same
+      // PR_MOBILE_NO, // Mobile number will be updated but PR_UNIQUE_ID remains the same
     };
 
     // Check if mobile number is being changed to a new number
@@ -586,9 +587,7 @@ export const updateProfile = async (req, res) => {
         });
       }
 
-      // If mobile number is changed but belongs to the same family group
-      // (i.e., same PR_FAMILY_NO), we just update the mobile without changing
-      // PR_UNIQUE_ID or other fields
+      updateData.PR_MOBILE_NO = PR_MOBILE_NO;
     }
 
     // Update user information - PR_UNIQUE_ID remains unchanged
