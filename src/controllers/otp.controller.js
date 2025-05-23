@@ -570,23 +570,46 @@ export const updateProfile = async (req, res) => {
     };
 
     // Check if mobile number is being changed to a new number
-    if (userWithNewMobile) {
-      // Check if the full name is the same
-      if (userWithNewMobile.PR_FULL_NAME === PR_FULL_NAME) {
-        return res.status(400).json({
-          message: "That user is already registered",
-          success: false,
-        });
-      } else {
-        return res.status(400).json({
-          message: "Mobile number already registered to another user",
-          success: false,
-        });
-      }
+    // if (existingUser.PR_MOBILE_NO !== PR_MOBILE_NO) {
+    //   // Verify if the new mobile number is already registered to another user
+    //   const userWithNewMobile = await prisma.peopleRegistry.findFirst({
+    //     where: {
+    //       PR_MOBILE_NO: PR_MOBILE_NO,
+    //       NOT: { PR_ID: Number(PR_ID) }
+    //     }
+    //   });
 
-      // If mobile number is changed but belongs to the same family group
-      // (i.e., same PR_FAMILY_NO), we just update the mobile without changing
-      // PR_UNIQUE_ID or other fields
+    //   if (userWithNewMobile) {
+    //     return res.status(400).json({
+    //       message: "Mobile number already registered to another user",
+    //       success: false,
+    //     });
+    //   }
+    // }
+
+    if (existingUser.PR_MOBILE_NO !== PR_MOBILE_NO) {
+      // Verify if the new mobile number is already registered to another user
+      const userWithNewMobile = await prisma.peopleRegistry.findFirst({
+        where: {
+          PR_MOBILE_NO: PR_MOBILE_NO,
+          NOT: { PR_ID: Number(PR_ID) },
+        },
+      });
+
+      if (userWithNewMobile) {
+        // Check if the full name is the same
+        if (userWithNewMobile.PR_FULL_NAME === PR_FULL_NAME) {
+          return res.status(400).json({
+            message: "That user is already registered",
+            success: false,
+          });
+        } else {
+          return res.status(400).json({
+            message: "Mobile number already registered to another user",
+            success: false,
+          });
+        }
+      }
     }
 
     // Update user information - PR_UNIQUE_ID remains unchanged
