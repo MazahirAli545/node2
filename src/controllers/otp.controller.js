@@ -530,10 +530,10 @@ export const updateProfile = async (req, res) => {
           userName: userWithNewMobile.PR_FULL_NAME,
         };
 
-        // Clear the mobile number from the other user
+        // SOLUTION 1: Set mobile number to empty string instead of null
         await prisma.peopleRegistry.update({
           where: { PR_ID: userWithNewMobile.PR_ID },
-          data: { PR_MOBILE_NO: null },
+          data: { PR_MOBILE_NO: "" }, // Use empty string instead of null
         });
 
         console.log(
@@ -580,10 +580,10 @@ export const updateProfile = async (req, res) => {
         });
 
         if (conflictingUser) {
-          // Clear mobile number from conflicting user
+          // Clear mobile number from conflicting user using empty string
           await prisma.peopleRegistry.update({
             where: { PR_ID: conflictingUser.PR_ID },
-            data: { PR_MOBILE_NO: null },
+            data: { PR_MOBILE_NO: "" }, // Use empty string instead of null
           });
 
           console.log(
