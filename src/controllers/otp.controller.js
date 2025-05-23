@@ -409,8 +409,8 @@ export async function verifyFunc(PR_MOBILE_NO, otp) {
 //       const userWithNewMobile = await prisma.peopleRegistry.findFirst({
 //         where: {
 //           PR_MOBILE_NO: PR_MOBILE_NO,
-//           NOT: { PR_ID: Number(PR_ID) }
-//         }
+//           NOT: { PR_ID: Number(PR_ID) },
+//         },
 //       });
 
 //       if (userWithNewMobile) {
@@ -524,20 +524,16 @@ export const updateProfile = async (req, res) => {
       });
 
       if (userWithNewMobile) {
-        // Store info about the user losing the mobile number
+        // Store info about the user who already has this mobile number
         transferredFromUser = {
           userId: userWithNewMobile.PR_ID,
           userName: userWithNewMobile.PR_FULL_NAME,
         };
 
-        // SOLUTION 1: Set mobile number to empty string instead of null
-        await prisma.peopleRegistry.update({
-          where: { PR_ID: userWithNewMobile.PR_ID },
-          data: { PR_MOBILE_NO: "" }, // Use empty string instead of null
-        });
-
+        // Don't clear the mobile number from the other user
+        // Both users will have the same mobile number
         console.log(
-          `Mobile number ${PR_MOBILE_NO} transferred from user ${userWithNewMobile.PR_ID} to ${PR_ID}`
+          `Mobile number ${PR_MOBILE_NO} will be shared between user ${userWithNewMobile.PR_ID} and ${PR_ID}`
         );
       }
     }
@@ -551,7 +547,7 @@ export const updateProfile = async (req, res) => {
     // Prepare response message
     let responseMessage = "Profile updated successfully";
     if (transferredFromUser) {
-      responseMessage += ". Mobile number was transferred from another user.";
+      responseMessage += ". Mobile number is now shared with another user.";
     }
 
     return res.status(200).json({
@@ -560,8 +556,8 @@ export const updateProfile = async (req, res) => {
       user: updatedUser,
       mobileTransferred: transferredFromUser
         ? {
-            message: `Mobile number was previously registered to ${transferredFromUser.userName}`,
-            previousUserId: transferredFromUser.userId,
+            message: `Mobile number is also registered to ${transferredFromUser.userName}`,
+            sharedWithUserId: transferredFromUser.userId,
           }
         : null,
     });
@@ -580,14 +576,10 @@ export const updateProfile = async (req, res) => {
         });
 
         if (conflictingUser) {
-          // Clear mobile number from conflicting user using empty string
-          await prisma.peopleRegistry.update({
-            where: { PR_ID: conflictingUser.PR_ID },
-            data: { PR_MOBILE_NO: "" }, // Use empty string instead of null
-          });
-
+          // Don't clear the mobile number from conflicting user
+          // Just log that there's a shared mobile number
           console.log(
-            `Resolved P2002 error: Cleared mobile number from user ${conflictingUser.PR_ID}`
+            `Resolved P2002 error: Mobile number ${PR_MOBILE_NO} will be shared between users ${conflictingUser.PR_ID} and ${PR_ID}`
           );
         }
 
@@ -598,13 +590,13 @@ export const updateProfile = async (req, res) => {
         });
 
         return res.status(200).json({
-          message: "Profile updated successfully (resolved mobile conflict)",
+          message: "Profile updated successfully (mobile number shared)",
           success: true,
           user: updatedUser,
           mobileTransferred: conflictingUser
             ? {
-                message: `Mobile number was transferred from ${conflictingUser.PR_FULL_NAME}`,
-                previousUserId: conflictingUser.PR_ID,
+                message: `Mobile number is also registered to ${conflictingUser.PR_FULL_NAME}`,
+                sharedWithUserId: conflictingUser.PR_ID,
               }
             : null,
         });
