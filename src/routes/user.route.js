@@ -76,8 +76,11 @@ import { getUserStats } from "../controllers/PopulationCount.js";
 
 import { getFamiliesByLocation } from "../controllers/user.controller.js";
 import { getFamilyMembers } from "../controllers/user.controller.js";
+
+import { checkPersonById } from "../controllers/user.controller.js";
 const userRouter = Router();
 
+userRouter.get("/checkPersonById/:id", checkPersonById);
 userRouter.get("/families/:districtCode/:cityCode", getFamiliesByLocation);
 userRouter.get("/families/:districtCode/:cityCode/:familyNo", getFamilyMembers);
 userRouter.post("/register", registerUser);
