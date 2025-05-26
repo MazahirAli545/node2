@@ -316,7 +316,7 @@ export const verifyUserOtp = async (req, res) => {
       PR_CITY_CODE: cityId,
       PR_FATHER_NAME: PR_FATHER_NAME || "",
       PR_MOTHER_NAME: PR_MOTHER_NAME || "",
-      PR_ROLE: PR_ROLE || "End User",
+      PR_ROLE: PR_ROLE || "End_User",
     };
  
     // Create or update user
