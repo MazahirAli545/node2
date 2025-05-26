@@ -10,7 +10,7 @@ async function DirectoryController(req, res) {
 
     const Directory = directory.filter((item) => {
       return (
-        item.PR_UNIQUE_ID.split("-")[3] === "001" && item.PR_GENDER === "M"
+        item.PR_UNIQUE_ID.split("-")[3] === "0001" && item.PR_GENDER === "M"
       );
     });
 
