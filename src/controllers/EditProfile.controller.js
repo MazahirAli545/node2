@@ -914,16 +914,47 @@ async function EditProfile(req, res) {
       ? "Y"
       : "N";
 
+    const convertEmptyToNull = (value) => {
+      if (value === "" || value === undefined) return null;
+      if (typeof value === "string" && value.trim() === "") return null;
+      return value;
+    };
+
+    // Helper function to convert to number or null
+    const convertToNumberOrNull = (value) => {
+      if (value === "" || value === undefined || value === null) return null;
+      if (typeof value === "string" && value.trim() === "") return null;
+      const num = Number(value);
+      return isNaN(num) ? null : num;
+    };
+
     const updateData = {
-      ...Object.fromEntries(
-        Object.entries(req.body)
-          .filter(([key]) => key.startsWith("PR_") && key !== "PR_ID")
-          .map(([key, value]) => [
-            key,
-            key === "PR_PROFESSION_ID" ? Number(value) : value,
-          ])
-      ),
-      PR_CITY_CODE: cityCode,
+      PR_FULL_NAME: req.body.PR_FULL_NAME,
+      PR_DOB: req.body.PR_DOB,
+      PR_MOBILE_NO: req.body.PR_MOBILE_NO,
+      PR_GENDER: req.body.PR_GENDER,
+      PR_PIN_CODE: req.body.PR_PIN_CODE,
+      PR_AREA_NAME: req.body.PR_AREA_NAME,
+      PR_ADDRESS: req.body.PR_ADDRESS,
+      PR_STATE_CODE: req.body.PR_STATE_CODE,
+      PR_DISTRICT_CODE: req.body.PR_DISTRICT_CODE,
+      PR_EDUCATION: req.body.PR_EDUCATION,
+      PR_EDUCATION_DESC: req.body.PR_EDUCATION_DESC,
+      PR_PROFESSION_DETA: req.body.PR_PROFESSION_DETA,
+      PR_MARRIED_YN: req.body.PR_MARRIED_YN,
+      PR_FATHER_NAME: req.body.PR_FATHER_NAME,
+      PR_MOTHER_NAME: req.body.PR_MOTHER_NAME,
+      PR_SPOUSE_NAME: req.body.PR_SPOUSE_NAME,
+      PR_BUSS_INTER: req.body.PR_BUSS_INTER,
+      PR_BUSS_STREAM: req.body.PR_BUSS_STREAM,
+      PR_BUSS_TYPE: req.body.PR_BUSS_TYPE,
+      PR_HOBBY: req.body.PR_HOBBY,
+      // Convert integer fields properly - handle empty strings
+      PR_FATHER_ID: convertToNumberOrNull(req.body.PR_FATHER_ID),
+      PR_MOTHER_ID: convertToNumberOrNull(req.body.PR_MOTHER_ID),
+      PR_SPOUSE_ID: convertToNumberOrNull(req.body.PR_SPOUSE_ID),
+      PR_PROFESSION_ID: convertToNumberOrNull(req.body.PR_PROFESSION_ID),
+      PR_CITY_CODE: cityCode || null,
       PR_UPDATED_AT: new Date(),
       PR_PHOTO_URL,
       PR_IS_COMPLETED: isCompleted,
