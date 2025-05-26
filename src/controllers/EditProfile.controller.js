@@ -914,45 +914,20 @@ async function EditProfile(req, res) {
       ? "Y"
       : "N";
 
-    // const updateData = {
-    //   ...Object.fromEntries(
-    //     Object.entries(req.body)
-    //       .filter(([key]) => key.startsWith("PR_") && key !== "PR_ID")
-    //       .map(([key, value]) => [
-    //         key,
-    //         key === "PR_PROFESSION_ID" ? Number(value) : value,
-    //       ])
-    //   ),
-    //   PR_CITY_CODE: cityCode,
-    //   PR_UPDATED_AT: new Date(),
-    //   PR_PHOTO_URL,
-    //   PR_IS_COMPLETED: isCompleted,
-    // };
-
     const updateData = {
       ...Object.fromEntries(
         Object.entries(req.body)
-          .filter(([key]) => key.startsWith("PR_") && key !== "PR_ID" && key !== "PR_CITY_CODE")
+          .filter(([key]) => key.startsWith("PR_") && key !== "PR_ID")
           .map(([key, value]) => [
             key,
             key === "PR_PROFESSION_ID" ? Number(value) : value,
           ])
       ),
-      City: {
-        connect: {
-          CITY_ID: cityCode,
-        },
-      },
-      Profession: {
-        connect: {
-          PROF_ID: Number(req.body.PR_PROFESSION_ID),
-        },
-      },
+      PR_CITY_CODE: cityCode,
       PR_UPDATED_AT: new Date(),
       PR_PHOTO_URL,
       PR_IS_COMPLETED: isCompleted,
     };
-    
 
     // Handle location changes and unique ID generation
     const locationChanged = [
@@ -1022,8 +997,8 @@ async function EditProfile(req, res) {
         req.body.PR_STATE_CODE || existingProfile.PR_STATE_CODE;
       updateData.PR_DISTRICT_CODE =
         req.body.PR_DISTRICT_CODE || existingProfile.PR_DISTRICT_CODE;
-      // updateData.PR_CITY_CODE =
-      //   Number(req.body.PR_CITY_CODE) || existingProfile.PR_CITY_CODE;
+      updateData.PR_CITY_CODE =
+        Number(req.body.PR_CITY_CODE) || existingProfile.PR_CITY_CODE;
     }
 
     // Update profile
