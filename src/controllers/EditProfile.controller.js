@@ -943,6 +943,11 @@ async function EditProfile(req, res) {
           CITY_ID: cityCode,
         },
       },
+      Profession: {
+        connect: {
+          PROF_ID: Number(req.body.PR_PROFESSION_ID),
+        },
+      },
       PR_UPDATED_AT: new Date(),
       PR_PHOTO_URL,
       PR_IS_COMPLETED: isCompleted,
