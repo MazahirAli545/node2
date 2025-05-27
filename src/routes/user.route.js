@@ -97,7 +97,7 @@ userRouter.delete("/professions/:PROF_ID", deleteProfession);
 
 
 // contact
-userRouter.get("/contact", getContactForms)
+userRouter.get("/contactus", getContactForms)
 userRouter.post(
   "/contactus",
   upload.single("CON_ATTACHMENT"),
