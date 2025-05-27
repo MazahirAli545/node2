@@ -62,7 +62,7 @@ import {
 } from "../controllers/Stream.controller.js";
 
 import { getAllUsersBasicDetails } from "../controllers/RegisteredUser.controller.js";
-import { getUserByPrId } from "../controllers/UserFamily.controller.js";
+import { getUsersByIds } from "../controllers/UserFamily.controller.js";
 import { get } from "http";
 import {
   capturePayment,
@@ -151,7 +151,9 @@ userRouter.delete("/child/:id", deleteChild);
 
 userRouter.post("/updateMobNam", updateProfile);
 
-userRouter.get("/users/pr/:prId", getUserByPrId);
+// userRouter.get("/by-mobile/:mobileNumber", getUsersByMobileNumber);
+userRouter.get("/users/by-ids", getUsersByIds);
+
 userRouter.post("/capture-payment", capturePayment);
 userRouter.get("/getDonationByDonar/:PR_ID", getDonationsByDonor);
 

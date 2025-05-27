@@ -42,17 +42,37 @@
 
 import prisma from "../db/prismaClient.js";
 
-export const getUserByPrId = async (req, res) => {
+export const getUsersByIds = async (req, res) => {
   try {
-    const { prId } = req.params; // Extract PR_ID from URL params
+    const { ids } = req.query;
 
-    // Fetch user with the given PR_ID
-    const user = await prisma.peopleRegistry.findUnique({
+    if (!ids) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide PR_IDs as a comma-separated list in the query",
+      });
+    }
+
+    // Convert comma-separated string to an array of numbers
+    const idArray = ids
+      .split(",")
+      .map((id) => parseInt(id))
+      .filter((id) => !isNaN(id));
+
+    if (idArray.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid PR_IDs provided",
+      });
+    }
+
+    const users = await prisma.peopleRegistry.findMany({
       where: {
-        PR_ID: parseInt(prId), // Convert to integer if PR_ID is numeric
+        PR_ID: {
+          in: idArray,
+        },
       },
       include: {
-        // Include related data (optional)
         Profession: true,
         City: true,
         BUSSINESS: true,
@@ -60,20 +80,21 @@ export const getUserByPrId = async (req, res) => {
       },
     });
 
-    if (!user) {
+    if (users.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "No user found with this PR_ID",
+        message: "No users found with the provided PR_IDs",
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: "User fetched successfully",
-      user,
+      message: "Users fetched successfully",
+      count: users.length,
+      users,
     });
   } catch (error) {
-    console.error("Error fetching user by PR_ID:", error);
+    console.error("Error fetching users by PR_IDs:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
