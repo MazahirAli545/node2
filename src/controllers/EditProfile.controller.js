@@ -790,6 +790,17 @@ async function EditProfile(req, res) {
           .json({ message: "Invalid city code", success: false });
     }
 
+    if (req.body.PR_PR_ID) {
+      const prIdToReference = Number(req.body.PR_PR_ID);
+      const referencedProfile = await prisma.peopleRegistry.findUnique({
+        where: { PR_ID: prIdToReference },
+      });
+      if (!referencedProfile)
+        return res
+          .status(400)
+          .json({ message: "Invalid PR_PR_ID reference", success: false });
+    }
+
     // Handle photo upload
     let PR_PHOTO_URL = existingProfile.PR_PHOTO_URL;
     if (req.file) {
@@ -929,6 +940,7 @@ async function EditProfile(req, res) {
     };
 
     const updateData = {
+      PR_PR_ID: convertToNumberOrNull(req.body.PR_PR_ID),
       PR_FULL_NAME: req.body.PR_FULL_NAME,
       PR_DOB: req.body.PR_DOB,
       PR_MOBILE_NO: req.body.PR_MOBILE_NO,
