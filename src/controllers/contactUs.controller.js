@@ -8,6 +8,28 @@ import FormData from "form-data";
 import fs from "fs";
 import axios from "axios";
 
+export const getContactForms = async (req, res) => {
+  try {
+    const contacts = await prisma.contact.findMany({
+      orderBy: {
+        CON_CREATED_DT: "desc", // optional: show latest first
+      },
+    });
+
+    return res.status(200).json({
+      message: "Contact forms retrieved successfully",
+      success: true,
+      data: contacts,
+    });
+  } catch (error) {
+    console.error("❌ Failed to fetch contact forms:", error);
+    return res.status(500).json({
+      message: "Internal server error",
+      success: false,
+    });
+  }
+};
+
 export const contactForm = async (req, res) => {
   try {
     const {
