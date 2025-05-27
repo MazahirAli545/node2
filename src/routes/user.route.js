@@ -11,7 +11,7 @@ import {
   deleteProfession,
 } from "../controllers/professionSeed.js";
 // import contact from '../controllers/contactUs.controller.js'
-import { contactForm } from "../controllers/contactUs.controller.js";
+import { getContactForms, contactForm } from "../controllers/contactUs.controller.js";
 import pincodeController from "../controllers/pincode.controller.js";
 // import cityController from "../controllers/city.controller.js";
 import { updateProfile } from "../controllers/otp.controller.js";
@@ -94,8 +94,12 @@ userRouter.get("/professions", getProfessions);
 userRouter.post("/professions", createProfession);
 userRouter.put("/professions/:PROF_ID", updateProfession);
 userRouter.delete("/professions/:PROF_ID", deleteProfession);
+
+
+// contact
+userRouter.get("/contact", getContactForms)
 userRouter.post(
-  "/contactUs",
+  "/contactus",
   upload.single("CON_ATTACHMENT"),
   verifyToken,
   contactForm
