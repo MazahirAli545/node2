@@ -951,9 +951,12 @@ async function EditProfile(req, res) {
       PR_BUSS_TYPE: req.body.PR_BUSS_TYPE,
       PR_HOBBY: req.body.PR_HOBBY,
       // Convert integer fields properly - handle empty strings
-      PR_FATHER_ID: convertToNumberOrNull(req.body.PR_FATHER_ID),
-      PR_MOTHER_ID: convertToNumberOrNull(req.body.PR_MOTHER_ID),
-      PR_SPOUSE_ID: convertToNumberOrNull(req.body.PR_SPOUSE_ID),
+      // PR_FATHER_ID: convertToNumberOrNull(req.body.PR_FATHER_ID),
+      // PR_MOTHER_ID: convertToNumberOrNull(req.body.PR_MOTHER_ID),
+      // PR_SPOUSE_ID: convertToNumberOrNull(req.body.PR_SPOUSE_ID),
+      PR_FATHER_ID: req.body.PR_FATHER_ID || null, // Directly assign string or null
+      PR_MOTHER_ID: req.body.PR_MOTHER_ID || null,
+      PR_SPOUSE_ID: req.body.PR_SPOUSE_ID || null,
       PR_PROFESSION_ID: convertToNumberOrNull(req.body.PR_PROFESSION_ID),
       PR_CITY_CODE: cityCode || null,
       PR_UPDATED_AT: new Date(),
