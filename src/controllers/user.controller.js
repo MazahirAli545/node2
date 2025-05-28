@@ -373,10 +373,62 @@ export const LoginUser = async (req, res) => {
 };
 
 // GET API to check PR_UNIQUE_ID existence and gender for relation types
+// export const checkPersonById = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { type } = req.query; // type: 'father', 'mother', 'spouse'
+
+//     if (!id) {
+//       return res
+//         .status(400)
+//         .json({ success: false, message: "ID is required" });
+//     }
+
+//     // Use findFirst instead of findUnique if PR_UNIQUE_ID isn't marked as unique
+//     const person = await prisma.peopleRegistry.findFirst({
+//       where: { PR_UNIQUE_ID: id },
+//       select: { PR_UNIQUE_ID: true, PR_GENDER: true, PR_FULL_NAME: true },
+//     });
+
+//     if (!person) {
+//       return res
+//         .status(404)
+//         .json({ success: false, message: "Person not found" });
+//     }
+
+//     // Gender validation based on type
+//     if (type === "father" && person.PR_GENDER !== "M") {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid gender for father. Expected Male.",
+//       });
+//     }
+
+//     if (type === "mother" && person.PR_GENDER !== "F") {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid gender for mother. Expected Female.",
+//       });
+//     }
+
+//     return res.status(200).json({
+//       success: true,
+//       data: person,
+//       message: `Person is valid${type ? " for " + type : ""}`,
+//     });
+//   } catch (error) {
+//     console.error("Check Person Error:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Internal server error",
+//     });
+//   }
+// };
 export const checkPersonById = async (req, res) => {
   try {
     const { id } = req.params;
     const { type } = req.query; // type: 'father', 'mother', 'spouse'
+    const { currentUserId } = req.body; // ID of the current user making the request
 
     if (!id) {
       return res
@@ -384,7 +436,79 @@ export const checkPersonById = async (req, res) => {
         .json({ success: false, message: "ID is required" });
     }
 
-    // Use findFirst instead of findUnique if PR_UNIQUE_ID isn't marked as unique
+    if (!currentUserId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Current user ID is required" });
+    }
+
+    // Check if the provided ID is the same as the current user's ID
+    if (id === currentUserId) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot set yourself as a relation",
+      });
+    }
+
+    // Get the current user's existing relationships
+    const currentUser = await prisma.peopleRegistry.findUnique({
+      where: { PR_UNIQUE_ID: currentUserId },
+      select: {
+        PR_FATHER_ID: true,
+        PR_MOTHER_ID: true,
+        PR_SPOUSE_ID: true,
+      },
+    });
+
+    if (!currentUser) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Current user not found" });
+    }
+
+    // Check if the ID is already used in any of the relationships
+    if (type === "father") {
+      if (currentUser.PR_MOTHER_ID === id) {
+        return res.status(400).json({
+          success: false,
+          message: "This person is already set as mother",
+        });
+      }
+      if (currentUser.PR_SPOUSE_ID === id) {
+        return res.status(400).json({
+          success: false,
+          message: "This person is already set as spouse",
+        });
+      }
+    } else if (type === "mother") {
+      if (currentUser.PR_FATHER_ID === id) {
+        return res.status(400).json({
+          success: false,
+          message: "This person is already set as father",
+        });
+      }
+      if (currentUser.PR_SPOUSE_ID === id) {
+        return res.status(400).json({
+          success: false,
+          message: "This person is already set as spouse",
+        });
+      }
+    } else if (type === "spouse") {
+      if (currentUser.PR_FATHER_ID === id) {
+        return res.status(400).json({
+          success: false,
+          message: "This person is already set as father",
+        });
+      }
+      if (currentUser.PR_MOTHER_ID === id) {
+        return res.status(400).json({
+          success: false,
+          message: "This person is already set as mother",
+        });
+      }
+    }
+
+    // Check if the person exists
     const person = await prisma.peopleRegistry.findFirst({
       where: { PR_UNIQUE_ID: id },
       select: { PR_UNIQUE_ID: true, PR_GENDER: true, PR_FULL_NAME: true },
