@@ -44,7 +44,7 @@ model Profession {
 
 model PeopleRegistry {
   PR_ID            Int      @id @default(autoincrement())
-  PR_UNIQUE_ID     String   @unique @db.VarChar(50)
+  PR_UNIQUE_ID     String   @db.VarChar(50)
   PR_PR_ID         Int?
   PR_FULL_NAME     String   @db.VarChar(100)
   PR_DOB           String
@@ -64,12 +64,9 @@ model PeopleRegistry {
   PR_DISTRICT_CODE String?   @db.Char(20)      
   PR_FAMILY_NO     String?   @db.Char(4)
   PR_MEMBER_NO     String?   @db.Char(4)
-  // PR_FATHER_ID     Int?     
-  // PR_MOTHER_ID     Int?     
-  // PR_SPOUSE_ID     Int? 
-   PR_FATHER_ID     String?   // Changed from Int? to String?
-  PR_MOTHER_ID     String?   // Changed from Int? to String?
-  PR_SPOUSE_ID     String?   // Changed from Int? to String?
+  PR_FATHER_ID     Int?     
+  PR_MOTHER_ID     Int?     
+  PR_SPOUSE_ID     Int? 
   PR_MARRIED_YN    String? @db.Char(1)
   PR_FATHER_NAME     String?   @db.VarChar(100) 
   PR_MOTHER_NAME     String?   @db.VarChar(100)
@@ -96,28 +93,20 @@ model PeopleRegistry {
   // Contact          Contact[]
 
   // Self-referencing relations for family
-  // Father           PeopleRegistry? @relation("FatherRelation", fields: [PR_FATHER_ID], references: [PR_ID])
-  // Mother           PeopleRegistry? @relation("MotherRelation", fields: [PR_MOTHER_ID], references: [PR_ID])
-  // Spouse           PeopleRegistry? @relation("SpouseRelation", fields: [PR_SPOUSE_ID], references: [PR_ID])
-
-  // FatherOf         PeopleRegistry[] @relation("FatherRelation")
-  // MotherOf         PeopleRegistry[] @relation("MotherRelation")
-  // SpouseOf         PeopleRegistry[] @relation("SpouseRelation")
-    Father           PeopleRegistry? @relation("FatherRelation", fields: [PR_FATHER_ID], references: [PR_UNIQUE_ID])
-  Mother           PeopleRegistry? @relation("MotherRelation", fields: [PR_MOTHER_ID], references: [PR_UNIQUE_ID])
-  Spouse           PeopleRegistry? @relation("SpouseRelation", fields: [PR_SPOUSE_ID], references: [PR_UNIQUE_ID])
+  Father           PeopleRegistry? @relation("FatherRelation", fields: [PR_FATHER_ID], references: [PR_ID])
+  Mother           PeopleRegistry? @relation("MotherRelation", fields: [PR_MOTHER_ID], references: [PR_ID])
+  Spouse           PeopleRegistry? @relation("SpouseRelation", fields: [PR_SPOUSE_ID], references: [PR_ID])
 
   FatherOf         PeopleRegistry[] @relation("FatherRelation")
   MotherOf         PeopleRegistry[] @relation("MotherRelation")
   SpouseOf         PeopleRegistry[] @relation("SpouseRelation")
 
-
  
   @@unique([PR_MOBILE_NO, PR_FULL_NAME])
   
-  // @@unique([PR_FATHER_ID])
-  // @@unique([PR_MOTHER_ID])
-  // @@unique([PR_SPOUSE_ID])
+  @@unique([PR_FATHER_ID])
+  @@unique([PR_MOTHER_ID])
+  @@unique([PR_SPOUSE_ID])
 
   @@index([PR_STATE_CODE])
   @@index([PR_DISTRICT_CODE])
