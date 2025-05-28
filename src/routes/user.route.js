@@ -11,7 +11,10 @@ import {
   deleteProfession,
 } from "../controllers/professionSeed.js";
 // import contact from '../controllers/contactUs.controller.js'
-import { getContactForms, contactForm } from "../controllers/contactUs.controller.js";
+import {
+  getContactForms,
+  contactForm,
+} from "../controllers/contactUs.controller.js";
 import pincodeController from "../controllers/pincode.controller.js";
 // import cityController from "../controllers/city.controller.js";
 import { updateProfile } from "../controllers/otp.controller.js";
@@ -78,6 +81,7 @@ import { getFamiliesByLocation } from "../controllers/user.controller.js";
 import { getFamilyMembers } from "../controllers/user.controller.js";
 
 import { checkPersonById } from "../controllers/user.controller.js";
+import { convertUniqueIdToId } from "../controllers/user.controller.js";
 const userRouter = Router();
 
 userRouter.get("/checkPersonById/:id", checkPersonById);
@@ -95,9 +99,8 @@ userRouter.post("/professions", createProfession);
 userRouter.put("/professions/:PROF_ID", updateProfession);
 userRouter.delete("/professions/:PROF_ID", deleteProfession);
 
-
 // contact
-userRouter.get("/contactus", getContactForms)
+userRouter.get("/contactus", getContactForms);
 userRouter.post(
   "/contactus",
   upload.single("CON_ATTACHMENT"),
@@ -157,6 +160,7 @@ userRouter.post("/updateMobNam", updateProfile);
 
 // userRouter.get("/by-mobile/:mobileNumber", getUsersByMobileNumber);
 userRouter.get("/users/by-ids", getUsersByIds);
+userRouter.get("/person/convert/:uniqueId", convertUniqueIdToId);
 
 userRouter.post("/capture-payment", capturePayment);
 userRouter.get("/getDonationByDonar/:PR_ID", getDonationsByDonor);
