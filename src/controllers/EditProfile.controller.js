@@ -929,6 +929,7 @@ async function EditProfile(req, res) {
     };
 
     const updateData = {
+      PR_PR_ID: convertToNumberOrNull(req.body.PR_PR_ID),
       PR_FULL_NAME: req.body.PR_FULL_NAME,
       PR_DOB: req.body.PR_DOB,
       PR_MOBILE_NO: req.body.PR_MOBILE_NO,
