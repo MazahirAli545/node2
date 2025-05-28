@@ -377,16 +377,23 @@ export const checkPersonById = async (req, res) => {
   try {
     const { id } = req.params;
     const { type } = req.query; // type: 'father', 'mother', 'spouse'
-    const personId = parseInt(id);
+    // const personId = parseInt(id);
 
-    if (isNaN(personId)) {
+    // if (isNaN(personId)) {
+    //   return res
+    //     .status(400)
+    //     .json({ success: false, message: "Invalid ID format" });
+    // }
+    const personUniqueId = id;
+
+    if (!personUniqueId) {
       return res
         .status(400)
-        .json({ success: false, message: "Invalid ID format" });
+        .json({ success: false, message: "ID is required" });
     }
 
     const person = await prisma.peopleRegistry.findUnique({
-      where: { PR_UNIQUE_ID: personId },
+      where: { PR_UNIQUE_ID: personUniqueId },
       select: { PR_UNIQUE_ID: true, PR_GENDER: true, PR_FULL_NAME: true },
     });
 
