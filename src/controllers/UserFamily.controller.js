@@ -1,34 +1,108 @@
 import prisma from "../db/prismaClient.js";
 
-export const getUsersByIds = async (req, res) => {
+export const getFamilyMembers = async (req, res) => {
   try {
-    const { ids } = req.query;
+    const { id, father_id, mother_id } = req.query;
 
-    if (!ids) {
+    // If no parameters provided
+    if (!id && !father_id && !mother_id) {
       return res.status(400).json({
         success: false,
-        message: "Please provide PR_IDs as a comma-separated list in the query",
+        message:
+          "Please provide at least one of: PR_ID, father_id, or mother_id",
       });
     }
 
-    // Convert comma-separated string to an array of numbers
-    const idArray = ids
-      .split(",")
-      .map((id) => parseInt(id))
-      .filter((id) => !isNaN(id));
+    let baseUniqueId = null;
 
-    if (idArray.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid PR_IDs provided",
-      });
-    }
+    // Priority 1: If father_id is provided
+    if (father_id) {
+      const fatherId = parseInt(father_id);
+      if (isNaN(fatherId)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid father_id provided",
+        });
+      }
 
-    const users = await prisma.peopleRegistry.findMany({
-      where: {
-        PR_ID: {
-          in: idArray,
+      const father = await prisma.peopleRegistry.findFirst({
+        where: {
+          OR: [{ PR_ID: fatherId }, { PR_FATHER_ID: fatherId }],
         },
+        select: { PR_UNIQUE_ID: true },
+      });
+
+      if (father) {
+        const parts = father.PR_UNIQUE_ID.split("-");
+        if (parts.length >= 3) {
+          baseUniqueId = `${parts[0]}-${parts[1]}-${parts[2]}`;
+        }
+      }
+    }
+
+    // Priority 2: If mother_id is provided and we haven't found a baseUniqueId yet
+    if (!baseUniqueId && mother_id) {
+      const motherId = parseInt(mother_id);
+      if (isNaN(motherId)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid mother_id provided",
+        });
+      }
+
+      const mother = await prisma.peopleRegistry.findFirst({
+        where: {
+          OR: [{ PR_ID: motherId }, { PR_MOTHER_ID: motherId }],
+        },
+        select: { PR_UNIQUE_ID: true },
+      });
+
+      if (mother) {
+        const parts = mother.PR_UNIQUE_ID.split("-");
+        if (parts.length >= 3) {
+          baseUniqueId = `${parts[0]}-${parts[1]}-${parts[2]}`;
+        }
+      }
+    }
+
+    // Priority 3: If id is provided and we haven't found a baseUniqueId yet
+    if (!baseUniqueId && id) {
+      const prId = parseInt(id);
+      if (isNaN(prId)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid PR_ID provided",
+        });
+      }
+
+      const person = await prisma.peopleRegistry.findUnique({
+        where: { PR_ID: prId },
+        select: { PR_UNIQUE_ID: true },
+      });
+
+      if (person) {
+        const parts = person.PR_UNIQUE_ID.split("-");
+        if (parts.length >= 3) {
+          baseUniqueId = `${parts[0]}-${parts[1]}-${parts[2]}`;
+        }
+      }
+    }
+
+    if (!baseUniqueId) {
+      return res.status(404).json({
+        success: false,
+        message: "No valid family identifier found",
+      });
+    }
+
+    // Find all family members
+    const familyMembers = await prisma.peopleRegistry.findMany({
+      where: {
+        PR_UNIQUE_ID: {
+          startsWith: baseUniqueId,
+        },
+        // Exclude the original person if ID was provided
+        ...(id && { NOT: { PR_ID: parseInt(id) } }),
       },
       include: {
         Profession: true,
@@ -38,21 +112,15 @@ export const getUsersByIds = async (req, res) => {
       },
     });
 
-    if (users.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "No users found with the provided PR_IDs",
-      });
-    }
-
     return res.status(200).json({
       success: true,
-      message: "Users fetched successfully",
-      count: users.length,
-      users,
+      message: "Family members fetched successfully",
+      count: familyMembers.length,
+      baseUniqueId,
+      familyMembers,
     });
   } catch (error) {
-    console.error("Error fetching users by PR_IDs:", error);
+    console.error("Error fetching family members:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",

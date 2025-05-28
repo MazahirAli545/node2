@@ -65,7 +65,7 @@ import {
 } from "../controllers/Stream.controller.js";
 
 import { getAllUsersBasicDetails } from "../controllers/RegisteredUser.controller.js";
-import { getUsersByIds } from "../controllers/UserFamily.controller.js";
+import { getFamilyMembers } from "../controllers/UserFamily.controller.js";
 import { get } from "http";
 import {
   capturePayment,
@@ -159,7 +159,7 @@ userRouter.delete("/child/:id", deleteChild);
 userRouter.post("/updateMobNam", updateProfile);
 
 // userRouter.get("/by-mobile/:mobileNumber", getUsersByMobileNumber);
-userRouter.get("/users/by-ids", getUsersByIds);
+userRouter.get("/users/family-members", getFamilyMembers);
 userRouter.get("/person/convert/:uniqueId", convertUniqueIdToId);
 
 userRouter.post("/capture-payment", capturePayment);
