@@ -439,7 +439,7 @@ export const checkPersonById = async (req, res) => {
         .json({ success: false, message: "Invalid PR_UNIQUE_ID format" });
     }
 
-    const person = await prisma.peopleRegistry.findUnique({
+    const person = await prisma.peopleRegistry.findFirst({
       where: { PR_UNIQUE_ID: id },
       select: { PR_UNIQUE_ID: true, PR_GENDER: true, PR_FULL_NAME: true },
     });
