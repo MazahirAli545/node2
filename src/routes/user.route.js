@@ -29,7 +29,6 @@ import {
   createEvent,
   updateEvent,
   deleteEvent,
-  getEventById,
 } from "../controllers/events.contoller.js";
 import DirectoryController from "../controllers/Directory.controller.js";
 import upload from "../middlewares/upload.js";
@@ -66,7 +65,7 @@ import {
 } from "../controllers/Stream.controller.js";
 
 import { getAllUsersBasicDetails } from "../controllers/RegisteredUser.controller.js";
-import { getFamilyMembers } from "../controllers/UserFamily.controller.js";
+import { getFamilyMembersss } from "../controllers/UserFamily.controller.js";
 import { get } from "http";
 import {
   capturePayment,
@@ -123,7 +122,6 @@ userRouter.get("/events", getEvents);
 userRouter.post("/events", createEvent);
 userRouter.put("/events/:ENVT_ID", updateEvent);
 userRouter.delete("/events/:ENVT_ID", deleteEvent);
-userRouter.get("/events/:ENVT_ID", getEventById)
 
 // userRouter.get("/Hobbies", HobbiesController);
 userRouter.get("/hobbies", getHobbies);
@@ -161,7 +159,7 @@ userRouter.delete("/child/:id", deleteChild);
 userRouter.post("/updateMobNam", updateProfile);
 
 // userRouter.get("/by-mobile/:mobileNumber", getUsersByMobileNumber);
-userRouter.get("/users/family-members", getFamilyMembers);
+userRouter.get("/users/family-members", getFamilyMembersss);
 userRouter.get("/person/convert/:uniqueId", convertUniqueIdToId);
 
 userRouter.post("/capture-payment", capturePayment);
