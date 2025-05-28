@@ -128,7 +128,7 @@ import prisma from "../db/prismaClient.js";
 //   }
 // };
 
-export const getFamilyMembers = async (req, res) => {
+export const getFamilyMembersss = async (req, res) => {
   try {
     const { id, father_id, mother_id } = req.query;
 
