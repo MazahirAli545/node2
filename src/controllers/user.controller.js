@@ -373,61 +373,10 @@ export const LoginUser = async (req, res) => {
 };
 
 // GET API to check PR_UNIQUE_ID existence and gender for relation types
-// export const checkPersonById = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { type } = req.query; // type: 'father', 'mother', 'spouse'
-
-//     if (!id) {
-//       return res
-//         .status(400)
-//         .json({ success: false, message: "ID is required" });
-//     }
-
-//     // Use findFirst instead of findUnique if PR_UNIQUE_ID isn't marked as unique
-//     const person = await prisma.peopleRegistry.findFirst({
-//       where: { PR_UNIQUE_ID: id },
-//       select: { PR_UNIQUE_ID: true, PR_GENDER: true, PR_FULL_NAME: true },
-//     });
-
-//     if (!person) {
-//       return res
-//         .status(404)
-//         .json({ success: false, message: "Person not found" });
-//     }
-
-//     // Gender validation based on type
-//     if (type === "father" && person.PR_GENDER !== "M") {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Invalid gender for father. Expected Male.",
-//       });
-//     }
-
-//     if (type === "mother" && person.PR_GENDER !== "F") {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Invalid gender for mother. Expected Female.",
-//       });
-//     }
-
-//     return res.status(200).json({
-//       success: true,
-//       data: person,
-//       message: `Person is valid${type ? " for " + type : ""}`,
-//     });
-//   } catch (error) {
-//     console.error("Check Person Error:", error);
-//     return res.status(500).json({
-//       success: false,
-//       message: "Internal server error",
-//     });
-//   }
-// };
 export const checkPersonById = async (req, res) => {
   try {
     const { id } = req.params;
-    const { type, currentUserId } = req.query; // Now getting both from query params
+    const { type } = req.query; // type: 'father', 'mother', 'spouse'
 
     if (!id) {
       return res
@@ -435,55 +384,19 @@ export const checkPersonById = async (req, res) => {
         .json({ success: false, message: "ID is required" });
     }
 
-    if (!currentUserId) {
-      return res.status(400).json({
-        success: false,
-        message: "Current user ID is required",
-      });
-    }
-
-    // Check if the provided ID is the same as the current user's ID
-    if (id === currentUserId) {
-      return res.status(400).json({
-        success: false,
-        message: "Cannot set yourself as a relation",
-      });
-    }
-
-    // Get the current user's existing relationships
-    const currentUser = await prisma.peopleRegistry.findUnique({
-      where: { PR_UNIQUE_ID: currentUserId },
-      select: {
-        PR_FATHER_ID: true,
-        PR_MOTHER_ID: true,
-        PR_SPOUSE_ID: true,
-      },
-    });
-
-    if (!currentUser) {
-      return res.status(404).json({
-        success: false,
-        message: "Current user not found",
-      });
-    }
-
-    // Rest of your validation logic remains the same...
-    // [Previous validation checks here...]
-
-    // Check if the person exists
+    // Use findFirst instead of findUnique if PR_UNIQUE_ID isn't marked as unique
     const person = await prisma.peopleRegistry.findFirst({
       where: { PR_UNIQUE_ID: id },
       select: { PR_UNIQUE_ID: true, PR_GENDER: true, PR_FULL_NAME: true },
     });
 
     if (!person) {
-      return res.status(404).json({
-        success: false,
-        message: "Person not found",
-      });
+      return res
+        .status(404)
+        .json({ success: false, message: "Person not found" });
     }
 
-    // Gender validation
+    // Gender validation based on type
     if (type === "father" && person.PR_GENDER !== "M") {
       return res.status(400).json({
         success: false,
