@@ -29,6 +29,7 @@ import {
   createEvent,
   updateEvent,
   deleteEvent,
+  getEventById,
 } from "../controllers/events.contoller.js";
 import DirectoryController from "../controllers/Directory.controller.js";
 import upload from "../middlewares/upload.js";
@@ -122,6 +123,7 @@ userRouter.get("/events", getEvents);
 userRouter.post("/events", createEvent);
 userRouter.put("/events/:ENVT_ID", updateEvent);
 userRouter.delete("/events/:ENVT_ID", deleteEvent);
+userRouter.get("/events/:ENVT_ID", getEventById)
 
 // userRouter.get("/Hobbies", HobbiesController);
 userRouter.get("/hobbies", getHobbies);

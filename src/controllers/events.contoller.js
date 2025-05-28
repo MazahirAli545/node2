@@ -29,6 +29,50 @@ export async function getEvents(req, res) {
   }
 }
 
+export async function getEventById(req, res) {
+  try {
+    const { ENVT_ID } = req.params;
+
+    if (!ENVT_ID || isNaN(Number(ENVT_ID))) {
+      return res.status(400).json({
+        message: "Invalid event ID",
+        success: false,
+      });
+    }
+
+    const event = await prisma.events.findUnique({
+      where: {
+        ENVT_ID: Number(ENVT_ID),
+      },
+      include: {
+        Category: true,
+        SubCategory: true,
+      },
+    });
+
+    if (!event) {
+      return res.status(404).json({
+        message: "Event not found",
+        success: false,
+      });
+    }
+
+    return res.status(200).json({
+      message: "Event fetched successfully",
+      success: true,
+      event,
+    });
+  } catch (error) {
+    console.error("Error fetching event:", error);
+    return res.status(500).json({
+      message: "Error fetching event",
+      success: false,
+      error: error.message,
+    });
+  }
+}
+
+
 export async function createEvent(req, res) {
   try {
     const {
