@@ -386,8 +386,8 @@ export const checkPersonById = async (req, res) => {
     }
 
     const person = await prisma.peopleRegistry.findUnique({
-      where: { PR_ID: personId },
-      select: { PR_ID: true, PR_GENDER: true, PR_FULL_NAME: true },
+      where: { PR_UNIQUE_ID: personId },
+      select: { PR_UNIQUE_ID: true, PR_GENDER: true, PR_FULL_NAME: true },
     });
 
     if (!person) {
