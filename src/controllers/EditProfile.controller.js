@@ -928,6 +928,30 @@ async function EditProfile(req, res) {
       return isNaN(num) ? null : num;
     };
 
+    const checkPersonExists = async (id) => {
+      if (!id || isNaN(Number(id))) return null;
+      const person = await prisma.peopleRegistry.findUnique({
+        where: { PR_ID: Number(id) },
+      });
+      return person ? Number(id) : null;
+    };
+
+    const PR_FATHER_ID = await checkPersonExists(req.body.PR_FATHER_ID);
+    const PR_MOTHER_ID = await checkPersonExists(req.body.PR_MOTHER_ID);
+    const PR_SPOUSE_ID = await checkPersonExists(req.body.PR_SPOUSE_ID);
+
+    // Step 2: Return error if any provided foreign key does not exist
+    if (
+      (req.body.PR_FATHER_ID && PR_FATHER_ID === null) ||
+      (req.body.PR_MOTHER_ID && PR_MOTHER_ID === null) ||
+      (req.body.PR_SPOUSE_ID && PR_SPOUSE_ID === null)
+    ) {
+      return res.status(400).json({
+        message: "Invalid PR_FATHER_ID, PR_MOTHER_ID, or PR_SPOUSE_ID",
+        success: false,
+      });
+    }
+
     const updateData = {
       PR_PR_ID: convertToNumberOrNull(req.body.PR_PR_ID),
       PR_FULL_NAME: req.body.PR_FULL_NAME,
@@ -954,9 +978,9 @@ async function EditProfile(req, res) {
       // PR_FATHER_ID: convertToNumberOrNull(req.body.PR_FATHER_ID),
       // PR_MOTHER_ID: convertToNumberOrNull(req.body.PR_MOTHER_ID),
       // PR_SPOUSE_ID: convertToNumberOrNull(req.body.PR_SPOUSE_ID),
-      PR_FATHER_ID: req.body.PR_FATHER_ID || null, // Directly assign string or null
-      PR_MOTHER_ID: req.body.PR_MOTHER_ID || null,
-      PR_SPOUSE_ID: req.body.PR_SPOUSE_ID || null,
+      PR_FATHER_ID, // Directly assign string or null
+      PR_MOTHER_ID,
+      PR_SPOUSE_ID,
       PR_PROFESSION_ID: convertToNumberOrNull(req.body.PR_PROFESSION_ID),
       PR_CITY_CODE: cityCode || null,
       PR_UPDATED_AT: new Date(),
