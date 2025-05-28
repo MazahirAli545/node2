@@ -372,35 +372,28 @@ export const LoginUser = async (req, res) => {
   }
 };
 
-// GET API to check PR_ID existence and gender for relation types
+// GET API to check PR_UNIQUE_ID existence and gender for relation types
 export const checkPersonById = async (req, res) => {
   try {
     const { id } = req.params;
     const { type } = req.query; // type: 'father', 'mother', 'spouse'
-    // const personId = parseInt(id);
 
-    // if (isNaN(personId)) {
-    //   return res
-    //     .status(400)
-    //     .json({ success: false, message: "Invalid ID format" });
-    // }
-    const personUniqueId = id;
-
-    if (!personUniqueId) {
+    if (!id) {
       return res
         .status(400)
         .json({ success: false, message: "ID is required" });
     }
 
-    const person = await prisma.peopleRegistry.findUnique({
-      where: { PR_UNIQUE_ID: personUniqueId },
+    // Use findFirst instead of findUnique if PR_UNIQUE_ID isn't marked as unique
+    const person = await prisma.peopleRegistry.findFirst({
+      where: { PR_UNIQUE_ID: id },
       select: { PR_UNIQUE_ID: true, PR_GENDER: true, PR_FULL_NAME: true },
     });
 
     if (!person) {
       return res
         .status(404)
-        .json({ success: false, message: "PR_ID not present" });
+        .json({ success: false, message: "Person not found" });
     }
 
     // Gender validation based on type
@@ -418,12 +411,10 @@ export const checkPersonById = async (req, res) => {
       });
     }
 
-    // For spouse, just check existence — no gender restriction needed
-
     return res.status(200).json({
       success: true,
       data: person,
-      message: `PR_ID is valid${type ? " for " + type : ""}`,
+      message: `Person is valid${type ? " for " + type : ""}`,
     });
   } catch (error) {
     console.error("Check Person Error:", error);
