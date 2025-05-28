@@ -104,9 +104,9 @@ model PeopleRegistry {
  
   @@unique([PR_MOBILE_NO, PR_FULL_NAME])
   
-  @@unique([PR_FATHER_ID])
-  @@unique([PR_MOTHER_ID])
-  @@unique([PR_SPOUSE_ID])
+  // @@unique([PR_FATHER_ID])
+  // @@unique([PR_MOTHER_ID])
+  // @@unique([PR_SPOUSE_ID])
 
   @@index([PR_STATE_CODE])
   @@index([PR_DISTRICT_CODE])
