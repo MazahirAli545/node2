@@ -232,132 +232,69 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
+// UserFamily.controller.js
 import prisma from "../db/prismaClient.js";
 
-export const getFamilyMembersss = async (req, res) => {
+export const getFamilyMembers = async (req, res) => {
   try {
     const { id, father_id, mother_id } = req.query;
 
+    // Validate at least one parameter is provided
     if (!id && !father_id && !mother_id) {
       return res.status(400).json({
         success: false,
-        message:
-          "Please provide at least one of: PR_ID, father_id, or mother_id",
+        message: "Please provide at least one of: id, father_id, or mother_id",
       });
     }
 
-    // Determine which ID to use as the base
-    const baseId = id || father_id || mother_id;
-    const numericId = parseInt(baseId);
+    // Convert all IDs to numbers
+    const numericId = id ? parseInt(id) : null;
+    const numericFatherId = father_id ? parseInt(father_id) : null;
+    const numericMotherId = mother_id ? parseInt(mother_id) : null;
 
-    if (isNaN(numericId)) {
+    // Validate numeric IDs
+    if (
+      (id && isNaN(numericId)) ||
+      (father_id && isNaN(numericFatherId)) ||
+      (mother_id && isNaN(numericMotherId))
+    ) {
       return res.status(400).json({
         success: false,
-        message: "Invalid ID parameter provided",
+        message: "Invalid ID parameter(s) provided",
       });
     }
 
-    // Get the family prefix (first 3 parts of PR_UNIQUE_ID)
+    // Get family prefix from the base person
+    const baseId = numericId || numericFatherId || numericMotherId;
     const basePerson = await prisma.$queryRaw`
       SELECT SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 3) as familyPrefix 
       FROM PEOPLE_REGISTRY 
-      WHERE PR_ID = ${numericId} 
+      WHERE PR_ID = ${baseId} 
       LIMIT 1
     `;
 
     if (!basePerson || !basePerson[0]?.familyPrefix) {
       return res.status(404).json({
         success: false,
-        message: `Person not found or missing PR_UNIQUE_ID for ID ${numericId}`,
+        message: `Person not found or missing PR_UNIQUE_ID for ID ${baseId}`,
       });
     }
 
     const familyPrefix = basePerson[0].familyPrefix;
 
-    // Build the main query to get family members
-    let queryConditions = [];
+    // Build the where conditions for Prisma
+    const whereConditions = {
+      OR: [
+        { PR_UNIQUE_ID: { startsWith: familyPrefix } },
+        ...(numericFatherId ? [{ PR_FATHER_ID: numericFatherId }] : []),
+        ...(numericMotherId ? [{ PR_MOTHER_ID: numericMotherId }] : []),
+      ],
+      ...(numericId ? { NOT: { PR_ID: numericId } } : {}),
+    };
 
-    if (father_id) {
-      queryConditions.push(prisma.$queryRaw`
-        SELECT 
-          Child.PR_ID,
-          Child.PR_UNIQUE_ID,
-          Child.PR_FULL_NAME,
-          Child.PR_GENDER,
-          Child.PR_FATHER_ID,
-          Child.PR_MOTHER_ID,
-          Father.PR_ID as father_PR_ID,
-          Father.PR_UNIQUE_ID as father_PR_UNIQUE_ID,
-          Father.PR_FULL_NAME as father_PR_FULL_NAME,
-          Mother.PR_ID as mother_PR_ID,
-          Mother.PR_UNIQUE_ID as mother_PR_UNIQUE_ID,
-          Mother.PR_FULL_NAME as mother_PR_FULL_NAME
-        FROM PEOPLE_REGISTRY Child
-        LEFT JOIN PEOPLE_REGISTRY Father ON Child.PR_FATHER_ID = Father.PR_ID
-        LEFT JOIN PEOPLE_REGISTRY Mother ON Child.PR_MOTHER_ID = Mother.PR_ID
-        WHERE Child.PR_FATHER_ID = ${parseInt(father_id)}
-      `);
-    }
-
-    if (mother_id) {
-      queryConditions.push(prisma.$queryRaw`
-        SELECT 
-          Child.PR_ID,
-          Child.PR_UNIQUE_ID,
-          Child.PR_FULL_NAME,
-          Child.PR_GENDER,
-          Child.PR_FATHER_ID,
-          Child.PR_MOTHER_ID,
-          Father.PR_ID as father_PR_ID,
-          Father.PR_UNIQUE_ID as father_PR_UNIQUE_ID,
-          Father.PR_FULL_NAME as father_PR_FULL_NAME,
-          Mother.PR_ID as mother_PR_ID,
-          Mother.PR_UNIQUE_ID as mother_PR_UNIQUE_ID,
-          Mother.PR_FULL_NAME as mother_PR_FULL_NAME
-        FROM PEOPLE_REGISTRY Child
-        LEFT JOIN PEOPLE_REGISTRY Father ON Child.PR_FATHER_ID = Father.PR_ID
-        LEFT JOIN PEOPLE_REGISTRY Mother ON Child.PR_MOTHER_ID = Mother.PR_ID
-        WHERE Child.PR_MOTHER_ID = ${parseInt(mother_id)}
-      `);
-    }
-
-    // Always include family members by PR_UNIQUE_ID prefix
-    queryConditions.push(prisma.$queryRaw`
-      SELECT 
-        p.PR_ID,
-        p.PR_UNIQUE_ID,
-        p.PR_FULL_NAME,
-        p.PR_GENDER,
-        p.PR_FATHER_ID,
-        p.PR_MOTHER_ID,
-        Father.PR_ID as father_PR_ID,
-        Father.PR_UNIQUE_ID as father_PR_UNIQUE_ID,
-        Father.PR_FULL_NAME as father_PR_FULL_NAME,
-        Mother.PR_ID as mother_PR_ID,
-        Mother.PR_UNIQUE_ID as mother_PR_UNIQUE_ID,
-        Mother.PR_FULL_NAME as mother_PR_FULL_NAME
-      FROM PEOPLE_REGISTRY p
-      LEFT JOIN PEOPLE_REGISTRY Father ON p.PR_FATHER_ID = Father.PR_ID
-      LEFT JOIN PEOPLE_REGISTRY Mother ON p.PR_MOTHER_ID = Mother.PR_ID
-      WHERE p.PR_UNIQUE_ID LIKE CONCAT(${familyPrefix}, '-%') COLLATE utf8mb4_bin
-      ${id ? prisma.sql`AND p.PR_ID != ${parseInt(id)}` : prisma.empty}
-    `);
-
-    // Execute all queries and merge results
-    const queryResults = await Promise.all(queryConditions);
-    const allMembers = queryResults.flat();
-
-    // Remove duplicates (in case someone appears in multiple queries)
-    const uniqueMembers = allMembers.filter(
-      (member, index, self) =>
-        index === self.findIndex((m) => m.PR_ID === member.PR_ID)
-    );
-
-    // Get additional details for each member in a single query
-    const memberIds = uniqueMembers.map((m) => m.PR_ID);
-
-    const membersWithDetails = await prisma.peopleRegistry.findMany({
-      where: { PR_ID: { in: memberIds } },
+    // Fetch family members with all relations
+    const familyMembers = await prisma.peopleRegistry.findMany({
+      where: whereConditions,
       include: {
         Profession: true,
         City: true,
@@ -383,14 +320,15 @@ export const getFamilyMembersss = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Family members fetched successfully",
-      count: membersWithDetails.length,
-      familyMembers: membersWithDetails,
+      count: familyMembers.length,
+      familyMembers,
     });
   } catch (error) {
     console.error("Error fetching family members:", error);
     return res.status(500).json({
       success: false,
-      message: error.message || "Internal server error",
+      message: "Internal server error",
+      error: error.message,
     });
   }
 };
