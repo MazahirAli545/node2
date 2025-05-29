@@ -271,22 +271,32 @@ export const getFamilyMembersss = async (req, res) => {
       select: { PR_UNIQUE_ID: true },
     });
 
-    if (person?.PR_UNIQUE_ID) {
-      const parts = person.PR_UNIQUE_ID.split("-");
-      if (parts.length >= 3) {
-        basePrefix = `${parts[0]}-${parts[1]}-${parts[2]}`;
-      }
-    }
-
-    if (!basePrefix) {
+    if (!person) {
       return res.status(404).json({
         success: false,
-        message: "Unable to determine base family prefix",
+        message: `No person found for ID ${mainId}`,
+      });
+    }
+
+    if (!person.PR_UNIQUE_ID) {
+      return res.status(404).json({
+        success: false,
+        message: `PR_UNIQUE_ID missing for person ID ${mainId}`,
+      });
+    }
+
+    const parts = person.PR_UNIQUE_ID.split("-");
+    if (parts.length >= 3) {
+      basePrefix = `${parts[0]}-${parts[1]}-${parts[2]}`;
+    } else {
+      return res.status(404).json({
+        success: false,
+        message: `Unable to extract base family prefix from PR_UNIQUE_ID ${person.PR_UNIQUE_ID}`,
       });
     }
 
     const conditions = [
-      { PR_UNIQUE_ID: { startsWith: `${basePrefix}` } }, // basePrefix condition is always applied
+      { PR_UNIQUE_ID: { startsWith: `${basePrefix}` } }, // always include basePrefix condition
     ];
 
     if (father_id && !isNaN(parseInt(father_id))) {
