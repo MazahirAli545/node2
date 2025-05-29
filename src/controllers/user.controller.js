@@ -465,6 +465,46 @@ export const convertUniqueIdToId = async (req, res) => {
   }
 };
 
+export const getUserByUniqueId = async (req, res) => {
+  try {
+    const { uniqueId } = req.params;
+
+    if (!uniqueId || typeof uniqueId !== "string") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid PR_UNIQUE_ID format",
+      });
+    }
+
+    const user = await prisma.peopleRegistry.findFirst({
+      where: { PR_UNIQUE_ID: uniqueId },
+      select: {
+        PR_UNIQUE_ID: true,
+        PR_FULL_NAME: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User with this PR_UNIQUE_ID not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "User found",
+      data: user,
+    });
+  } catch (error) {
+    console.error("Error fetching user by PR_UNIQUE_ID:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 // 1. Get all families with same district and city code (with type conversion)
 export const getFamiliesByLocation = async (req, res) => {
   try {
