@@ -372,61 +372,6 @@ export const LoginUser = async (req, res) => {
   }
 };
 
-// GET API to check PR_ID existence and gender for relation types
-// export const checkPersonById = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { type } = req.query; // type: 'father', 'mother', 'spouse'
-//     const personId = parseInt(id);
-
-//     if (isNaN(personId)) {
-//       return res
-//         .status(400)
-//         .json({ success: false, message: "Invalid ID format" });
-//     }
-
-//     const person = await prisma.peopleRegistry.findUnique({
-//       where: { PR_ID: personId },
-//       select: { PR_ID: true, PR_GENDER: true, PR_FULL_NAME: true },
-//     });
-
-//     if (!person) {
-//       return res
-//         .status(404)
-//         .json({ success: false, message: "PR_ID not present" });
-//     }
-
-//     // Gender validation based on type
-//     if (type === "father" && person.PR_GENDER !== "M") {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Invalid gender for father. Expected Male.",
-//       });
-//     }
-
-//     if (type === "mother" && person.PR_GENDER !== "F") {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Invalid gender for mother. Expected Female.",
-//       });
-//     }
-
-//     // For spouse, just check existence — no gender restriction needed
-
-//     return res.status(200).json({
-//       success: true,
-//       data: person,
-//       message: `PR_ID is valid${type ? " for " + type : ""}`,
-//     });
-//   } catch (error) {
-//     console.error("Check Person Error:", error);
-//     return res.status(500).json({
-//       success: false,
-//       message: "Internal server error",
-//     });
-//   }
-// };
-
 export const checkPersonById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -480,45 +425,6 @@ export const checkPersonById = async (req, res) => {
     });
   }
 };
-
-// export const convertUniqueIdToId = async (req, res) => {
-//   try {
-//     const { uniqueId } = req.params;
-
-//     // Validate input
-//     if (!uniqueId || typeof uniqueId !== "string") {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Invalid PR_UNIQUE_ID format",
-//       });
-//     }
-
-//     // Query the database for the corresponding PR_ID
-//     const person = await prisma.peopleRegistry.findUnique({
-//       where: { PR_UNIQUE_ID: uniqueId },
-//       select: { PR_ID: true, PR_UNIQUE_ID: true },
-//     });
-
-//     if (!person) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "PR_UNIQUE_ID not found in the database",
-//       });
-//     }
-
-//     return res.status(200).json({
-//       success: true,
-//       data: person,
-//       message: "PR_UNIQUE_ID successfully converted to PR_ID",
-//     });
-//   } catch (error) {
-//     console.error("Convert Unique ID Error:", error);
-//     return res.status(500).json({
-//       success: false,
-//       message: "Internal server error",
-//     });
-//   }
-// };
 
 export const convertUniqueIdToId = async (req, res) => {
   try {

@@ -29,7 +29,7 @@ import {
   createEvent,
   updateEvent,
   deleteEvent,
-  getEventById
+  getEventById,
 } from "../controllers/events.contoller.js";
 import DirectoryController from "../controllers/Directory.controller.js";
 import upload from "../middlewares/upload.js";
@@ -83,8 +83,10 @@ import { getFamilyMembers } from "../controllers/user.controller.js";
 
 import { checkPersonById } from "../controllers/user.controller.js";
 import { convertUniqueIdToId } from "../controllers/user.controller.js";
+import { getUserByUniqueId } from "../controllers/user.controller.js";
 const userRouter = Router();
 
+userRouter.get("/user/check/:uniqueId", getUserByUniqueId);
 userRouter.get("/checkPersonById/:id", checkPersonById);
 userRouter.get("/families/:districtCode/:cityCode", getFamiliesByLocation);
 userRouter.get("/families/:districtCode/:cityCode/:familyNo", getFamilyMembers);
@@ -123,7 +125,7 @@ userRouter.get("/events", getEvents);
 userRouter.post("/events", createEvent);
 userRouter.put("/events/:ENVT_ID", updateEvent);
 userRouter.delete("/events/:ENVT_ID", deleteEvent);
-userRouter.get("/events/:ENVT_ID", getEventById)
+userRouter.get("/events/:ENVT_ID", getEventById);
 
 // userRouter.get("/Hobbies", HobbiesController);
 userRouter.get("/hobbies", getHobbies);
