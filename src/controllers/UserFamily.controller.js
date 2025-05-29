@@ -113,6 +113,125 @@
 //   }
 // };
 
+// /////////////////////////////////////////////////////////////////////////////////
+
+// import prisma from "../db/prismaClient.js";
+
+// export const getFamilyMembersss = async (req, res) => {
+//   try {
+//     const { id, father_id, mother_id } = req.query;
+
+//     if (!id && !father_id && !mother_id) {
+//       return res.status(400).json({
+//         success: false,
+//         message:
+//           "Please provide at least one of: PR_ID, father_id, or mother_id",
+//       });
+//     }
+
+//     let basePrefix = null;
+//     const conditions = [];
+
+//     if (father_id) {
+//       const fatherId = parseInt(father_id);
+//       if (isNaN(fatherId)) {
+//         return res.status(400).json({
+//           success: false,
+//           message: "Invalid father_id provided",
+//         });
+//       }
+//       conditions.push({ PR_FATHER_ID: fatherId });
+//     }
+
+//     if (mother_id) {
+//       const motherId = parseInt(mother_id);
+//       if (isNaN(motherId)) {
+//         return res.status(400).json({
+//           success: false,
+//           message: "Invalid mother_id provided",
+//         });
+//       }
+//       conditions.push({ PR_MOTHER_ID: motherId });
+//     }
+
+//     if (id) {
+//       const prId = parseInt(id);
+//       if (isNaN(prId)) {
+//         return res.status(400).json({
+//           success: false,
+//           message: "Invalid PR_ID provided",
+//         });
+//       }
+
+//       // Get base prefix from PR_UNIQUE_ID of the provided ID
+//       const person = await prisma.peopleRegistry.findUnique({
+//         where: { PR_ID: prId },
+//         select: { PR_UNIQUE_ID: true },
+//       });
+
+//       if (person?.PR_UNIQUE_ID) {
+//         const parts = person.PR_UNIQUE_ID.split("-");
+//         if (parts.length >= 3) {
+//           basePrefix = `${parts[0]}-${parts[1]}-${parts[2]}`;
+//           conditions.push({
+//             PR_UNIQUE_ID: { startsWith: `${basePrefix}` },
+//           });
+//         }
+//       }
+//     }
+
+//     if (conditions.length === 0) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "No valid identifiers or family prefix found.",
+//       });
+//     }
+
+//     const familyMembers = await prisma.peopleRegistry.findMany({
+//       where: {
+//         OR: conditions,
+//         ...(id && { NOT: { PR_ID: parseInt(id) } }),
+//       },
+//       include: {
+//         Profession: true,
+//         City: true,
+//         BUSSINESS: true,
+//         Children: true,
+//         Father: {
+//           select: {
+//             PR_ID: true,
+//             PR_UNIQUE_ID: true,
+//             PR_FULL_NAME: true,
+//           },
+//         },
+//         Mother: {
+//           select: {
+//             PR_ID: true,
+//             PR_UNIQUE_ID: true,
+//             PR_FULL_NAME: true,
+//           },
+//         },
+//       },
+//     });
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Family members fetched successfully",
+//       count: familyMembers.length,
+//       basePrefix,
+//       familyMembers,
+//     });
+//   } catch (error) {
+//     console.error("Error fetching family members:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: error.message || "Internal server error",
+//     });
+//   }
+// };
+
+////////////////////////////////////////////////////////////////////////////////////////
+
 import prisma from "../db/prismaClient.js";
 
 export const getFamilyMembersss = async (req, res) => {
@@ -128,67 +247,62 @@ export const getFamilyMembersss = async (req, res) => {
     }
 
     let basePrefix = null;
-    const conditions = [];
+    let mainId = null;
 
+    // Priority: use father_id > id > mother_id to get basePrefix
     if (father_id) {
-      const fatherId = parseInt(father_id);
-      if (isNaN(fatherId)) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid father_id provided",
-        });
-      }
-      conditions.push({ PR_FATHER_ID: fatherId });
+      mainId = parseInt(father_id);
+    } else if (id) {
+      mainId = parseInt(id);
+    } else if (mother_id) {
+      mainId = parseInt(mother_id);
     }
 
-    if (mother_id) {
-      const motherId = parseInt(mother_id);
-      if (isNaN(motherId)) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid mother_id provided",
-        });
-      }
-      conditions.push({ PR_MOTHER_ID: motherId });
-    }
-
-    if (id) {
-      const prId = parseInt(id);
-      if (isNaN(prId)) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid PR_ID provided",
-        });
-      }
-
-      // Get base prefix from PR_UNIQUE_ID of the provided ID
-      const person = await prisma.peopleRegistry.findUnique({
-        where: { PR_ID: prId },
-        select: { PR_UNIQUE_ID: true },
+    if (!mainId || isNaN(mainId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid PR_ID or parent ID provided for basePrefix lookup",
       });
+    }
 
-      if (person?.PR_UNIQUE_ID) {
-        const parts = person.PR_UNIQUE_ID.split("-");
-        if (parts.length >= 3) {
-          basePrefix = `${parts[0]}-${parts[1]}-${parts[2]}`;
-          conditions.push({
-            PR_UNIQUE_ID: { startsWith: `${basePrefix}` },
-          });
-        }
+    // Get basePrefix using mainId
+    const person = await prisma.peopleRegistry.findUnique({
+      where: { PR_ID: mainId },
+      select: { PR_UNIQUE_ID: true },
+    });
+
+    if (person?.PR_UNIQUE_ID) {
+      const parts = person.PR_UNIQUE_ID.split("-");
+      if (parts.length >= 3) {
+        basePrefix = `${parts[0]}-${parts[1]}-${parts[2]}`;
       }
     }
 
-    if (conditions.length === 0) {
+    if (!basePrefix) {
       return res.status(404).json({
         success: false,
-        message: "No valid identifiers or family prefix found.",
+        message: "Unable to determine base family prefix",
       });
     }
+
+    const conditions = [
+      { PR_UNIQUE_ID: { startsWith: `${basePrefix}` } }, // basePrefix condition is always applied
+    ];
+
+    if (father_id && !isNaN(parseInt(father_id))) {
+      conditions.push({ PR_FATHER_ID: parseInt(father_id) });
+    }
+
+    if (mother_id && !isNaN(parseInt(mother_id))) {
+      conditions.push({ PR_MOTHER_ID: parseInt(mother_id) });
+    }
+
+    const excludeId = id ? parseInt(id) : null;
 
     const familyMembers = await prisma.peopleRegistry.findMany({
       where: {
         OR: conditions,
-        ...(id && { NOT: { PR_ID: parseInt(id) } }),
+        ...(excludeId && { NOT: { PR_ID: excludeId } }),
       },
       include: {
         Profession: true,
