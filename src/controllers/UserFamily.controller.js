@@ -234,7 +234,7 @@
 
 import prisma from "../db/prismaClient.js";
 
-export const getFamilyMembersss = async (req, res) => {
+export const getFamilyMembers = async (req, res) => {
   try {
     const { id, father_id, mother_id } = req.query;
 
@@ -246,22 +246,25 @@ export const getFamilyMembersss = async (req, res) => {
       });
     }
 
-    let basePrefix = null;
     let mainId = null;
+    let priorityParam = null;
 
-    // Priority: use father_id > id > mother_id to get basePrefix
+    // Determine which parameter to prioritize
     if (father_id) {
       mainId = parseInt(father_id);
+      priorityParam = "father_id";
     } else if (id) {
       mainId = parseInt(id);
+      priorityParam = "id";
     } else if (mother_id) {
       mainId = parseInt(mother_id);
+      priorityParam = "mother_id";
     }
 
     if (!mainId || isNaN(mainId)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid PR_ID or parent ID provided for basePrefix lookup",
+        message: "Invalid ID parameter provided",
       });
     }
 
@@ -271,38 +274,28 @@ export const getFamilyMembersss = async (req, res) => {
       select: { PR_UNIQUE_ID: true },
     });
 
-    if (!person) {
+    if (!person || !person.PR_UNIQUE_ID) {
       return res.status(404).json({
         success: false,
-        message: `No person found for ID ${mainId}`,
-      });
-    }
-
-    if (!person.PR_UNIQUE_ID) {
-      return res.status(404).json({
-        success: false,
-        message: `PR_UNIQUE_ID missing for person ID ${mainId}`,
+        message: `Person not found or missing PR_UNIQUE_ID for ID ${mainId}`,
       });
     }
 
     const parts = person.PR_UNIQUE_ID.split("-");
-    if (parts.length >= 3) {
-      basePrefix = `${parts[0]}-${parts[1]}-${parts[2]}`;
-    } else {
-      return res.status(404).json({
+    if (parts.length < 3) {
+      return res.status(400).json({
         success: false,
-        message: `Unable to extract base family prefix from PR_UNIQUE_ID ${person.PR_UNIQUE_ID}`,
+        message: `Invalid PR_UNIQUE_ID format: ${person.PR_UNIQUE_ID}`,
       });
     }
 
-    const conditions = [
-      { PR_UNIQUE_ID: { startsWith: `${basePrefix}` } }, // always include basePrefix condition
-    ];
+    const basePrefix = `${parts[0]}-${parts[1]}-${parts[2]}`;
+    const conditions = [{ PR_UNIQUE_ID: { startsWith: basePrefix } }];
 
+    // Add additional conditions based on provided parameters
     if (father_id && !isNaN(parseInt(father_id))) {
       conditions.push({ PR_FATHER_ID: parseInt(father_id) });
     }
-
     if (mother_id && !isNaN(parseInt(mother_id))) {
       conditions.push({ PR_MOTHER_ID: parseInt(mother_id) });
     }
@@ -340,7 +333,6 @@ export const getFamilyMembersss = async (req, res) => {
       success: true,
       message: "Family members fetched successfully",
       count: familyMembers.length,
-      basePrefix,
       familyMembers,
     });
   } catch (error) {
