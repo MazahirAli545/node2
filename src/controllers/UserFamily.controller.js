@@ -152,6 +152,7 @@
 //     });
 //   }
 // };
+import prisma from "../db/prismaClient.js";
 
 export const getFamilyMembersss = async (req, res) => {
   try {
