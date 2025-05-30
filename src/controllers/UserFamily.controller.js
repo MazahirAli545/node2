@@ -152,6 +152,163 @@
 //     });
 //   }
 // };
+// import prisma from "../db/prismaClient.js";
+
+// export const getFamilyMembersss = async (req, res) => {
+//   try {
+//     const { id, father_id, mother_id } = req.query;
+//     console.log("Received query params:", { id, father_id, mother_id });
+
+//     // Validation
+//     if (!id && !father_id && !mother_id) {
+//       return res.status(400).json({
+//         success: false,
+//         message:
+//           "Please provide at least one of: PR_ID, father_id, or mother_id",
+//       });
+//     }
+
+//     // Determine main ID
+//     let mainId = null;
+//     if (father_id) mainId = parseInt(father_id);
+//     else if (id) mainId = parseInt(id);
+//     else if (mother_id) mainId = parseInt(mother_id);
+
+//     if (!mainId || isNaN(mainId)) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid PR_ID or parent ID provided",
+//       });
+//     }
+
+//     console.log("Using mainId:", mainId);
+
+//     // Get base prefix
+//     const person = await prisma.peopleRegistry.findUnique({
+//       where: { PR_ID: mainId },
+//       select: { PR_UNIQUE_ID: true },
+//     });
+
+//     if (!person?.PR_UNIQUE_ID) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Unable to determine base family prefix",
+//       });
+//     }
+
+//     const parts = person.PR_UNIQUE_ID.split("-");
+//     if (parts.length < 3) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Invalid PR_UNIQUE_ID format",
+//       });
+//     }
+
+//     const basePrefix = `${parts[0]}-${parts[1]}-${parts[2]}`;
+//     console.log("Base prefix:", basePrefix);
+
+//     // Execute queries
+//     const queries = {
+//       prefixQuery: {
+//         where: {
+//           PR_UNIQUE_ID: { startsWith: basePrefix },
+//           ...(id && { NOT: { PR_ID: parseInt(id) } }),
+//         },
+//         include: {
+//           Profession: true,
+//           City: true,
+//           BUSSINESS: true,
+//           Children: true,
+//           Father: true,
+//           Mother: true,
+//         },
+//       },
+//       parentsQuery: {
+//         where: {
+//           OR: [
+//             ...(father_id ? [{ PR_FATHER_ID: parseInt(father_id) }] : []),
+//             ...(mother_id ? [{ PR_MOTHER_ID: parseInt(mother_id) }] : []),
+//           ],
+//           ...(id && { NOT: { PR_ID: parseInt(id) } }),
+//         },
+//         include: {
+//           Profession: true,
+//           City: true,
+//           BUSSINESS: true,
+//           Children: true,
+//           Father: true,
+//           Mother: true,
+//         },
+//       },
+//     };
+
+//     console.log(
+//       "Query 1 conditions:",
+//       JSON.stringify(queries.prefixQuery.where)
+//     );
+//     console.log(
+//       "Query 2 conditions:",
+//       JSON.stringify(queries.parentsQuery.where)
+//     );
+
+//     const [familyByPrefix, familyByParents] = await Promise.all([
+//       prisma.peopleRegistry.findMany(queries.prefixQuery),
+//       father_id || mother_id
+//         ? prisma.peopleRegistry.findMany(queries.parentsQuery)
+//         : Promise.resolve([]),
+//     ]);
+
+//     console.log(
+//       "Query 1 results:",
+//       familyByPrefix.map((m) => ({ id: m.PR_ID, name: m.PR_FULL_NAME }))
+//     );
+//     console.log(
+//       "Query 2 results:",
+//       familyByParents.map((m) => ({ id: m.PR_ID, name: m.PR_FULL_NAME }))
+//     );
+
+//     // Combine results - NEW APPROACH
+//     const combinedFamily = [];
+//     const seenIds = new Set();
+
+//     // First add all prefix results
+//     familyByPrefix.forEach((member) => {
+//       if (!seenIds.has(member.PR_ID)) {
+//         seenIds.add(member.PR_ID);
+//         combinedFamily.push(member);
+//       }
+//     });
+
+//     // Then add parent results that aren't already included
+//     familyByParents.forEach((member) => {
+//       if (!seenIds.has(member.PR_ID)) {
+//         seenIds.add(member.PR_ID);
+//         combinedFamily.push(member);
+//       }
+//     });
+
+//     console.log(
+//       "Final combined family IDs:",
+//       combinedFamily.map((m) => m.PR_ID)
+//     );
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Family members fetched successfully",
+//       count: combinedFamily.length,
+//       basePrefix,
+//       query1Count: familyByPrefix.length,
+//       query2Count: familyByParents.length,
+//       familyMembers: combinedFamily,
+//     });
+//   } catch (error) {
+//     console.error("Error fetching family members:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: error.message || "Internal server error",
+//     });
+//   }
+// };
 import prisma from "../db/prismaClient.js";
 
 export const getFamilyMembersss = async (req, res) => {
@@ -166,104 +323,87 @@ export const getFamilyMembersss = async (req, res) => {
       });
     }
 
-    // Determine the main ID for base prefix lookup
-    let mainId = null;
-    if (father_id) mainId = parseInt(father_id);
-    else if (id) mainId = parseInt(id);
-    else if (mother_id) mainId = parseInt(mother_id);
-
-    if (!mainId || isNaN(mainId)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid PR_ID or parent ID provided",
-      });
-    }
-
-    // Get basePrefix
-    const person = await prisma.peopleRegistry.findUnique({
-      where: { PR_ID: mainId },
-      select: { PR_UNIQUE_ID: true },
+    // Step 1: Fetch PR_UNIQUE_ID of father, mother, or id
+    const idsToCheck = [id, father_id, mother_id].filter(Boolean).map(Number);
+    const people = await prisma.peopleRegistry.findMany({
+      where: { PR_ID: { in: idsToCheck } },
+      select: { PR_ID: true, PR_UNIQUE_ID: true },
     });
 
-    if (!person?.PR_UNIQUE_ID) {
+    // Step 2: Extract all prefixes (SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 3))
+    const basePrefixes = new Set();
+    people.forEach((p) => {
+      const parts = p.PR_UNIQUE_ID?.split("-");
+      if (parts?.length >= 3) {
+        basePrefixes.add(`${parts[0]}-${parts[1]}-${parts[2]}`);
+      }
+    });
+
+    if (basePrefixes.size === 0) {
       return res.status(404).json({
         success: false,
-        message: "Unable to determine base family prefix",
+        message: "Unable to determine family base prefix from given IDs",
       });
     }
 
-    const parts = person.PR_UNIQUE_ID.split("-");
-    if (parts.length < 3) {
-      return res.status(404).json({
-        success: false,
-        message: "Invalid PR_UNIQUE_ID format",
-      });
-    }
-
-    const basePrefix = `${parts[0]}-${parts[1]}-${parts[2]}`;
-
-    // Execute both queries in parallel for better performance
-    const [familyByPrefix, familyByParents] = await Promise.all([
-      // Query 1: Family by prefix
-      prisma.peopleRegistry.findMany({
-        where: {
-          PR_UNIQUE_ID: { startsWith: basePrefix },
-          ...(id && { NOT: { PR_ID: parseInt(id) } }),
-        },
-        include: {
-          Profession: true,
-          City: true,
-          BUSSINESS: true,
-          Children: true,
-          Father: true,
-          Mother: true,
-        },
-      }),
-
-      // Query 2: Family by parents (only if parents provided)
-      father_id || mother_id
-        ? prisma.peopleRegistry.findMany({
-            where: {
-              OR: [
-                ...(father_id ? [{ PR_FATHER_ID: parseInt(father_id) }] : []),
-                ...(mother_id ? [{ PR_MOTHER_ID: parseInt(mother_id) }] : []),
-              ],
-              ...(id && { NOT: { PR_ID: parseInt(id) } }),
-            },
-            include: {
-              Profession: true,
-              City: true,
-              BUSSINESS: true,
-              Children: true,
-              Father: true,
-              Mother: true,
-            },
-          })
-        : Promise.resolve([]),
-    ]);
-
-    // Combine results and remove duplicates
-    const uniqueMembers = new Map();
-
-    // Add all prefix-matched members first
-    familyByPrefix.forEach((member) => {
-      uniqueMembers.set(member.PR_ID, member);
+    // Step 3: Fetch by basePrefix (common family group)
+    const prefixQuery = await prisma.peopleRegistry.findMany({
+      where: {
+        OR: [...basePrefixes].map((prefix) => ({
+          PR_UNIQUE_ID: { startsWith: `${prefix}-` },
+        })),
+        ...(id && { NOT: { PR_ID: parseInt(id) } }),
+      },
+      include: {
+        Profession: true,
+        City: true,
+        BUSSINESS: true,
+        Children: true,
+        Father: true,
+        Mother: true,
+      },
     });
 
-    // Add parent-matched members (will overwrite only if same ID exists)
-    familyByParents.forEach((member) => {
-      uniqueMembers.set(member.PR_ID, member);
-    });
+    // Step 4: Fetch by parent ID (father/mother)
+    const parentConditions = [];
+    if (father_id) parentConditions.push({ PR_FATHER_ID: parseInt(father_id) });
+    if (mother_id) parentConditions.push({ PR_MOTHER_ID: parseInt(mother_id) });
 
-    const combinedFamily = Array.from(uniqueMembers.values());
+    const parentsQuery = parentConditions.length
+      ? await prisma.peopleRegistry.findMany({
+          where: {
+            OR: parentConditions,
+            ...(id && { NOT: { PR_ID: parseInt(id) } }),
+          },
+          include: {
+            Profession: true,
+            City: true,
+            BUSSINESS: true,
+            Children: true,
+            Father: true,
+            Mother: true,
+          },
+        })
+      : [];
+
+    // Step 5: Merge both results with unique PR_IDs
+    const seenIds = new Set();
+    const combinedFamily = [];
+
+    [...prefixQuery, ...parentsQuery].forEach((member) => {
+      if (!seenIds.has(member.PR_ID)) {
+        seenIds.add(member.PR_ID);
+        combinedFamily.push(member);
+      }
+    });
 
     return res.status(200).json({
       success: true,
       message: "Family members fetched successfully",
       count: combinedFamily.length,
-      basePrefix,
-      query1Count: familyByPrefix.length,
-      query2Count: familyByParents.length,
+      basePrefixes: Array.from(basePrefixes),
+      query1Count: prefixQuery.length,
+      query2Count: parentsQuery.length,
       familyMembers: combinedFamily,
     });
   } catch (error) {
