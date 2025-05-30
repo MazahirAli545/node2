@@ -456,7 +456,7 @@ export const getFamilyMembersss = async (req, res) => {
 
     const combinedFamily = [...idsWithPrefix, ...familyDetails];
     console.log(combinedFamily, "combinedFamily");
-    console.log([...idsWithPrefix, ...familyDetails], "combinedFamily2");
+    console.log(idsWithPrefix, familyDetails, "combinedFamily2");
     return res.status(200).json({
       success: true,
       message: "Family members fetched successfully",
