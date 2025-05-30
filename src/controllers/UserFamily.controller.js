@@ -131,7 +131,7 @@ export const getFamilyMembersss = async (req, res) => {
     for (const member of familyByParents) {
       if (!uniqueIds.has(member.PR_ID)) {
         combinedFamily.push(member);
-        // uniqueIds.add(member.PR_ID);
+        uniqueIds.add(member.PR_ID);
       }
     }
 
