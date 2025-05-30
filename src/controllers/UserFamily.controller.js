@@ -157,7 +157,9 @@ import prisma from "../db/prismaClient.js";
 export const getFamilyMembersss = async (req, res) => {
   try {
     const { id, father_id, mother_id } = req.query;
+    console.log("Received query params:", { id, father_id, mother_id });
 
+    // Validation
     if (!id && !father_id && !mother_id) {
       return res.status(400).json({
         success: false,
@@ -166,7 +168,7 @@ export const getFamilyMembersss = async (req, res) => {
       });
     }
 
-    // Determine the main ID for base prefix lookup
+    // Determine main ID
     let mainId = null;
     if (father_id) mainId = parseInt(father_id);
     else if (id) mainId = parseInt(id);
@@ -179,7 +181,9 @@ export const getFamilyMembersss = async (req, res) => {
       });
     }
 
-    // Get basePrefix
+    console.log("Using mainId:", mainId);
+
+    // Get base prefix
     const person = await prisma.peopleRegistry.findUnique({
       where: { PR_ID: mainId },
       select: { PR_UNIQUE_ID: true },
@@ -201,11 +205,11 @@ export const getFamilyMembersss = async (req, res) => {
     }
 
     const basePrefix = `${parts[0]}-${parts[1]}-${parts[2]}`;
+    console.log("Base prefix:", basePrefix);
 
-    // Execute both queries in parallel for better performance
-    const [familyByPrefix, familyByParents] = await Promise.all([
-      // Query 1: Family by prefix
-      prisma.peopleRegistry.findMany({
+    // Execute queries
+    const queries = {
+      prefixQuery: {
         where: {
           PR_UNIQUE_ID: { startsWith: basePrefix },
           ...(id && { NOT: { PR_ID: parseInt(id) } }),
@@ -218,44 +222,75 @@ export const getFamilyMembersss = async (req, res) => {
           Father: true,
           Mother: true,
         },
-      }),
+      },
+      parentsQuery: {
+        where: {
+          OR: [
+            ...(father_id ? [{ PR_FATHER_ID: parseInt(father_id) }] : []),
+            ...(mother_id ? [{ PR_MOTHER_ID: parseInt(mother_id) }] : []),
+          ],
+          ...(id && { NOT: { PR_ID: parseInt(id) } }),
+        },
+        include: {
+          Profession: true,
+          City: true,
+          BUSSINESS: true,
+          Children: true,
+          Father: true,
+          Mother: true,
+        },
+      },
+    };
 
-      // Query 2: Family by parents (only if parents provided)
+    console.log(
+      "Query 1 conditions:",
+      JSON.stringify(queries.prefixQuery.where)
+    );
+    console.log(
+      "Query 2 conditions:",
+      JSON.stringify(queries.parentsQuery.where)
+    );
+
+    const [familyByPrefix, familyByParents] = await Promise.all([
+      prisma.peopleRegistry.findMany(queries.prefixQuery),
       father_id || mother_id
-        ? prisma.peopleRegistry.findMany({
-            where: {
-              OR: [
-                ...(father_id ? [{ PR_FATHER_ID: parseInt(father_id) }] : []),
-                ...(mother_id ? [{ PR_MOTHER_ID: parseInt(mother_id) }] : []),
-              ],
-              ...(id && { NOT: { PR_ID: parseInt(id) } }),
-            },
-            include: {
-              Profession: true,
-              City: true,
-              BUSSINESS: true,
-              Children: true,
-              Father: true,
-              Mother: true,
-            },
-          })
+        ? prisma.peopleRegistry.findMany(queries.parentsQuery)
         : Promise.resolve([]),
     ]);
 
-    // Combine results and remove duplicates
-    const uniqueMembers = new Map();
+    console.log(
+      "Query 1 results:",
+      familyByPrefix.map((m) => ({ id: m.PR_ID, name: m.PR_FULL_NAME }))
+    );
+    console.log(
+      "Query 2 results:",
+      familyByParents.map((m) => ({ id: m.PR_ID, name: m.PR_FULL_NAME }))
+    );
 
-    // Add all prefix-matched members first
+    // Combine results - NEW APPROACH
+    const combinedFamily = [];
+    const seenIds = new Set();
+
+    // First add all prefix results
     familyByPrefix.forEach((member) => {
-      uniqueMembers.set(member.PR_ID, member);
+      if (!seenIds.has(member.PR_ID)) {
+        seenIds.add(member.PR_ID);
+        combinedFamily.push(member);
+      }
     });
 
-    // Add parent-matched members (will overwrite only if same ID exists)
+    // Then add parent results that aren't already included
     familyByParents.forEach((member) => {
-      uniqueMembers.set(member.PR_ID, member);
+      if (!seenIds.has(member.PR_ID)) {
+        seenIds.add(member.PR_ID);
+        combinedFamily.push(member);
+      }
     });
 
-    const combinedFamily = Array.from(uniqueMembers.values());
+    console.log(
+      "Final combined family IDs:",
+      combinedFamily.map((m) => m.PR_ID)
+    );
 
     return res.status(200).json({
       success: true,
