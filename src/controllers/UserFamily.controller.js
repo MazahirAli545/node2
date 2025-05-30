@@ -258,10 +258,7 @@ export const getFamilyMembersss = async (req, res) => {
         : Promise.resolve([]),
     ]);
 
-    console.log(
-      "Query 1 results:",
-      familyByPrefix.map((m) => ({ id: m.PR_ID, name: m.PR_FULL_NAME }))
-    );
+    console.log("Query 1 results:", [...familyByPrefix, ...familyByParents]);
     console.log(
       "Query 2 results:",
       familyByParents.map((m) => ({ id: m.PR_ID, name: m.PR_FULL_NAME }))
