@@ -126,7 +126,7 @@ export const getFamilyMembersss = async (req, res) => {
 
     // Combine results and remove duplicates
     const combinedFamily = [...familyByPrefix];
-    const uniqueIds = new Set(familyByPrefix.map((member) => member.PR_ID));
+    const uniqueIds = new Set(familyByPrefix.map((m) => m.PR_ID));
 
     for (const member of familyByParents) {
       if (!uniqueIds.has(member.PR_ID)) {
