@@ -156,25 +156,34 @@ import prisma from "../db/prismaClient.js";
 
 export const getFamilyMembersss = async (req, res) => {
   try {
-    const { id } = req.query;
-    console.log("Received PR_ID:", id);
+    const { id, father_id, mother_id } = req.query;
+    console.log("Received query params:", { id, father_id, mother_id });
 
-    if (!id) {
+    // Validation
+    if (!id && !father_id && !mother_id) {
       return res.status(400).json({
         success: false,
-        message: "Please provide a PR_ID",
+        message:
+          "Please provide at least one of: PR_ID, father_id, or mother_id",
       });
     }
 
-    const mainId = parseInt(id);
-    if (isNaN(mainId)) {
+    // Determine main ID (priority: provided id > father_id > mother_id)
+    let mainId = null;
+    if (id) mainId = parseInt(id);
+    else if (father_id) mainId = parseInt(father_id);
+    else if (mother_id) mainId = parseInt(mother_id);
+
+    if (!mainId || isNaN(mainId)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid PR_ID provided",
+        message: "Invalid PR_ID or parent ID provided",
       });
     }
 
-    // Get the main person's details including parents
+    console.log("Using mainId:", mainId);
+
+    // Get base person and prefix
     const person = await prisma.peopleRegistry.findUnique({
       where: { PR_ID: mainId },
       select: {
@@ -184,62 +193,118 @@ export const getFamilyMembersss = async (req, res) => {
       },
     });
 
-    if (!person) {
+    if (!person?.PR_UNIQUE_ID) {
       return res.status(404).json({
         success: false,
-        message: "Person not found",
+        message: "Unable to determine base family prefix",
       });
     }
 
-    // Extract family prefix (first 3 segments)
+    // Extract family prefix (first 3 segments of PR_UNIQUE_ID)
     const parts = person.PR_UNIQUE_ID.split("-");
     if (parts.length < 3) {
-      return res.status(400).json({
+      return res.status(404).json({
         success: false,
         message: "Invalid PR_UNIQUE_ID format",
       });
     }
-    const familyPrefix = `${parts[0]}-${parts[1]}-${parts[2]}`;
+    const basePrefix = `${parts[0]}-${parts[1]}-${parts[2]}`;
+    console.log("Base prefix:", basePrefix);
 
-    // Get all family members (parents, siblings, and self)
-    const familyMembers = await prisma.peopleRegistry.findMany({
-      where: {
-        OR: [
-          // Family members with same prefix (siblings)
-          { PR_UNIQUE_ID: { startsWith: familyPrefix } },
-          // Direct parents
-          {
-            PR_ID: {
-              in: [person.PR_FATHER_ID, person.PR_MOTHER_ID].filter(Boolean),
+    // Get actual father_id and mother_id from person if not provided
+    const effectiveFatherId = father_id
+      ? parseInt(father_id)
+      : person.PR_FATHER_ID;
+    const effectiveMotherId = mother_id
+      ? parseInt(mother_id)
+      : person.PR_MOTHER_ID;
+
+    // Execute both queries in parallel
+    const [familyByPrefix, familyByParents] = await Promise.all([
+      // Query 1: Get family members by prefix match
+      prisma.peopleRegistry.findMany({
+        where: {
+          PR_UNIQUE_ID: { startsWith: basePrefix },
+          NOT: { PR_ID: mainId }, // Always exclude the main person
+        },
+        include: {
+          Profession: true,
+          City: true,
+          BUSSINESS: true,
+          Children: true,
+          Father: { select: { PR_ID: true, PR_FULL_NAME: true } },
+          Mother: { select: { PR_ID: true, PR_FULL_NAME: true } },
+        },
+      }),
+
+      // Query 2: Get direct relatives (parents, siblings, children)
+      prisma.peopleRegistry.findMany({
+        where: {
+          OR: [
+            {
+              PR_ID: {
+                in: [effectiveFatherId, effectiveMotherId].filter(Boolean),
+              },
+            }, // Parents
+            { PR_FATHER_ID: effectiveFatherId }, // Siblings from father
+            { PR_MOTHER_ID: effectiveMotherId }, // Siblings from mother
+            {
+              OR: [
+                { PR_FATHER_ID: mainId }, // Children
+                { PR_MOTHER_ID: mainId },
+              ],
             },
-          },
-          // People who have the same parents (siblings)
-          { PR_FATHER_ID: person.PR_FATHER_ID },
-          { PR_MOTHER_ID: person.PR_MOTHER_ID },
-        ],
-        // Exclude self from results
-        NOT: { PR_ID: mainId },
-      },
-      include: {
-        Profession: true,
-        City: true,
-        BUSSINESS: true,
-        Father: { select: { PR_FULL_NAME: true } },
-        Mother: { select: { PR_FULL_NAME: true } },
-      },
-      orderBy: { PR_ID: "asc" },
-    });
+          ],
+          NOT: { PR_ID: mainId }, // Exclude self
+        },
+        include: {
+          Profession: true,
+          City: true,
+          BUSSINESS: true,
+          Children: true,
+          Father: { select: { PR_ID: true, PR_FULL_NAME: true } },
+          Mother: { select: { PR_ID: true, PR_FULL_NAME: true } },
+        },
+      }),
+    ]);
 
     console.log(
-      "Family members found:",
-      familyMembers.map((m) => m.PR_ID)
+      "Prefix query results:",
+      familyByPrefix.map((m) => m.PR_ID)
+    );
+    console.log(
+      "Relatives query results:",
+      familyByParents.map((m) => m.PR_ID)
+    );
+
+    // Combine and deduplicate results
+    const uniqueMembers = new Map();
+
+    // Add prefix-matched members first
+    familyByPrefix.forEach((member) => {
+      uniqueMembers.set(member.PR_ID, member);
+    });
+
+    // Add relatives (will overwrite if same ID exists)
+    familyByParents.forEach((member) => {
+      uniqueMembers.set(member.PR_ID, member);
+    });
+
+    const combinedFamily = Array.from(uniqueMembers.values());
+
+    console.log(
+      "Final combined members:",
+      combinedFamily.map((m) => m.PR_ID)
     );
 
     return res.status(200).json({
       success: true,
       message: "Family members fetched successfully",
-      count: familyMembers.length,
-      familyMembers,
+      count: combinedFamily.length,
+      basePrefix,
+      query1Count: familyByPrefix.length,
+      query2Count: familyByParents.length,
+      familyMembers: combinedFamily,
     });
   } catch (error) {
     console.error("Error fetching family members:", error);
