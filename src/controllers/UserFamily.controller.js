@@ -390,6 +390,8 @@ export const getFamilyMembersss = async (req, res) => {
     const seenIds = new Set();
     const combinedFamily = [];
 
+    console.log([...prefixQuery, ...parentsQuery], "FAMILY");
+
     [...prefixQuery, ...parentsQuery].forEach((member) => {
       if (!seenIds.has(member.PR_ID)) {
         seenIds.add(member.PR_ID);
