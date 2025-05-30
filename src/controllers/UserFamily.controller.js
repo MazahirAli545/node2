@@ -52,8 +52,11 @@ export const getFamilyMembersss = async (req, res) => {
 
     const basePrefix = `${parts[0]}-${parts[1]}-${parts[2]}`;
 
+    let familyByPrefix = [];
+    let familyByParents = [];
+
     // Execute Query 1 (all family members with same base prefix)
-    const familyByPrefix = await prisma.peopleRegistry.findMany({
+    familyByPrefix = await prisma.peopleRegistry.findMany({
       where: {
         PR_UNIQUE_ID: { startsWith: `${basePrefix}` },
         ...(id && { NOT: { PR_ID: parseInt(id) } }),
@@ -81,7 +84,7 @@ export const getFamilyMembersss = async (req, res) => {
     });
 
     // Execute Query 2 only if father_id or mother_id is provided
-    let familyByParents = [];
+    // familyByParents = [];
     if (father_id || mother_id) {
       const parentConditions = [];
 
