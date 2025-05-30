@@ -157,83 +157,68 @@ import prisma from "../db/prismaClient.js";
 export const getFamilyMembersss = async (req, res) => {
   try {
     const { id } = req.query;
+    console.log("Received PR_ID:", id);
 
-    // More detailed parameter validation
     if (!id) {
-      console.error("Error: No PR_ID provided in request");
       return res.status(400).json({
         success: false,
-        message: "Please provide a valid PR_ID in the query parameters",
-        example: "/api/family-members?id=841",
+        message: "Please provide a PR_ID",
       });
     }
 
     const mainId = parseInt(id);
     if (isNaN(mainId)) {
-      console.error(`Error: Invalid PR_ID provided: ${id}`);
       return res.status(400).json({
         success: false,
-        message: "The provided PR_ID must be a valid number",
-        received: id,
+        message: "Invalid PR_ID provided",
       });
     }
 
-    console.log(`Fetching family for PR_ID: ${mainId}`);
-
-    // Get the person's details including parents
+    // Get the main person's details including parents
     const person = await prisma.peopleRegistry.findUnique({
       where: { PR_ID: mainId },
       select: {
         PR_UNIQUE_ID: true,
         PR_FATHER_ID: true,
         PR_MOTHER_ID: true,
-        PR_FULL_NAME: true,
       },
     });
 
     if (!person) {
-      console.error(`Error: Person with PR_ID ${mainId} not found`);
       return res.status(404).json({
         success: false,
-        message: "Person not found in database",
-        PR_ID: mainId,
+        message: "Person not found",
       });
     }
-
-    console.log(`Found person: ${person.PR_FULL_NAME} (${mainId})`);
 
     // Extract family prefix (first 3 segments)
-    const parts = person.PR_UNIQUE_ID?.split("-");
-    if (!parts || parts.length < 3) {
-      console.error(`Error: Invalid PR_UNIQUE_ID format for ${mainId}`);
+    const parts = person.PR_UNIQUE_ID.split("-");
+    if (parts.length < 3) {
       return res.status(400).json({
         success: false,
-        message: "Invalid family identifier format",
-        PR_UNIQUE_ID: person.PR_UNIQUE_ID,
+        message: "Invalid PR_UNIQUE_ID format",
       });
     }
-
     const familyPrefix = `${parts[0]}-${parts[1]}-${parts[2]}`;
-    console.log(`Family prefix: ${familyPrefix}`);
 
-    // Prepare parent IDs (filter out null/undefined)
-    const parentIds = [person.PR_FATHER_ID, person.PR_MOTHER_ID].filter(
-      (id) => id
-    );
-
-    // Get all family members in a single query
+    // Get all family members (parents, siblings, and self)
     const familyMembers = await prisma.peopleRegistry.findMany({
       where: {
         OR: [
-          // Same family prefix (siblings)
+          // Family members with same prefix (siblings)
           { PR_UNIQUE_ID: { startsWith: familyPrefix } },
           // Direct parents
-          { PR_ID: { in: parentIds } },
-          // People with same parents (siblings)
+          {
+            PR_ID: {
+              in: [person.PR_FATHER_ID, person.PR_MOTHER_ID].filter(Boolean),
+            },
+          },
+          // People who have the same parents (siblings)
           { PR_FATHER_ID: person.PR_FATHER_ID },
           { PR_MOTHER_ID: person.PR_MOTHER_ID },
         ],
-        NOT: { PR_ID: mainId }, // Exclude self
+        // Exclude self from results
+        NOT: { PR_ID: mainId },
       },
       include: {
         Profession: true,
@@ -245,24 +230,22 @@ export const getFamilyMembersss = async (req, res) => {
       orderBy: { PR_ID: "asc" },
     });
 
-    console.log(`Found ${familyMembers.length} family members`);
+    console.log(
+      "Family members found:",
+      familyMembers.map((m) => m.PR_ID)
+    );
 
     return res.status(200).json({
       success: true,
       message: "Family members fetched successfully",
       count: familyMembers.length,
-      mainMember: {
-        PR_ID: mainId,
-        name: person.PR_FULL_NAME,
-      },
       familyMembers,
     });
   } catch (error) {
-    console.error("Error in getFamilyMembersss:", error);
+    console.error("Error fetching family members:", error);
     return res.status(500).json({
       success: false,
-      message: "An error occurred while fetching family members",
-      error: error.message,
+      message: error.message || "Internal server error",
     });
   }
 };
