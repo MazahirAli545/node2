@@ -315,13 +315,25 @@ export const getFamilyMembersss = async (req, res) => {
   try {
     const { id, father_id, mother_id } = req.query;
 
-    if (!id && !father_id && !mother_id) {
+    const parsedId = id ? parseInt(id) : null;
+    const parsedFatherId = father_id ? parseInt(father_id) : null;
+    const parsedMotherId = mother_id ? parseInt(mother_id) : null;
+
+    if (!parsedId && !parsedFatherId && !parsedMotherId) {
       return res.status(400).json({
         success: false,
         message:
           "Please provide at least one of: PR_ID, father_id, or mother_id",
       });
     }
+
+    // if (!id && !father_id && !mother_id) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message:
+    //       "Please provide at least one of: PR_ID, father_id, or mother_id",
+    //   });
+    // }
 
     // // Step 1: Fetch PR_UNIQUE_ID of father, mother, or id
     // const idsToCheck = [id, father_id, mother_id].filter(Boolean).map(Number);
@@ -407,7 +419,7 @@ export const getFamilyMembersss = async (req, res) => {
         (
           SELECT DISTINCT SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 3) 
           FROM PEOPLE_REGISTRY 
-          WHERE PR_ID = ${id} 
+          WHERE PR_ID = ${parsedId} 
           LIMIT 1
         ), '-%'
       ) COLLATE utf8mb4_bin;
@@ -426,18 +438,18 @@ export const getFamilyMembersss = async (req, res) => {
       LEFT JOIN PEOPLE_REGISTRY Father ON Child.PR_FATHER_ID = Father.PR_ID
       LEFT JOIN PEOPLE_REGISTRY Mother ON Child.PR_MOTHER_ID = Mother.PR_ID
       WHERE 
-        Child.PR_FATHER_ID = ${father_id}
-        OR Child.PR_MOTHER_ID = ${mother_id}
+        Child.PR_FATHER_ID = ${parsedFatherId}
+        OR Child.PR_MOTHER_ID = ${parsedMotherId}
         OR SUBSTRING_INDEX(Child.PR_UNIQUE_ID, '-', 3) = (
           SELECT SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 3)
           FROM PEOPLE_REGISTRY
-          WHERE PR_ID = ${father_id}
+          WHERE PR_ID = ${parsedFatherId}
           LIMIT 1
         )
         OR SUBSTRING_INDEX(Child.PR_UNIQUE_ID, '-', 3) = (
           SELECT SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 3)
           FROM PEOPLE_REGISTRY
-          WHERE PR_ID = ${mother_id}
+          WHERE PR_ID = ${parsedMotherId}
           LIMIT 1
         );
     `);
