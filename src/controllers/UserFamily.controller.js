@@ -453,25 +453,18 @@ export const getFamilyMembersss = async (req, res) => {
         );
     `);
 
-    const combinedFamily = removeDuplicates([
-      ...idsWithPrefix,
-      ...familyDetails,
-    ]);
+    const combinedFamily = [...idsWithPrefix, ...familyDetails];
     console.log(combinedFamily, "combinedFamily");
     console.log(idsWithPrefix, familyDetails, "combinedFamily2");
-
-    const filteredMembers = (combinedFamily || []).filter(
-      (member) => member.PR_ID !== parsedId
-    );
 
     return res.status(200).json({
       success: true,
       message: "Family members fetched successfully",
-      count: filteredMembers.length || 0,
+      count: combinedFamily.length,
       basePrefixes: [], //Array.from(basePrefixes),
       query1Count: idsWithPrefix.length,
       query2Count: familyDetails.length,
-      familyMembers: filteredMembers,
+      familyMembers: combinedFamily,
     });
   } catch (error) {
     console.error("Error fetching family members:", error);
