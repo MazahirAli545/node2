@@ -313,6 +313,16 @@ model Events {
 }
 
 
+model LanguageContent {
+  id          Int     @id @default(autoincrement())
+  key         String  @unique            // Unique identifier like 'home.title'
+  en          String?                    // English translation
+  hi          String?                    // Hindi translation
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+
 
 
 //Database Architecure hei

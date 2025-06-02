@@ -6,6 +6,9 @@
     "start": "node src/index.js",
     "postinstall": "prisma generate"
   },
+  "prisma": {
+    "seed": "node prisma/language.js"
+  },
   "type": "module",
   "keywords": [],
   "author": "",
