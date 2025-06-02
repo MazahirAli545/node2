@@ -422,7 +422,7 @@ export const getFamilyMembersss = async (req, res) => {
           WHERE PR_ID = ${parsedId} 
           LIMIT 1
         ), '-%'
-      ) COLLATE utf8mb4_bin;
+      );
     `);
 
     // Query 2: Get children with their parents where Father/Mother ID = prId1/prId2 or same prefix
@@ -456,7 +456,21 @@ export const getFamilyMembersss = async (req, res) => {
 
     const combinedFamily = [...idsWithPrefix, ...familyDetails];
     console.log(combinedFamily, "combinedFamily");
-    console.log(idsWithPrefix, familyDetails, "combinedFamily2");
+    console.log(
+      `SELECT * 
+      FROM PEOPLE_REGISTRY 
+      WHERE PR_UNIQUE_ID LIKE CONCAT(
+        (
+          SELECT DISTINCT SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 3) 
+          FROM PEOPLE_REGISTRY 
+          WHERE PR_ID = ${parsedId} 
+          LIMIT 1
+        ), '-%'
+      );`,
+      idsWithPrefix,
+      familyDetails,
+      "combinedFamily2"
+    );
     return res.status(200).json({
       success: true,
       message: "Family members fetched successfully",
