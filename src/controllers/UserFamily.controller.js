@@ -460,10 +460,10 @@ export const getFamilyMembersss = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Family members fetched successfully",
-      count: combinedFamily.length,
-      basePrefixes: [], //Array.from(basePrefixes),
-      query1Count: idsWithPrefix.length,
-      query2Count: familyDetails.length,
+      // count: combinedFamily.length,
+      // basePrefixes: [], //Array.from(basePrefixes),
+      // query1Count: idsWithPrefix.length,
+      // query2Count: familyDetails.length,
       familyMembers: combinedFamily,
     });
   } catch (error) {
