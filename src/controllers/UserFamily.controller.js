@@ -456,30 +456,18 @@ export const getFamilyMembersss = async (req, res) => {
 
     const combinedFamily = [...idsWithPrefix, ...familyDetails];
     console.log(combinedFamily, "combinedFamily");
-    console.log(
-      req,
-      `SELECT * 
-      FROM PEOPLE_REGISTRY 
-      WHERE PR_UNIQUE_ID LIKE CONCAT(
-        (
-          SELECT DISTINCT SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 3) 
-          FROM PEOPLE_REGISTRY 
-          WHERE PR_ID = ${parsedId} 
-          LIMIT 1
-        ), '-%'
-      );`,
-      idsWithPrefix,
-      familyDetails,
-      "combinedFamily2"
-    );
+    console.log(idsWithPrefix, familyDetails, "combinedFamily2");
     return res.status(200).json({
       success: true,
       message: "Family members fetched successfully",
-      count: combinedFamily.length,
+      count:
+        familyDetails.length > 0
+          ? parseInt(familyDetails.length) + parseInt(idsWithPrefix.length)
+          : idsWithPrefix.length,
       basePrefixes: [], //Array.from(basePrefixes),
       query1Count: idsWithPrefix.length,
       query2Count: familyDetails.length,
-      familyMembers: combinedFamily,
+      familyMembers: familyDetails.length > 0 ? familyDetails : idsWithPrefix,
     });
   } catch (error) {
     console.error("Error fetching family members:", error);
