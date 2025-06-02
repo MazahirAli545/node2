@@ -428,8 +428,8 @@ export const getFamilyMembersss = async (req, res) => {
     // Query 2: Get children with their parents where Father/Mother ID = prId1/prId2 or same prefix
     const familyDetails = await prisma.$queryRawUnsafe(`
       SELECT 
-        Child.PR_UNIQUE_ID AS Child_ID,
-        Child.PR_FULL_NAME AS Child_Name,
+        Child.PR_UNIQUE_ID AS PR_UNIQUE_ID,
+        Child.PR_FULL_NAME AS PR_FULL_NAME,
         Father.PR_UNIQUE_ID AS Father_ID,
         Father.PR_FULL_NAME AS Father_Name,
         Mother.PR_UNIQUE_ID AS Mother_ID,
