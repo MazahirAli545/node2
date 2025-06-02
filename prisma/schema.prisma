@@ -298,9 +298,8 @@ model content_sections {
   lang_code        String    @default("en") @db.VarChar(2)
 }
 
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model content_sections_lang {
-  id               Int
+  id               Int       @id // <- add this for Prisma only
   title            String    @db.VarChar(50)
   id_id            Int?
   description      String    @db.Text
@@ -316,9 +315,8 @@ model content_sections_lang {
   page_id          Int
   refrence_page_id Int?
   lang_code        String    @default("en") @db.VarChar(2)
-
-  @@ignore
 }
+
 
 model pages {
   id           Int       @id @default(autoincrement())
