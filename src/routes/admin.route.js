@@ -3,7 +3,8 @@ import { generateUserOtp, verifyUserOtp } from "../controllers/admin/adminOTP.co
 import { getAllUsers } from "../controllers/admin/getAllUsers.controller.js";
 import { getCategories } from "../controllers/admin/category.controller.js";
 import { createBusiness, deleteBusiness,  updateBusiness} from "../controllers/admin/adminBusiness.controller.js";
-import { getTranslations } from "../controllers/admin/language.controller.js";
+// import { getTranslations } from "../controllers/admin/language.controller.js";
+import { getAllPages, getPageById, updatePageById, deletePageById, addPage } from "../controllers/admin/page.controller.js";
 
 
 const router = Router();
@@ -28,6 +29,13 @@ router.put("/business/:id", updateBusiness)
 router.delete("/business/:id", deleteBusiness)
 
 // language routes
-router.get("/language/:locale", getTranslations)
+// router.get("/language/:locale", getTranslations)
+
+// Pages
+router.get("/pages", getAllPages)
+router.post("/pages", addPage)
+router.get("/pages/:id", getPageById)
+router.put("/pages/:id", updatePageById);
+router.delete("/pages/:id", deletePageById);
 
 export default router;
