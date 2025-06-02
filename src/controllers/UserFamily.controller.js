@@ -453,7 +453,10 @@ export const getFamilyMembersss = async (req, res) => {
         );
     `);
 
-    const combinedFamily = [...idsWithPrefix, ...familyDetails];
+    const combinedFamily = removeDuplicates([
+      ...idsWithPrefix,
+      ...familyDetails,
+    ]);
     console.log(combinedFamily, "combinedFamily");
     console.log(idsWithPrefix, familyDetails, "combinedFamily2");
 
