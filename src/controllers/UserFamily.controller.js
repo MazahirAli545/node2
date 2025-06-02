@@ -453,20 +453,25 @@ export const getFamilyMembersss = async (req, res) => {
         );
     `);
 
-    const combinedFamily = [...idsWithPrefix, ...familyDetails];
+    const combinedFamily = removeDuplicates([
+      ...idsWithPrefix,
+      ...familyDetails,
+    ]);
     console.log(combinedFamily, "combinedFamily");
     console.log(idsWithPrefix, familyDetails, "combinedFamily2");
+
+    const filteredMembers = (combinedFamily || []).filter(
+      (member) => member.PR_ID !== parsedId
+    );
+
     return res.status(200).json({
       success: true,
       message: "Family members fetched successfully",
-      count:
-        familyDetails.length > 0
-          ? parseInt(familyDetails.length) + parseInt(idsWithPrefix.length)
-          : idsWithPrefix.length,
+      count: filteredMembers.length || 0,
       basePrefixes: [], //Array.from(basePrefixes),
       query1Count: idsWithPrefix.length,
       query2Count: familyDetails.length,
-      familyMembers: familyDetails.length > 0 ? familyDetails : idsWithPrefix,
+      familyMembers: filteredMembers,
     });
   } catch (error) {
     console.error("Error fetching family members:", error);
@@ -477,6 +482,17 @@ export const getFamilyMembersss = async (req, res) => {
   }
 };
 
+const removeDuplicates = (records) => {
+  const uniqueKeys = new Set();
+  return records.filter((record) => {
+    const key = `${record.PR_ID}_${record.PR_UNIQUE_ID}`;
+    if (!uniqueKeys.has(key)) {
+      uniqueKeys.add(key);
+      return true;
+    }
+    return false;
+  });
+};
 // import prisma from "../db/prismaClient.js";
 
 // export const getFamilyMembersss = async (req, res) => {
