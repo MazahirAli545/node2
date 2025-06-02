@@ -457,6 +457,7 @@ export const getFamilyMembersss = async (req, res) => {
     const combinedFamily = [...idsWithPrefix, ...familyDetails];
     console.log(combinedFamily, "combinedFamily");
     console.log(
+      req,
       `SELECT * 
       FROM PEOPLE_REGISTRY 
       WHERE PR_UNIQUE_ID LIKE CONCAT(
