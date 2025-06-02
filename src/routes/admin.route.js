@@ -5,6 +5,7 @@ import { getCategories } from "../controllers/admin/category.controller.js";
 import { createBusiness, deleteBusiness,  updateBusiness} from "../controllers/admin/adminBusiness.controller.js";
 // import { getTranslations } from "../controllers/admin/language.controller.js";
 import { getAllPages, getPageById, updatePageById, deletePageById, addPage } from "../controllers/admin/page.controller.js";
+import { createContentSection, deleteContentSection, getAllContentSections, updateContentSection } from "../controllers/admin/contentSection.controller.js";
 
 
 const router = Router();
@@ -37,5 +38,13 @@ router.post("/pages", addPage)
 router.get("/pages/:id", getPageById)
 router.put("/pages/:id", updatePageById);
 router.delete("/pages/:id", deletePageById);
+
+// Content 
+router.get("/content", getAllContentSections)
+router.post("/content", createContentSection)
+router.put("/content/:id", updateContentSection)
+router.delete("/content/:id", deleteContentSection)
+
+
 
 export default router;
