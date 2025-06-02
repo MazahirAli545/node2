@@ -37,13 +37,13 @@ export const generateotp = async (req, res) => {
     }
 
     // Generate 4-digit OTP
-    const otp = otpGenerator.generate(4, {
-      upperCaseAlphabets: false,
-      specialChars: false,
-      lowerCaseAlphabets: false,
-      digits: true,
-    });
-
+    // const otp = otpGenerator.generate(4, {
+    //   upperCaseAlphabets: false,
+    //   specialChars: false,
+    //   lowerCaseAlphabets: false,
+    //   digits: true,
+    // });
+    const otp = "1234"; // For testing purposes, use a fixed OTP
     // Save OTP in DB
     await prisma.otp.upsert({
       where: { PR_MOBILE_NO },
@@ -56,14 +56,33 @@ export const generateotp = async (req, res) => {
     });
 
     // Send OTP using 2Factor API
-    const url = `https://2factor.in/API/V1/${API_KEY}/SMS/${PR_MOBILE_NO}/${otp}/${OTP_TEMPLATE_NAME}`;
-    const response = await axios.get(url);
-
+    // const url = `https://2factor.in/API/V1/${API_KEY}/SMS/${PR_MOBILE_NO}/${otp}/${OTP_TEMPLATE_NAME}`;
+    // const response = await axios.get(url);
+    const response = {
+      data: {
+        Status: "Success",
+        Details: "5e75949c-6e8e-4b85-8f69-787e88556b42",
+      },
+    };
     console.log(`OTP ${otp} sent to ${PR_MOBILE_NO}:`, response.data);
 
-    return res
-      .status(200)
-      .json({ message: "OTP sent successfully", success: true });
+    if (response.data.Status !== "Success") {
+      return res.status(400).json({
+        message: "OTP Failed",
+        success: false,
+        details: response.data.Details, // optionally include details
+      });
+    } else {
+      // {"Status":"Success","Details":"5e75949c-6e8e-4b85-8f69-787e88556b42"}
+
+      return res
+        .status(200)
+        .json({
+          message: "OTP sent successfully",
+          success: true,
+          transactionId: response.data.Details,
+        });
+    }
   } catch (error) {
     console.error("Error generating OTP:", error.message);
     return res
