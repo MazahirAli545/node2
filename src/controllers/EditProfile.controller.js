@@ -212,17 +212,9 @@ async function EditProfile(req, res) {
       // Check existing records with same prefix and mobile
       const existing = await prisma.$queryRaw`
         SELECT PR_UNIQUE_ID FROM PEOPLE_REGISTRY
-        WHERE ${andCondition}
+        WHERE ${andCondition} COLLATE utf8mb4_bin
         LIMIT 1
       `;
-
-      console.log(
-        "Existing records found:",
-        `SELECT PR_UNIQUE_ID FROM PEOPLE_REGISTRY
-        WHERE ${andCondition}
-        LIMIT 1
-      `
-      );
 
       let prUniqueId, familyNumber, memberNumber;
 
@@ -233,7 +225,7 @@ async function EditProfile(req, res) {
             SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 3), '-', -1) AS family,
             MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', -1) AS UNSIGNED)) AS max_member
           FROM PEOPLE_REGISTRY
-          WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%')
+          WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_bin
           ${mobileNo}
           GROUP BY family
         `;
@@ -246,7 +238,7 @@ async function EditProfile(req, res) {
         const familyResult = await prisma.$queryRaw`
           SELECT MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 3), '-', -1) AS UNSIGNED)) AS max_family
           FROM PEOPLE_REGISTRY
-          WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%')
+          WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_bin
         `;
 
         const nextFamily = (Number(familyResult[0]?.max_family) || 0) + 1;
