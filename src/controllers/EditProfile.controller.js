@@ -216,7 +216,13 @@ async function EditProfile(req, res) {
         LIMIT 1
       `;
 
-      console.log("Existing records found:", existing);
+      console.log(
+        "Existing records found:",
+        `SELECT PR_UNIQUE_ID FROM PEOPLE_REGISTRY
+        WHERE ${andCondition}
+        LIMIT 1
+      `
+      );
 
       let prUniqueId, familyNumber, memberNumber;
 
