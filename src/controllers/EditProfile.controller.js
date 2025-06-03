@@ -198,10 +198,10 @@ async function EditProfile(req, res) {
       const motherPrID = req.body.PR_MOTHER_ID || existingProfile.PR_MOTHER_ID;
       let andCondition = `PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_bin
         AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}`;
-
+      let mobileNo = `AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}`;
       if (fatherPrID || motherPrID) {
         andCondition = ` PR_FATHER_ID = ${fatherPrID} OR PR_MOTHER_ID = ${motherPrID}`;
-      } else {
+        mobileNo = "";
       }
       // Check existing records with same prefix and mobile
       const existing = await prisma.$queryRaw`
@@ -220,7 +220,7 @@ async function EditProfile(req, res) {
             MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', -1) AS UNSIGNED)) AS max_member
           FROM PEOPLE_REGISTRY
           WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_bin
-          AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}
+          ${mobileNo}
           GROUP BY family
         `;
 
