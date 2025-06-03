@@ -426,38 +426,80 @@ export const checkPersonById = async (req, res) => {
   }
 };
 
+// export const convertUniqueIdToId = async (req, res) => {
+//   try {
+//     const { uniqueId } = req.params;
+
+//     // Validate input
+//     if (!uniqueId || typeof uniqueId !== "string") {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid PR_UNIQUE_ID format",
+//       });
+//     }
+
+//     // Query the database for the corresponding PR_ID using findFirst
+//     const person = await prisma.peopleRegistry.findFirst({
+//       where: { PR_UNIQUE_ID: uniqueId },
+//       select: { PR_ID: true, PR_UNIQUE_ID: true },
+//     });
+
+//     if (!person) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "PR_UNIQUE_ID not found in the database",
+//       });
+//     }
+
+//     return res.status(200).json({
+//       success: true,
+//       data: person,
+//       message: "PR_UNIQUE_ID successfully converted to PR_ID",
+//     });
+//   } catch (error) {
+//     console.error("Convert Unique ID Error:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Internal server error",
+//     });
+//   }
+// };
+
 export const convertUniqueIdToId = async (req, res) => {
   try {
     const { uniqueId } = req.params;
 
-    // Validate input
-    if (!uniqueId || typeof uniqueId !== "string") {
+    if (!uniqueId?.trim()) {
+      // More thorough validation
       return res.status(400).json({
         success: false,
-        message: "Invalid PR_UNIQUE_ID format",
+        message: "PR_UNIQUE_ID is required",
       });
     }
 
-    // Query the database for the corresponding PR_ID using findFirst
     const person = await prisma.peopleRegistry.findFirst({
-      where: { PR_UNIQUE_ID: uniqueId },
-      select: { PR_ID: true, PR_UNIQUE_ID: true },
+      where: {
+        PR_UNIQUE_ID: uniqueId.trim(),
+      },
+      select: {
+        PR_ID: true,
+        PR_UNIQUE_ID: true,
+      },
     });
 
     if (!person) {
       return res.status(404).json({
         success: false,
-        message: "PR_UNIQUE_ID not found in the database",
+        message: "Person not found",
       });
     }
 
     return res.status(200).json({
       success: true,
       data: person,
-      message: "PR_UNIQUE_ID successfully converted to PR_ID",
     });
   } catch (error) {
-    console.error("Convert Unique ID Error:", error);
+    console.error("Error in convertUniqueIdToId:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
