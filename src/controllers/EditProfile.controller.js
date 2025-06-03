@@ -467,7 +467,11 @@ async function EditProfile(req, res) {
     const needsUniqueId =
       parentID || locationChanged || !existingProfile.PR_UNIQUE_ID;
 
-    if (parentID && existingProfile.PR_IS_COMPLETED !== "Y") {
+    if (
+      parentID &&
+      (!existingProfile.PR_UNIQUE_ID ||
+        existingProfile.PR_UNIQUE_ID.trim() === "")
+    ) {
       try {
         // Get parent's profile to extract their PR_UNIQUE_ID
         const parentProfile = await prisma.peopleRegistry.findUnique({
@@ -516,7 +520,10 @@ async function EditProfile(req, res) {
         console.error("Error processing parent ID:", parentError);
         // Continue with original location-based logic if parent processing fails
       }
-    } else if (needsUniqueId && existingProfile.PR_IS_COMPLETED !== "Y") {
+    } else if (
+      needsUniqueId &&
+      (existingProfile.PR_IS_COMPLETED !== "Y" || !existingProfile.PR_UNIQUE_ID)
+    ) {
       // Original location-based logic (fallback)
       const newStateCode =
         req.body.PR_STATE_CODE || existingProfile.PR_STATE_CODE;
