@@ -215,6 +215,13 @@ async function EditProfile(req, res) {
         WHERE ${andCondition} COLLATE utf8mb4_bin
         LIMIT 1
       `;
+      console.log(
+        "Existing records found:",
+        existing,
+        `SELECT PR_UNIQUE_ID FROM PEOPLE_REGISTRY
+        WHERE ${andCondition} COLLATE utf8mb4_bin
+        LIMIT 1`
+      );
 
       let prUniqueId, familyNumber, memberNumber;
 
@@ -230,6 +237,20 @@ async function EditProfile(req, res) {
           GROUP BY family
         `;
 
+        console.log(
+          "Member result:",
+          memberResult,
+          `
+          SELECT
+            SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 3), '-', -1) AS family,
+            MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', -1) AS UNSIGNED)) AS max_member
+          FROM PEOPLE_REGISTRY
+          WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_bin
+          ${mobileNo}
+          GROUP BY family
+        `
+        );
+
         familyNumber = memberResult[0].family;
         const nextMember = Number(memberResult[0].max_member) + 1;
         memberNumber = String(nextMember).padStart(4, "0");
@@ -240,6 +261,16 @@ async function EditProfile(req, res) {
           FROM PEOPLE_REGISTRY
           WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_bin
         `;
+
+        console.log(
+          "Family result:",
+          familyResult,
+          `
+          SELECT MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 3), '-', -1) AS UNSIGNED)) AS max_family
+          FROM PEOPLE_REGISTRY
+          WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_bin
+        `
+        );
 
         const nextFamily = (Number(familyResult[0]?.max_family) || 0) + 1;
         familyNumber = String(nextFamily).padStart(4, "0");
