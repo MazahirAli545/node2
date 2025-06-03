@@ -216,6 +216,8 @@ async function EditProfile(req, res) {
         LIMIT 1
       `;
 
+      console.log("Existing records found:", existing);
+
       let prUniqueId, familyNumber, memberNumber;
 
       if (existing.length > 0) {
