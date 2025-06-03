@@ -44,13 +44,29 @@ async function getUserProfile(req, res) {
   try {
     const userId = req.userId;
 
-    // First get the main user data
+    // Get the main user data with all relationships
     const user = await prisma.peopleRegistry.findUnique({
       where: { PR_ID: userId },
       include: {
         Profession: true,
         City: true,
         Children: true,
+        // Include the actual relation records
+        Father: {
+          select: {
+            PR_UNIQUE_ID: true,
+          },
+        },
+        Mother: {
+          select: {
+            PR_UNIQUE_ID: true,
+          },
+        },
+        Spouse: {
+          select: {
+            PR_UNIQUE_ID: true,
+          },
+        },
       },
     });
 
@@ -61,56 +77,23 @@ async function getUserProfile(req, res) {
       });
     }
 
-    // Prepare an object to store the final response data
-    const responseData = {
+    // Transform the response to use PR_UNIQUE_ID
+    const transformedUser = {
       ...user,
-      Father: null,
-      Mother: null,
-      Spouse: null,
+      FatherID: user.Father?.PR_UNIQUE_ID || null,
+      MotherID: user.Mother?.PR_UNIQUE_ID || null,
+      SpouseID: user.Spouse?.PR_UNIQUE_ID || null,
     };
 
-    // Remove the ID fields that we'll replace with objects
-    delete responseData.FatherID;
-    delete responseData.MotherID;
-    delete responseData.SpouseID;
-
-    // Fetch father details if FatherID exists
-    if (user.FatherID) {
-      const father = await prisma.peopleRegistry.findUnique({
-        where: { PR_ID: user.FatherID },
-        select: { PR_UNIQUE_ID: true },
-      });
-      if (father) {
-        responseData.Father = { PR_UNIQUE_ID: father.PR_UNIQUE_ID };
-      }
-    }
-
-    // Fetch mother details if MotherID exists
-    if (user.MotherID) {
-      const mother = await prisma.peopleRegistry.findUnique({
-        where: { PR_ID: user.MotherID },
-        select: { PR_UNIQUE_ID: true },
-      });
-      if (mother) {
-        responseData.Mother = { PR_UNIQUE_ID: mother.PR_UNIQUE_ID };
-      }
-    }
-
-    // Fetch spouse details if SpouseID exists
-    if (user.SpouseID) {
-      const spouse = await prisma.peopleRegistry.findUnique({
-        where: { PR_ID: user.SpouseID },
-        select: { PR_UNIQUE_ID: true },
-      });
-      if (spouse) {
-        responseData.Spouse = { PR_UNIQUE_ID: spouse.PR_UNIQUE_ID };
-      }
-    }
+    // Remove the relation objects since we've extracted the IDs
+    delete transformedUser.Father;
+    delete transformedUser.Mother;
+    delete transformedUser.Spouse;
 
     res.status(200).json({
       message: "User data fetched successfully",
       success: true,
-      data: responseData,
+      data: transformedUser,
     });
   } catch (error) {
     console.error("Error fetching user data:", error);
