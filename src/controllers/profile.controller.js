@@ -44,7 +44,7 @@ async function getUserProfile(req, res) {
   try {
     const userId = req.userId;
 
-    // First get the main user data
+    // Get the main user data
     const user = await prisma.peopleRegistry.findUnique({
       where: { PR_ID: userId },
       include: {
@@ -61,36 +61,42 @@ async function getUserProfile(req, res) {
       });
     }
 
-    // Create a copy of the user object to modify
-    const responseData = { ...user };
+    // Collect all related PR_IDs that need conversion
+    const relatedIds = [
+      user.FatherID,
+      user.MotherID,
+      user.SpouseID,
+      ...(user.Children?.map((child) => child.PR_ID) || []),
+    ].filter((id) => id); // Remove null/undefined
 
-    // Function to get PR_UNIQUE_ID from PR_ID
-    const getUniqueId = async (prId) => {
-      if (!prId) return null;
-      const person = await prisma.peopleRegistry.findUnique({
-        where: { PR_ID: prId },
-        select: { PR_UNIQUE_ID: true },
-      });
-      return person?.PR_UNIQUE_ID || null;
+    // Fetch all unique IDs in one query
+    const relatedPeople = await prisma.peopleRegistry.findMany({
+      where: {
+        PR_ID: { in: relatedIds },
+      },
+      select: {
+        PR_ID: true,
+        PR_UNIQUE_ID: true,
+      },
+    });
+
+    // Create a mapping of PR_ID to PR_UNIQUE_ID
+    const idToUniqueIdMap = new Map(
+      relatedPeople.map((person) => [person.PR_ID, person.PR_UNIQUE_ID])
+    );
+
+    // Create response data
+    const responseData = {
+      ...user,
+      FatherID: user.FatherID ? idToUniqueIdMap.get(user.FatherID) : null,
+      MotherID: user.MotherID ? idToUniqueIdMap.get(user.MotherID) : null,
+      SpouseID: user.SpouseID ? idToUniqueIdMap.get(user.SpouseID) : null,
+      Children:
+        user.Children?.map((child) => ({
+          ...child,
+          PR_ID: idToUniqueIdMap.get(child.PR_ID) || child.PR_ID,
+        })) || [],
     };
-
-    // Replace PR_IDs with PR_UNIQUE_IDs for relationships
-    responseData.FatherID = await getUniqueId(user.FatherID);
-    responseData.MotherID = await getUniqueId(user.MotherID);
-    responseData.SpouseID = await getUniqueId(user.SpouseID);
-
-    // Also convert Children's PR_ID to PR_UNIQUE_ID if needed
-    if (responseData.Children && responseData.Children.length > 0) {
-      responseData.Children = await Promise.all(
-        responseData.Children.map(async (child) => {
-          const uniqueId = await getUniqueId(child.PR_ID);
-          return {
-            ...child,
-            PR_ID: uniqueId, // Replace PR_ID with PR_UNIQUE_ID for each child
-          };
-        })
-      );
-    }
 
     res.status(200).json({
       message: "User data fetched successfully",
