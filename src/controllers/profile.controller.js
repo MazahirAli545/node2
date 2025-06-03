@@ -44,7 +44,7 @@ async function getUserProfile(req, res) {
   try {
     const userId = req.userId;
 
-    // Get the main user data
+    // 1. First get the main user with all relationships
     const user = await prisma.peopleRegistry.findUnique({
       where: { PR_ID: userId },
       include: {
@@ -61,18 +61,16 @@ async function getUserProfile(req, res) {
       });
     }
 
-    // Collect all related PR_IDs that need conversion
-    const relatedIds = [
-      user.FatherID,
-      user.MotherID,
-      user.SpouseID,
-      ...(user.Children?.map((child) => child.PR_ID) || []),
-    ].filter((id) => id); // Remove null/undefined
+    // 2. Prepare an array of all related PR_IDs we need to convert
+    const idsToConvert = [];
+    if (user.FatherID) idsToConvert.push(user.FatherID);
+    if (user.MotherID) idsToConvert.push(user.MotherID);
+    if (user.SpouseID) idsToConvert.push(user.SpouseID);
 
-    // Fetch all unique IDs in one query
+    // 3. Fetch all unique IDs in a single query
     const relatedPeople = await prisma.peopleRegistry.findMany({
       where: {
-        PR_ID: { in: relatedIds },
+        PR_ID: { in: idsToConvert },
       },
       select: {
         PR_ID: true,
@@ -80,24 +78,23 @@ async function getUserProfile(req, res) {
       },
     });
 
-    // Create a mapping of PR_ID to PR_UNIQUE_ID
-    const idToUniqueIdMap = new Map(
-      relatedPeople.map((person) => [person.PR_ID, person.PR_UNIQUE_ID])
-    );
+    // 4. Create a mapping dictionary for quick lookup
+    const idMap = {};
+    relatedPeople.forEach((person) => {
+      idMap[person.PR_ID] = person.PR_UNIQUE_ID;
+    });
 
-    // Create response data
+    // 5. Construct the final response with PR_UNIQUE_ID values
     const responseData = {
       ...user,
-      FatherID: user.FatherID ? idToUniqueIdMap.get(user.FatherID) : null,
-      MotherID: user.MotherID ? idToUniqueIdMap.get(user.MotherID) : null,
-      SpouseID: user.SpouseID ? idToUniqueIdMap.get(user.SpouseID) : null,
-      Children:
-        user.Children?.map((child) => ({
-          ...child,
-          PR_ID: idToUniqueIdMap.get(child.PR_ID) || child.PR_ID,
-        })) || [],
+      FatherID: user.FatherID ? idMap[user.FatherID] : null,
+      MotherID: user.MotherID ? idMap[user.MotherID] : null,
+      SpouseID: user.SpouseID ? idMap[user.SpouseID] : null,
+      // Keep original Children data (modify if you need to convert their IDs too)
+      Children: user.Children,
     };
 
+    // 6. Send the transformed response
     res.status(200).json({
       message: "User data fetched successfully",
       success: true,
