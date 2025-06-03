@@ -395,14 +395,29 @@ async function EditProfile(req, res) {
     // Helper function to convert PR_UNIQUE_ID to PR_ID
     const convertUniqueIdToPrId = async (uniqueId) => {
       if (!uniqueId) return null;
-      const person = await prisma.peopleRegistry.findUnique({
-        where: { PR_UNIQUE_ID: uniqueId },
-        select: { PR_ID: true },
-      });
-      return person ? person.PR_ID : null;
+
+      try {
+        const person = await prisma.peopleRegistry.findUnique({
+          where: { PR_UNIQUE_ID: uniqueId },
+          select: { PR_ID: true },
+        });
+
+        if (!person) {
+          console.warn(`No person found with unique ID: ${uniqueId}`);
+          return null;
+        }
+
+        return person.PR_ID;
+      } catch (error) {
+        console.error(
+          `Error converting unique ID ${uniqueId} to PR_ID:`,
+          error
+        );
+        return null;
+      }
     };
 
-    // Convert unique IDs to PR_IDs
+    // Then in your main function, ensure you're handling null cases:
     const PR_FATHER_ID = req.body.PR_FATHER_ID
       ? await convertUniqueIdToPrId(req.body.PR_FATHER_ID)
       : null;
@@ -466,9 +481,9 @@ async function EditProfile(req, res) {
       PR_BUSS_TYPE: req.body.PR_BUSS_TYPE,
       PR_HOBBY: req.body.PR_HOBBY,
       // Use the converted PR_IDs from unique IDs
-      PR_FATHER_ID,
-      PR_MOTHER_ID,
-      PR_SPOUSE_ID,
+      PR_FATHER_ID: PR_FATHER_ID ? Number(PR_FATHER_ID) : null,
+      PR_MOTHER_ID: PR_MOTHER_ID ? Number(PR_MOTHER_ID) : null,
+      PR_SPOUSE_ID: PR_SPOUSE_ID ? Number(PR_SPOUSE_ID) : null,
       PR_PROFESSION_ID: convertToNumberOrNull(req.body.PR_PROFESSION_ID),
       PR_CITY_CODE: cityCode || null,
       PR_UPDATED_AT: new Date(),

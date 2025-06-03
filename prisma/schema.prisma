@@ -83,13 +83,17 @@ model PeopleRegistry {
   Children           Child[]          @relation("UserChildren")
   BUSSINESS          BUSSINESS?       @relation(fields: [PR_BUSS_CODE], references: [BUSS_ID])
   City               City?            @relation(fields: [PR_CITY_CODE], references: [CITY_ID])
-  Father             PeopleRegistry?  @relation("FatherRelation", fields: [PR_FATHER_ID], references: [PR_ID])
-  FatherOf           PeopleRegistry[] @relation("FatherRelation")
-  Mother             PeopleRegistry?  @relation("MotherRelation", fields: [PR_MOTHER_ID], references: [PR_ID])
-  MotherOf           PeopleRegistry[] @relation("MotherRelation")
+  // Father             PeopleRegistry?  @relation("FatherRelation", fields: [PR_FATHER_ID], references: [PR_ID])
+  // FatherOf           PeopleRegistry[] @relation("FatherRelation")
+  // Mother             PeopleRegistry?  @relation("MotherRelation", fields: [PR_MOTHER_ID], references: [PR_ID])
+  // MotherOf           PeopleRegistry[] @relation("MotherRelation")
   Profession         Profession?      @relation(fields: [PR_PROFESSION_ID], references: [PROF_ID])
-  Spouse             PeopleRegistry?  @relation("SpouseRelation", fields: [PR_SPOUSE_ID], references: [PR_ID])
-  SpouseOf           PeopleRegistry[] @relation("SpouseRelation")
+  // Spouse             PeopleRegistry?  @relation("SpouseRelation", fields: [PR_SPOUSE_ID], references: [PR_ID])
+  // SpouseOf           PeopleRegistry[] @relation("SpouseRelation")
+    Father   PeopleRegistry? @relation("FatherRelation", fields: [PR_FATHER_ID], references: [PR_ID])
+  Mother   PeopleRegistry? @relation("MotherRelation", fields: [PR_MOTHER_ID], references: [PR_ID])
+  Spouse   PeopleRegistry? @relation("SpouseRelation", fields: [PR_SPOUSE_ID], references: [PR_ID])
+
 
   @@unique([PR_MOBILE_NO, PR_FULL_NAME])
   @@index([PR_STATE_CODE])
@@ -101,6 +105,11 @@ model PeopleRegistry {
   @@index([PR_PROFESSION_ID], map: "PEOPLE_REGISTRY_PR_PROFESSION_ID_fkey")
   @@index([PR_SPOUSE_ID], map: "PEOPLE_REGISTRY_PR_SPOUSE_ID_fkey")
   @@map("PEOPLE_REGISTRY")
+  // PeopleRegistry PeopleRegistry[] @relation("FatherRelation")
+  // PeopleRegistry PeopleRegistry[] @relation("MotherRelation")
+  FatherOf PeopleRegistry[] @relation("FatherRelation")
+  MotherOf PeopleRegistry[] @relation("MotherRelation")
+  PeopleRegistry PeopleRegistry[] @relation("SpouseRelation")
 }
 
 model PopulationStats {
