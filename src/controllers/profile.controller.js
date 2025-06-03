@@ -46,7 +46,7 @@ const convertIdToUniqueId = async (prId) => {
   if (!prId) return null;
 
   try {
-    const person = await prisma.peopleRegistry.findFirst({
+    const person = await prisma.peopleRegistry.findUnique({
       where: {
         PR_ID: prId,
       },
