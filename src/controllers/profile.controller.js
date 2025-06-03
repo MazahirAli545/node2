@@ -81,19 +81,19 @@ async function getUserProfile(req, res) {
         .json({ message: "User not found", success: false });
     }
 
-    // Convert PR_ID to PR_UNIQUE_ID for father_id, mother_id, and spouse_id
+    // Convert PR_ID to PR_UNIQUE_ID for PR_FATHER_ID, PR_MOTHER_ID, and PR_SPOUSE_ID
     const convertedUser = { ...user };
 
-    if (user.father_id) {
-      convertedUser.father_id = await convertIdToUniqueId(user.father_id);
+    if (user.PR_FATHER_ID) {
+      convertedUser.PR_FATHER_ID = await convertIdToUniqueId(user.PR_FATHER_ID);
     }
 
-    if (user.mother_id) {
-      convertedUser.mother_id = await convertIdToUniqueId(user.mother_id);
+    if (user.PR_MOTHER_ID) {
+      convertedUser.PR_MOTHER_ID = await convertIdToUniqueId(user.PR_MOTHER_ID);
     }
 
-    if (user.spouse_id) {
-      convertedUser.spouse_id = await convertIdToUniqueId(user.spouse_id);
+    if (user.PR_SPOUSE_ID) {
+      convertedUser.PR_SPOUSE_ID = await convertIdToUniqueId(user.PR_SPOUSE_ID);
     }
 
     res.status(200).json({
