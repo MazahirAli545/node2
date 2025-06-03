@@ -74,6 +74,23 @@ async function getUserProfile(req, res) {
     }
 
     // Transform the response to replace PR_ID references with PR_UNIQUE_ID
+    include: {
+      Father: {
+        select: {
+          PR_UNIQUE_ID: true;
+        }
+      }
+      Mother: {
+        select: {
+          PR_UNIQUE_ID: true;
+        }
+      }
+      Spouse: {
+        select: {
+          PR_UNIQUE_ID: true;
+        }
+      }
+    }
     const transformedUser = {
       ...user,
       father_id: user.Father?.PR_UNIQUE_ID || null,
