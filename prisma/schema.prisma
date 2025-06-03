@@ -8,321 +8,329 @@ datasource db {
 }
 
 model Stream {
-  STREAM_ID          Int      @id @default(autoincrement())
-  STREAM_NAME        String?   @db.Char(50)
-  STREAM_CREATED_BY  Int
-  STREAM_CREATED_DT  DateTime @default(now())
-  STREAM_UPDATED_BY  Int?
-  STREAM_UPDATED_DT  DateTime?
-
+  STREAM_ID         Int       @id @default(autoincrement())
+  STREAM_NAME       String?   @db.Char(50)
+  STREAM_CREATED_BY Int
+  STREAM_CREATED_DT DateTime  @default(now())
+  STREAM_UPDATED_BY Int?
+  STREAM_UPDATED_DT DateTime?
 }
 
 model Education {
-  EDUCATION_ID          Int      @id @default(autoincrement())
-  EDUCATION_NAME        String?   @db.Char(50)
-  EDUCATION_IMAGE_URL String? @db.VarChar(255)
-  EDUCATION_CREATED_BY  Int
-  EDUCATION_CREATED_DT  DateTime @default(now())
-  EDUCATION_UPDATED_BY  Int?
-  EDUCATION_UPDATED_DT  DateTime?
-
+  EDUCATION_ID         Int       @id @default(autoincrement())
+  EDUCATION_NAME       String?   @db.Char(50)
+  EDUCATION_IMAGE_URL  String?   @db.VarChar(255)
+  EDUCATION_CREATED_BY Int
+  EDUCATION_CREATED_DT DateTime  @default(now())
+  EDUCATION_UPDATED_BY Int?
+  EDUCATION_UPDATED_DT DateTime?
 }
 
 model Profession {
-  PROF_ID          Int      @id @default(autoincrement())
-  PROF_NAME        String?   @db.Char(50)
-  PROF_DESC        String?   @db.Char(50)
-  PROF_ACTIVE_YN   String   @db.Char(1)
-  PROF_CREATED_BY  Int
-  PROF_CREATED_DT  DateTime @default(now())
-  PROF_UPDATED_BY  Int?
-  PROF_UPDATED_DT  DateTime?
-  PeopleRegistry   PeopleRegistry[]
+  PROF_ID         Int              @id @default(autoincrement())
+  PROF_DESC       String?          @db.Char(50)
+  PROF_ACTIVE_YN  String           @db.Char(1)
+  PROF_CREATED_BY Int
+  PROF_CREATED_DT DateTime         @default(now())
+  PROF_UPDATED_BY Int?
+  PROF_UPDATED_DT DateTime?
+  PROF_NAME       String?          @db.Char(50)
+  PeopleRegistry  PeopleRegistry[]
 
   @@map("PROFESSION")
 }
 
 model PeopleRegistry {
-  PR_ID            Int      @id @default(autoincrement())
-  PR_UNIQUE_ID     String   @db.VarChar(50) @unique
-  PR_PR_ID         Int?
-  PR_FULL_NAME     String   @db.VarChar(100)
-  PR_DOB           String
-  PR_GENDER        String?  @db.Char(1)
-  PR_MOBILE_NO     String   @db.VarChar(15)
-  PR_PROFESSION_ID Int? 
-  Profession    Profession? @relation(fields: [PR_PROFESSION_ID], references: [PROF_ID])
-  PR_PROFESSION_DETA  String? @db.VarChar(500)
-  PR_EDUCATION     String?  @db.VarChar(20)
-  PR_EDUCATION_DESC String? @db.VarChar(500)
-  PR_ADDRESS       String  @db.Text
-  PR_PIN_CODE      String  
-  PR_AREA_NAME     String  @db.VarChar(100)
-  PR_CITY_CODE     Int?
-  City             City? @relation(fields: [PR_CITY_CODE], references: [CITY_ID], onDelete: SetNull)
-  PR_STATE_CODE    String?   @db.Char(20)
-  PR_DISTRICT_CODE String?   @db.Char(20)      
-  PR_FAMILY_NO     String?   @db.Char(4)
-  PR_MEMBER_NO     String?   @db.Char(4)
-  PR_FATHER_ID     Int?     
-  PR_MOTHER_ID     Int?     
-  PR_SPOUSE_ID     Int? 
-  PR_MARRIED_YN    String? @db.Char(1)
-  PR_FATHER_NAME     String?   @db.VarChar(100) 
-  PR_MOTHER_NAME     String?   @db.VarChar(100)
-  PR_SPOUSE_NAME     String?   @db.VarChar(100)
-  Children         Child[] @relation("UserChildren")
-  PR_BUSS_CODE     Int?
-  BUSSINESS        BUSSINESS? @relation(fields: [PR_BUSS_CODE], references: [BUSS_ID], onDelete: SetNull)
-  PR_BUSS_INTER    String? @db.Char(1)
-  PR_BUSS_STREAM   String? @db.VarChar(20)
-  PR_BUSS_TYPE     String? @db.VarChar(20)
-   PR_HOBBY        String? @db.VarChar(200)
-   PR_IS_COMPLETED String? @db.Char(1) @default("N")
+  PR_ID              Int              @id @default(autoincrement())
+  PR_UNIQUE_ID       String           @unique @db.VarChar(50)
+  PR_ROLE            PR_ROLE          @default(End_User)
+  PR_FULL_NAME       String           @db.VarChar(100)
+  PR_DOB             String
+  PR_GENDER          String?          @db.Char(1)
+  PR_MOBILE_NO       String           @db.VarChar(15)
+  PR_EDUCATION       String?          @db.VarChar(20)
+  PR_ADDRESS         String           @db.Text
+  PR_PIN_CODE        String
+  PR_CITY_CODE       Int?
+  PR_STATE_CODE      String?          @db.Char(20)
+  PR_DISTRICT_CODE   String?          @db.Char(20)
+  PR_FAMILY_NO       String?          @db.Char(4)
+  PR_MEMBER_NO       String?          @db.Char(4)
+  PR_FATHER_ID       Int?
+  PR_MOTHER_ID       Int?
+  PR_SPOUSE_ID       Int?
+  PR_FATHER_NAME     String?          @db.VarChar(100)
+  PR_MOTHER_NAME     String?          @db.VarChar(100)
+  PR_SPOUSE_NAME     String?          @db.VarChar(100)
+  PR_PHOTO_URL       String?          @db.VarChar(255)
+  PR_CREATED_BY      Int?
+  PR_CREATED_AT      DateTime         @default(now())
+  PR_UPDATED_BY      Int?
+  PR_UPDATED_AT      DateTime?
+  PR_AREA_NAME       String           @db.VarChar(100)
+  PR_EDUCATION_DESC  String?          @db.VarChar(500)
+  PR_PROFESSION_DETA String?          @db.VarChar(500)
+  PR_PROFESSION_ID   Int?
+  PR_BUSS_INTER      String?          @db.Char(1)
+  PR_BUSS_STREAM     String?          @db.VarChar(20)
+  PR_BUSS_TYPE       String?          @db.VarChar(20)
+  PR_BUSS_CODE       Int?
+  PR_MARRIED_YN      String?          @db.Char(1)
+  PR_HOBBY           String?          @db.VarChar(200)
+  PR_IS_COMPLETED    String?          @default("N") @db.Char(1)
+  PR_PR_ID           Int?
+  Contact            Contact[]
+  Children           Child[]          @relation("UserChildren")
+  BUSSINESS          BUSSINESS?       @relation(fields: [PR_BUSS_CODE], references: [BUSS_ID])
+  City               City?            @relation(fields: [PR_CITY_CODE], references: [CITY_ID])
+  Father             PeopleRegistry?  @relation("FatherRelation", fields: [PR_FATHER_ID], references: [PR_ID])
+  FatherOf           PeopleRegistry[] @relation("FatherRelation")
+  Mother             PeopleRegistry?  @relation("MotherRelation", fields: [PR_MOTHER_ID], references: [PR_ID])
+  MotherOf           PeopleRegistry[] @relation("MotherRelation")
+  Profession         Profession?      @relation(fields: [PR_PROFESSION_ID], references: [PROF_ID])
+  Spouse             PeopleRegistry?  @relation("SpouseRelation", fields: [PR_SPOUSE_ID], references: [PR_ID])
+  SpouseOf           PeopleRegistry[] @relation("SpouseRelation")
 
-  
-  PR_PHOTO_URL     String?  @db.VarChar(255)
-  PR_CREATED_BY    Int?     
-  PR_CREATED_AT    DateTime @default(now())
-  PR_UPDATED_BY    Int?     
-  PR_UPDATED_AT    DateTime?
-    PR_ROLE          PR_ROLE    @default(End_User) 
-  // Hobbies PR_Hobbies[]  
-
-  // Children         Child[] @relation("UserChildren")
-  // Contact          Contact[]
-
-  // Self-referencing relations for family
-  Father           PeopleRegistry? @relation("FatherRelation", fields: [PR_FATHER_ID], references: [PR_ID])
-  Mother           PeopleRegistry? @relation("MotherRelation", fields: [PR_MOTHER_ID], references: [PR_ID])
-  Spouse           PeopleRegistry? @relation("SpouseRelation", fields: [PR_SPOUSE_ID], references: [PR_ID])
-
-  FatherOf         PeopleRegistry[] @relation("FatherRelation")
-  MotherOf         PeopleRegistry[] @relation("MotherRelation")
-  SpouseOf         PeopleRegistry[] @relation("SpouseRelation")
-
- 
   @@unique([PR_MOBILE_NO, PR_FULL_NAME])
-  
-  // @@unique([PR_FATHER_ID])
-  // @@unique([PR_MOTHER_ID])
-  // @@unique([PR_SPOUSE_ID])
-
   @@index([PR_STATE_CODE])
   @@index([PR_DISTRICT_CODE])
-
+  @@index([PR_BUSS_CODE], map: "PEOPLE_REGISTRY_PR_BUSS_CODE_fkey")
+  @@index([PR_CITY_CODE], map: "PEOPLE_REGISTRY_PR_CITY_CODE_fkey")
+  @@index([PR_FATHER_ID], map: "PEOPLE_REGISTRY_PR_FATHER_ID_fkey")
+  @@index([PR_MOTHER_ID], map: "PEOPLE_REGISTRY_PR_MOTHER_ID_fkey")
+  @@index([PR_PROFESSION_ID], map: "PEOPLE_REGISTRY_PR_PROFESSION_ID_fkey")
+  @@index([PR_SPOUSE_ID], map: "PEOPLE_REGISTRY_PR_SPOUSE_ID_fkey")
   @@map("PEOPLE_REGISTRY")
-
-  Contact Contact[]
 }
 
-
-
 model PopulationStats {
-  PS_ID          Int      @id @default(autoincrement())
+  PS_ID           Int      @id @default(autoincrement())
   totalPopulation Int
   familyCount     Int
-  createdAt      DateTime @default(now())
-  
+  createdAt       DateTime @default(now())
+
   @@map("POPULATION_STATS")
 }
 
 model DonationPayment {
-  id        Int      @id @default(autoincrement())
-  ENVIT_ID  Int
-  
-  PR_ID     Int 
-   PR_FULL_NAME      String   
-  paymentId String   @unique
-  entity String
-  amount    Int
-  currency  String
-  status    String
-  order_id   String?   // instead of Int?
-  invoice_id String?   // instead of Int?
-  international Int 
-  method    String
+  id                Int      @id @default(autoincrement())
+  paymentId         String   @unique
+  amount            Int
+  currency          String
+  status            String
+  method            String
+  captured          Boolean
+  createdAt         DateTime @default(now())
+  ENVIT_ID          Int
+  JSON_LOG          String   @db.VarChar(4000)
   amount_refunded   Int
-  refund_status Int
-  captured  Boolean
-  description String
-  bank Int
-  wallet Int
-  vpa Int
-  email String
-  contact String
-  fee Int
-  tax Int
-  error_code String
+  bank              Int
+  contact           String
+  description       String
+  entity            String
+  error_code        String
   error_description String
-  error_source String
-  error_step String
-  error_reason String
-  JSON_LOG String @db.VarChar(4000)
-  createdAt DateTime @default(now())
-  cate_id Int @default(0)
+  error_reason      String
+  error_source      String
+  error_step        String
+  fee               Int
+  international     Int
+  invoice_id        String?
+  order_id          String?
+  refund_status     Int
+  tax               Int
+  vpa               Int
+  wallet            Int
+  PR_FULL_NAME      String
+  email             String
+  cate_id           Int      @default(0)
+  PR_ID             Int
+  Event             Events   @relation(fields: [ENVIT_ID], references: [ENVT_ID])
 
-Event      Events?   @relation(fields: [ENVIT_ID], references: [ENVT_ID])
-}
-
-enum PR_ROLE {
-  Admin     @map("Admin")
-  End_User  @map("End User")
-  Master    @map("Master")
+  @@index([ENVIT_ID], map: "DonationPayment_ENVIT_ID_fkey")
 }
 
 model Hobbies {
-  HOBBY_ID   Int    @id @default(autoincrement())
-  HOBBY_NAME String  @db.VarChar(100)
-  HOBBY_IMAGE_URL String? @db.VarChar(255)
+  HOBBY_ID         Int       @id @default(autoincrement())
+  HOBBY_NAME       String    @db.VarChar(100)
+  HOBBY_IMAGE_URL  String?   @db.VarChar(255)
+  HOBBY_CREATED_AT DateTime  @default(now())
   HOBBY_CREATED_BY Int?
-  HOBBY_CREATED_AT DateTime @default(now())
-  HOOBY_UPDATED_BY Int?
   HOBBY_UPDATED_AT DateTime?
-
-  // PR_Hobbies PR_Hobbies[] 
+  HOOBY_UPDATED_BY Int?
 }
 
-
-
-
-
 model City {
-  CITY_ID         Int      @id @default(autoincrement()) 
-  CITY_PIN_CODE   String?  @db.VarChar(20)  // Renamed from `pincode` @unique @unique 
-  // CITY_CODE       Int?
-  CITY_NAME       String?  @db.VarChar(150)
-  CITY_DS_CODE    String?  @db.VarChar(20)  @default("default_ds_code")
-  CITY_DS_NAME    String?  @db.VarChar(100) @default("default_ds_name")
-  CITY_ST_CODE    String?  @db.VarChar(20)  @default("default_st_code")
-  CITY_ST_NAME    String?  @db.VarChar(100) @default("default_st_name")
+  CITY_ID         Int              @id @default(autoincrement())
+  CITY_PIN_CODE   String?          @db.VarChar(20)
+  CITY_NAME       String?          @db.VarChar(150)
+  CITY_DS_CODE    String?          @default("default_ds_code") @db.VarChar(20)
+  CITY_DS_NAME    String?          @default("default_ds_name") @db.VarChar(100)
+  CITY_ST_CODE    String?          @default("default_st_code") @db.VarChar(20)
+  CITY_ST_NAME    String?          @default("default_st_name") @db.VarChar(100)
   CITY_CREATED_BY Int?
-  CITY_CREATED_AT DateTime @default(now())
+  CITY_CREATED_AT DateTime         @default(now())
   CITY_UPDATED_BY Int?
   CITY_UPDATED_AT DateTime?
+  PeopleRegistry  PeopleRegistry[]
 
-
-  // Self-relation for hierarchical cities (e.g., districts within cities)
-  
-
-  PeopleRegistry PeopleRegistry[]
   @@map("CITY")
 }
 
 model BUSSINESS {
-  BUSS_ID         Int      @id @default(autoincrement()) 
-  BUSS_STREM   String?  @db.VarChar(20)
-  BUSS_TYPE   String?  @db.VarChar(20)                
-  // BUSS_INTER       String?  @db.Char(1)
+  BUSS_ID         Int              @id @default(autoincrement())
+  BUSS_STREM      String?          @db.VarChar(20)
+  BUSS_TYPE       String?          @db.VarChar(20)
+  BUSS_CREATED_AT DateTime         @default(now())
   BUSS_CREATED_BY Int?
-  BUSS_CREATED_AT DateTime @default(now())
-  BUSS_UPDATED_BY Int?
   BUSS_UPDATED_AT DateTime?
-
-
+  BUSS_UPDATED_BY Int?
+  PeopleRegistry  PeopleRegistry[]
 
   @@map("BUSSINESS")
-
-  PeopleRegistry PeopleRegistry[]
 }
 
-
-
 model Child {
-  id       String   @id @default(uuid())
-  name     String
-  dob      DateTime
-    userId   Int
-  user PeopleRegistry @relation("UserChildren", fields: [userId], references: [PR_ID])
+  id     String         @id @default(uuid())
+  name   String
+  dob    DateTime
+  userId Int
+  user   PeopleRegistry @relation("UserChildren", fields: [userId], references: [PR_ID])
 
+  @@index([userId], map: "Child_userId_fkey")
 }
 
 model Otp {
-  id           String  @id @default(uuid())
-  PR_MOBILE_NO String  @unique
+  id           String   @id @default(uuid())
+  PR_MOBILE_NO String   @unique
   otp          String
   expiresAt    DateTime
 }
-enum ContactType {
-  FEEDBACK
-  CONTACT
-}
-
 
 model Contact {
-  CON_ID          Int      @id @default(autoincrement())
-  CON_TYPE        String   @db.Char(10) // Enum for 'FEEDBACK' or 'CONTACT'
-  CON_NAME        String   @db.Char(50) // Required name field
-  CON_MOBILE_NO   String   @db.VarChar(20) // Required mobile number
-  CON_ATTACHMENT  String?  @db.Char(250) // Optional attachment
-  CON_MORE_DETAIL String  @db.VarChar(500) // Optional more details
-  CON_RATING      Int?     // Optional rating
-  CON_ACTIVE_YN   String   @db.Char(1) // Active flag ('Y' or 'N')
-  CON_CREATED_BY  Int      // User ID for the creator
-  PeopleRegistry PeopleRegistry? @relation(fields: [CON_CREATED_BY], references: [PR_ID])
-  CON_CREATED_DT  DateTime @default(now()) // Creation date
-  CON_UPDATED_BY  Int?     // User ID for the updater (optional)
-  CON_UPDATED_DT  DateTime? // Updated date (optional)
+  CON_ID          Int            @id @default(autoincrement())
+  CON_TYPE        String         @db.Char(10)
+  CON_NAME        String         @db.Char(50)
+  CON_MOBILE_NO   String         @db.VarChar(20)
+  CON_ATTACHMENT  String?        @db.Char(250)
+  CON_MORE_DETAIL String         @db.VarChar(500)
+  CON_RATING      Int?
+  CON_ACTIVE_YN   String         @db.Char(1)
+  CON_CREATED_BY  Int
+  CON_CREATED_DT  DateTime       @default(now())
+  CON_UPDATED_BY  Int?
+  CON_UPDATED_DT  DateTime?
+  PeopleRegistry  PeopleRegistry @relation(fields: [CON_CREATED_BY], references: [PR_ID])
 
+  @@index([CON_CREATED_BY], map: "CONTACT_CON_CREATED_BY_fkey")
   @@map("CONTACT")
-
 }
 
-
 model Category {
-  CATE_ID        Int     @id @default(autoincrement())
-  CATE_CATE_ID   Int?    
-  CATE_DESC      String  @db.VarChar(50)
-  CATE_ACTIVE_YN String  @db.Char(1)
-  CATE_CREATED_BY Int
-  CATE_CREATED_DT DateTime @default(now())
-  CATE_UPDATED_BY Int?
-  CATE_UPDATED_DT DateTime?
-
-  ParentCategory  Category?  @relation("ParentChild", fields: [CATE_CATE_ID], references: [CATE_ID], onDelete: SetNull)
+  CATE_ID           Int        @id @default(autoincrement())
+  CATE_CATE_ID      Int?
+  CATE_DESC         String     @db.VarChar(50)
+  CATE_ACTIVE_YN    String     @db.Char(1)
+  CATE_CREATED_BY   Int
+  CATE_CREATED_DT   DateTime   @default(now())
+  CATE_UPDATED_BY   Int?
+  CATE_UPDATED_DT   DateTime?
+  ParentCategory    Category?  @relation("ParentChild", fields: [CATE_CATE_ID], references: [CATE_ID])
   SubCategories     Category[] @relation("ParentChild")
-  SubCategoryEvents Events[]   @relation("SubCategory") // Opposite relation field for SubCategory
-  Events      Events[]  // ✅ One-to-Many Relationship (Category has multiple Events)
+  SubCategoryEvents Events[]   @relation("SubCategory")
+  Events            Events[]
+
+  @@index([CATE_CATE_ID], map: "Category_CATE_CATE_ID_fkey")
 }
 
 model Events {
-  ENVT_ID            Int     @id @default(autoincrement())
-  ENVT_CATE_ID       Int
-  ENVT_CATE_CATE_ID  Int?
-  ENVT_DESC          String  @db.VarChar(50)
-  ENVT_EXCERPT       String  @db.VarChar(250)
-  ENVT_DETAIL        String  @db.VarChar(4000)
-  ENVT_BANNER_IMAGE  String  @db.VarChar(250)
-  ENVT_GALLERY_IMAGES String @db.VarChar(500)
-  ENVT_CONTACT_NO    String  @db.VarChar(20)
-  ENVT_ADDRESS       String  @db.VarChar(500)
-  ENVT_CITY          String  @db.VarChar(50)
-  EVNT_FROM_DT       String  @db.VarChar(20)
-  EVNT_UPTO_DT       String  @db.VarChar(20)  
-  EVET_ACTIVE_YN     String  @db.Char(1)
-  EVET_CREATED_BY    Int
-  EVET_CREATED_DT    DateTime @default(now())
-  EVET_UPDATED_BY    Int?
-  EVET_UPDATED_DT    DateTime?
+  ENVT_ID             Int               @id @default(autoincrement())
+  ENVT_CATE_ID        Int
+  ENVT_CATE_CATE_ID   Int?
+  ENVT_DESC           String            @db.VarChar(50)
+  ENVT_EXCERPT        String            @db.VarChar(250)
+  ENVT_DETAIL         String            @db.VarChar(4000)
+  ENVT_BANNER_IMAGE   String            @db.VarChar(250)
+  ENVT_GALLERY_IMAGES String            @db.VarChar(500)
+  ENVT_CONTACT_NO     String            @db.VarChar(20)
+  ENVT_ADDRESS        String            @db.VarChar(500)
+  ENVT_CITY           String            @db.VarChar(50)
+  EVNT_FROM_DT        String            @db.VarChar(20)
+  EVNT_UPTO_DT        String            @db.VarChar(20)
+  EVET_ACTIVE_YN      String            @db.Char(1)
+  EVET_CREATED_BY     Int
+  EVET_CREATED_DT     DateTime          @default(now())
+  EVET_UPDATED_BY     Int?
+  EVET_UPDATED_DT     DateTime?
+  DonationPayment     DonationPayment[]
+  SubCategory         Category?         @relation("SubCategory", fields: [ENVT_CATE_CATE_ID], references: [CATE_ID])
+  Category            Category          @relation(fields: [ENVT_CATE_ID], references: [CATE_ID])
 
-  Category          Category @relation(fields: [ENVT_CATE_ID], references: [CATE_ID]) // ✅ Correct One-to-Many
-  SubCategory         Category? @relation("SubCategory", fields: [ENVT_CATE_CATE_ID], references: [CATE_ID])
-
-
-  DonationPayment DonationPayment[]
+  @@index([ENVT_CATE_CATE_ID], map: "Events_ENVT_CATE_CATE_ID_fkey")
+  @@index([ENVT_CATE_ID], map: "Events_ENVT_CATE_ID_fkey")
 }
-
 
 model LanguageContent {
-  id          Int     @id @default(autoincrement())
-  key         String  @unique            // Unique identifier like 'home.title'
-  en          String?                    // English translation
-  hi          String?                    // Hindi translation
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  en        String?
+  hi        String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+}
+
+model content_sections {
+  id               Int       @id @default(autoincrement())
+  title            String    @db.VarChar(50)
+  id_id            Int?
+  description      String    @db.Text
+  image_path       String?   @db.VarChar(250)
+  icon_path        String?   @db.VarChar(250)
+  from_date        DateTime  @db.Date
+  upto_date        DateTime  @db.Date
+  active_yn        Int
+  created_by       Int
+  created_date     DateTime  @db.Date
+  updated_by       Int?
+  updated_date     DateTime? @db.Date
+  page_id          Int
+  refrence_page_id Int?
+  lang_code        String    @default("en") @db.VarChar(2)
+}
+
+model content_sections_lang {
+  id               Int       @id // <- add this for Prisma only
+  title            String    @db.VarChar(50)
+  id_id            Int?
+  description      String    @db.Text
+  image_path       String?   @db.VarChar(250)
+  icon_path        String?   @db.VarChar(250)
+  from_date        DateTime  @db.Date
+  upto_date        DateTime  @db.Date
+  active_yn        Int
+  created_by       Int
+  created_date     DateTime  @db.Date
+  updated_by       Int?
+  updated_date     DateTime? @db.Date
+  page_id          Int
+  refrence_page_id Int?
+  lang_code        String    @default("en") @db.VarChar(2)
 }
 
 
+model pages {
+  id           Int       @id @default(autoincrement())
+  title        String    @db.VarChar(20)
+  link_url     String?   @default("/") @db.VarChar(50)
+  active_yn    Int
+  created_by   Int
+  created_date DateTime  @db.Date
+  updated_by   Int?
+  updated_date DateTime? @db.Date
+}
 
-
-//Database Architecure hei
+enum PR_ROLE {
+  Admin    @map("Admin")
+  End_User @map("End User")
+  Master   @map("Master")
+}
