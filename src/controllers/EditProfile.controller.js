@@ -394,11 +394,17 @@ async function EditProfile(req, res) {
 
     // Helper function to convert PR_UNIQUE_ID to PR_ID
     const convertUniqueIdToPrId = async (uniqueId) => {
-      if (!uniqueId) return null;
+      // Handle empty strings, null, undefined, or whitespace-only strings
+      if (
+        !uniqueId ||
+        (typeof uniqueId === "string" && uniqueId.trim() === "")
+      ) {
+        return null;
+      }
 
       try {
         const person = await prisma.peopleRegistry.findUnique({
-          where: { PR_UNIQUE_ID: uniqueId },
+          where: { PR_UNIQUE_ID: uniqueId.trim() }, // Trim whitespace
           select: { PR_ID: true },
         });
 
@@ -417,18 +423,20 @@ async function EditProfile(req, res) {
       }
     };
 
-    // Then in your main function, ensure you're handling null cases:
-    const PR_FATHER_ID = req.body.PR_FATHER_ID
-      ? await convertUniqueIdToPrId(req.body.PR_FATHER_ID)
-      : null;
+    // Then in your main function, fix the conversion logic:
+    const PR_FATHER_ID = await convertUniqueIdToPrId(req.body.PR_FATHER_ID);
+    const PR_MOTHER_ID = await convertUniqueIdToPrId(req.body.PR_MOTHER_ID);
+    const PR_SPOUSE_ID = await convertUniqueIdToPrId(req.body.PR_SPOUSE_ID);
 
-    const PR_MOTHER_ID = req.body.PR_MOTHER_ID
-      ? await convertUniqueIdToPrId(req.body.PR_MOTHER_ID)
-      : null;
-
-    const PR_SPOUSE_ID = req.body.PR_SPOUSE_ID
-      ? await convertUniqueIdToPrId(req.body.PR_SPOUSE_ID)
-      : null;
+    // Add logging to debug what values you're receiving
+    console.log("Received values:", {
+      PR_FATHER_ID_original: req.body.PR_FATHER_ID,
+      PR_MOTHER_ID_original: req.body.PR_MOTHER_ID,
+      PR_SPOUSE_ID_original: req.body.PR_SPOUSE_ID,
+      PR_FATHER_ID_converted: PR_FATHER_ID,
+      PR_MOTHER_ID_converted: PR_MOTHER_ID,
+      PR_SPOUSE_ID_converted: PR_SPOUSE_ID,
+    });
 
     // Determine profile completion status
     const isCompleted = [
@@ -458,6 +466,40 @@ async function EditProfile(req, res) {
       return isNaN(num) ? null : num;
     };
 
+    // const updateData = {
+    //   PR_PR_ID: convertToNumberOrNull(req.body.PR_PR_ID),
+    //   PR_FULL_NAME: req.body.PR_FULL_NAME,
+    //   PR_DOB: req.body.PR_DOB,
+    //   PR_MOBILE_NO: req.body.PR_MOBILE_NO,
+    //   PR_GENDER: req.body.PR_GENDER,
+    //   PR_PIN_CODE: req.body.PR_PIN_CODE,
+    //   PR_AREA_NAME: req.body.PR_AREA_NAME,
+    //   PR_ADDRESS: req.body.PR_ADDRESS,
+    //   PR_STATE_CODE: req.body.PR_STATE_CODE,
+    //   PR_DISTRICT_CODE: req.body.PR_DISTRICT_CODE,
+    //   PR_EDUCATION: req.body.PR_EDUCATION,
+    //   PR_EDUCATION_DESC: req.body.PR_EDUCATION_DESC,
+    //   PR_PROFESSION_DETA: req.body.PR_PROFESSION_DETA,
+    //   PR_MARRIED_YN: req.body.PR_MARRIED_YN,
+    //   PR_FATHER_NAME: req.body.PR_FATHER_NAME,
+    //   PR_MOTHER_NAME: req.body.PR_MOTHER_NAME,
+    //   PR_SPOUSE_NAME: req.body.PR_SPOUSE_NAME,
+    //   PR_BUSS_INTER: req.body.PR_BUSS_INTER,
+    //   PR_BUSS_STREAM: req.body.PR_BUSS_STREAM,
+    //   PR_BUSS_TYPE: req.body.PR_BUSS_TYPE,
+    //   PR_HOBBY: req.body.PR_HOBBY,
+    //   // Use the converted PR_IDs from unique IDs
+    //   PR_FATHER_ID: PR_FATHER_ID ? Number(PR_FATHER_ID) : null,
+    //   PR_MOTHER_ID: PR_MOTHER_ID ? Number(PR_MOTHER_ID) : null,
+    //   PR_SPOUSE_ID: PR_SPOUSE_ID ? Number(PR_SPOUSE_ID) : null,
+    //   PR_PROFESSION_ID: convertToNumberOrNull(req.body.PR_PROFESSION_ID),
+    //   PR_CITY_CODE: cityCode || null,
+    //   PR_UPDATED_AT: new Date(),
+    //   PR_PHOTO_URL,
+    //   PR_IS_COMPLETED: isCompleted,
+    // };
+
+    // Handle location changes and unique ID generation
     const updateData = {
       PR_PR_ID: convertToNumberOrNull(req.body.PR_PR_ID),
       PR_FULL_NAME: req.body.PR_FULL_NAME,
@@ -480,18 +522,16 @@ async function EditProfile(req, res) {
       PR_BUSS_STREAM: req.body.PR_BUSS_STREAM,
       PR_BUSS_TYPE: req.body.PR_BUSS_TYPE,
       PR_HOBBY: req.body.PR_HOBBY,
-      // Use the converted PR_IDs from unique IDs
-      PR_FATHER_ID: PR_FATHER_ID ? Number(PR_FATHER_ID) : null,
-      PR_MOTHER_ID: PR_MOTHER_ID ? Number(PR_MOTHER_ID) : null,
-      PR_SPOUSE_ID: PR_SPOUSE_ID ? Number(PR_SPOUSE_ID) : null,
+      // Use the converted PR_IDs (they are already numbers or null)
+      PR_FATHER_ID: PR_FATHER_ID,
+      PR_MOTHER_ID: PR_MOTHER_ID,
+      PR_SPOUSE_ID: PR_SPOUSE_ID,
       PR_PROFESSION_ID: convertToNumberOrNull(req.body.PR_PROFESSION_ID),
       PR_CITY_CODE: cityCode || null,
       PR_UPDATED_AT: new Date(),
       PR_PHOTO_URL,
       PR_IS_COMPLETED: isCompleted,
     };
-
-    // Handle location changes and unique ID generation
     const locationChanged = [
       "PR_STATE_CODE",
       "PR_DISTRICT_CODE",
