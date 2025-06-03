@@ -463,6 +463,10 @@ async function EditProfile(req, res) {
     const motherID = convertToNumberOrNull(req.body.PR_MOTHER_ID);
     const parentID = fatherID || motherID; // Priority to father ID
 
+    // Check if we need to generate PR_UNIQUE_ID (either parent ID provided or location changed or if PR_UNIQUE_ID is empty/null)
+    const needsUniqueId =
+      parentID || locationChanged || !existingProfile.PR_UNIQUE_ID;
+
     if (parentID && existingProfile.PR_IS_COMPLETED !== "Y") {
       try {
         // Get parent's profile to extract their PR_UNIQUE_ID
@@ -512,7 +516,7 @@ async function EditProfile(req, res) {
         console.error("Error processing parent ID:", parentError);
         // Continue with original location-based logic if parent processing fails
       }
-    } else if (locationChanged && existingProfile.PR_IS_COMPLETED !== "Y") {
+    } else if (needsUniqueId && existingProfile.PR_IS_COMPLETED !== "Y") {
       // Original location-based logic (fallback)
       const newStateCode =
         req.body.PR_STATE_CODE || existingProfile.PR_STATE_CODE;
