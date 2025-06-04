@@ -50,11 +50,41 @@ const convertIdToUniqueId = async (prId) => {
   }
 };
 
+// Helper function to convert PR_UNIQUE_ID to PR_ID
+
+const convertUniqueIdToId = async (uniqueId) => {
+  if (!uniqueId) return null;
+
+  try {
+    const person = await prisma.peopleRegistry.findUnique({
+      where: {
+        PR_UNIQUE_ID: uniqueId,
+      },
+      select: {
+        PR_ID: true,
+      },
+    });
+
+    return person ? person.PR_ID : null;
+  } catch (error) {
+    console.error(`Error converting PR_UNIQUE_ID ${uniqueId} to PR_ID:`, error);
+    return null;
+  }
+};
+
 export async function getUserProfile(req, res) {
   try {
     const { uniqueID } = req.params;
-    const userId = parseInt(uniqueID);
-    console.log("User ID: ", userId);
+
+    if (!uniqueID) {
+      return res.status(400).json({ message: "Missing unique ID", success: false });
+    }
+
+    const userId = await convertUniqueIdToId(uniqueID);
+
+    if (!userId) {
+      return res.status(404).json({ message: "User not found", success: false });
+    }
 
     const user = await prisma.peopleRegistry.findUnique({
       where: { PR_ID: userId },
@@ -66,12 +96,10 @@ export async function getUserProfile(req, res) {
     });
 
     if (!user) {
-      return res
-        .status(404)
-        .json({ message: "User not found", success: false });
+      return res.status(404).json({ message: "User not found", success: false });
     }
 
-    // Convert PR_ID to PR_UNIQUE_ID for PR_FATHER_ID, PR_MOTHER_ID, and PR_SPOUSE_ID
+    // Convert related IDs to PR_UNIQUE_ID
     const convertedUser = { ...user };
 
     if (user.PR_FATHER_ID) {
@@ -96,3 +124,4 @@ export async function getUserProfile(req, res) {
     res.status(500).json({ message: "Something went wrong", success: false });
   }
 }
+
