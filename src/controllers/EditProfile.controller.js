@@ -13,7 +13,6 @@ async function EditProfile(req, res) {
   try {
     const PR_ID = req.headers.pr_id;
     const { PR_FCM_TOKEN } = req.body;
-
     if (!PR_ID)
       return res
         .status(400)
@@ -197,34 +196,13 @@ async function EditProfile(req, res) {
       const newCityCode = req.body.PR_CITY_CODE || existingProfile.PR_CITY_CODE;
       const prefix = `${newStateCode}${newDistrictCode}-${newCityCode}`;
 
-      const fatherPrID = req.body.PR_FATHER_ID || existingProfile.PR_FATHER_ID;
-      const motherPrID = req.body.PR_MOTHER_ID || existingProfile.PR_MOTHER_ID;
-      let andCondition = `PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%')
-        AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}`;
-      let mobileNo = `AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}`;
-      if (fatherPrID || motherPrID) {
-        if (fatherPrID && motherPrID) {
-          andCondition = ` PR_ID = ${fatherPrID}`;
-        } else if (fatherPrID) {
-          andCondition = ` PR_ID = ${fatherPrID}`;
-        } else if (motherPrID) {
-          andCondition = ` PR_ID = ${motherPrID}`;
-        }
-        mobileNo = "";
-      }
       // Check existing records with same prefix and mobile
       const existing = await prisma.$queryRaw`
         SELECT PR_UNIQUE_ID FROM PEOPLE_REGISTRY
-        WHERE ${andCondition} COLLATE utf8mb4_bin
+        WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_bin
+        AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}
         LIMIT 1
       `;
-      console.log(
-        "Existing records found:",
-        existing,
-        `SELECT PR_UNIQUE_ID FROM PEOPLE_REGISTRY
-        WHERE ${andCondition} COLLATE utf8mb4_bin
-        LIMIT 1`
-      );
 
       let prUniqueId, familyNumber, memberNumber;
 
@@ -236,23 +214,9 @@ async function EditProfile(req, res) {
             MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', -1) AS UNSIGNED)) AS max_member
           FROM PEOPLE_REGISTRY
           WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_bin
-          ${mobileNo}
+          AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}
           GROUP BY family
         `;
-
-        console.log(
-          "Member result:",
-          memberResult,
-          `
-          SELECT
-            SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 3), '-', -1) AS family,
-            MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', -1) AS UNSIGNED)) AS max_member
-          FROM PEOPLE_REGISTRY
-          WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_bin
-          ${mobileNo}
-          GROUP BY family
-        `
-        );
 
         familyNumber = memberResult[0].family;
         const nextMember = Number(memberResult[0].max_member) + 1;
@@ -264,16 +228,6 @@ async function EditProfile(req, res) {
           FROM PEOPLE_REGISTRY
           WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_bin
         `;
-
-        console.log(
-          "Family result:",
-          familyResult,
-          `
-          SELECT MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 3), '-', -1) AS UNSIGNED)) AS max_family
-          FROM PEOPLE_REGISTRY
-          WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_bin
-        `
-        );
 
         const nextFamily = (Number(familyResult[0]?.max_family) || 0) + 1;
         familyNumber = String(nextFamily).padStart(4, "0");
