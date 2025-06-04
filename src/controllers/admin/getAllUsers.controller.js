@@ -9,7 +9,7 @@ export const getAllUsers = async (req, res) => {
         Profession: true, // includes profession
         BUSSINESS: true, // includes business details
         Contact: true, // includes contact info if needed
-      },
+      },                                            
       orderBy: {
         PR_ID: "desc",
       },
