@@ -117,7 +117,7 @@ userRouter.post("/cities", createCity);
 userRouter.put("/cities/:CITY_ID", updateCity);
 userRouter.delete("/cities/:CITY_ID", deleteCity);
 userRouter.get("/directory", DirectoryController);
-userRouter.get("/profile", verifyToken, getUserProfile);
+userRouter.get("/profile/:userId", verifyToken, getUserProfile);
 userRouter.get("/business", BusinessController);
 
 // Events
