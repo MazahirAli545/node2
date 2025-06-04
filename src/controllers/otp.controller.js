@@ -75,13 +75,11 @@ export const generateotp = async (req, res) => {
     } else {
       // {"Status":"Success","Details":"5e75949c-6e8e-4b85-8f69-787e88556b42"}
 
-      return res
-        .status(200)
-        .json({
-          message: "OTP sent successfully",
-          success: true,
-          transactionId: response.data.Details,
-        });
+      return res.status(200).json({
+        message: "OTP sent successfully",
+        success: true,
+        transactionId: response.data.Details,
+      });
     }
   } catch (error) {
     console.error("Error generating OTP:", error.message);
@@ -106,6 +104,7 @@ export const verifyotp = async (req, res) => {
       PR_ADDRESS,
       PR_FATHER_NAME,
       PR_MOTHER_NAME,
+      PR_FCM_TOKEN,
     } = req.body;
 
     // Validate input data
@@ -125,6 +124,7 @@ export const verifyotp = async (req, res) => {
       PR_ADDRESS: Joi.string().allow("").optional(),
       PR_FATHER_NAME: Joi.string().allow("").optional(),
       PR_MOTHER_NAME: Joi.string().allow("").optional(),
+      PR_FCM_TOKEN: PR_FCM_TOKEN || null,
     });
 
     const { error } = schema.validate({
@@ -360,117 +360,10 @@ export async function verifyFunc(PR_MOBILE_NO, otp) {
   }
 }
 
-// export const updateProfile = async (req, res) => {
-//   try {
-//     const { PR_ID, PR_MOBILE_NO, PR_FULL_NAME, PR_DOB, otp } = req.body;
-
-//     // Validate input data
-//     const schema = Joi.object({
-//       PR_ID: Joi.number().required(),
-//       PR_MOBILE_NO: Joi.string()
-//         .pattern(/^[6-9]\d{9}$/)
-//         .required()
-//         .messages({ "string.pattern.base": "Invalid mobile number" }),
-//       PR_FULL_NAME: Joi.string().min(3).max(100).required(),
-//       PR_DOB: Joi.date().required(),
-//       otp: Joi.string().required(),
-//     });
-
-//     const { error } = schema.validate({
-//       PR_ID,
-//       PR_MOBILE_NO,
-//       PR_FULL_NAME,
-//       PR_DOB,
-//       otp,
-//     });
-
-//     if (error) {
-//       return res.status(400).json({
-//         message: error.details[0].message,
-//         success: false,
-//       });
-//     }
-
-//     // Verify OTP
-//     const isOtpValid = await verifyFunc(PR_MOBILE_NO, otp);
-//     if (!isOtpValid) {
-//       return res.status(400).json({
-//         message: "OTP is expired or invalid",
-//         success: false,
-//       });
-//     }
-
-//     // Check if user exists
-//     const existingUser = await prisma.peopleRegistry.findUnique({
-//       where: { PR_ID: Number(PR_ID) },
-//     });
-
-//     if (!existingUser) {
-//       return res.status(404).json({
-//         message: "User not found",
-//         success: false,
-//       });
-//     }
-
-//     // Format the date as string (YYYY-MM-DD)
-//     const formattedDOB = new Date(PR_DOB).toISOString().split("T")[0];
-
-//     // Prepare update data - only update name, dob, and mobile
-//     const updateData = {
-//       PR_FULL_NAME,
-//       PR_DOB: formattedDOB,
-//       PR_MOBILE_NO, // Mobile number will be updated but PR_UNIQUE_ID remains the same
-//     };
-
-//     // Check if mobile number is being changed to a new number
-//     if (existingUser.PR_MOBILE_NO !== PR_MOBILE_NO) {
-//       // Verify if the new mobile number is already registered to another user
-//       const userWithNewMobile = await prisma.peopleRegistry.findFirst({
-//         where: {
-//           PR_MOBILE_NO: PR_MOBILE_NO,
-//           NOT: { PR_ID: Number(PR_ID) },
-//         },
-//       });
-
-//       if (userWithNewMobile) {
-//         return res.status(400).json({
-//           message: "Mobile number already registered to another user",
-//           success: false,
-//         });
-//       }
-//     }
-
-//     // Update user information - PR_UNIQUE_ID remains unchanged
-//     const updatedUser = await prisma.peopleRegistry.update({
-//       where: { PR_ID: Number(PR_ID) },
-//       data: updateData,
-//     });
-
-//     return res.status(200).json({
-//       message: "Profile updated successfully",
-//       success: true,
-//       user: updatedUser,
-//     });
-//   } catch (error) {
-//     console.error("Error in profile update:", error);
-
-//     if (error.code === "P2002") {
-//       return res.status(400).json({
-//         message: "Mobile number already registered",
-//         success: false,
-//       });
-//     }
-
-//     return res.status(500).json({
-//       message: error.message || "Internal server error",
-//       success: false,
-//     });
-//   }
-// };
-
 export const updateProfile = async (req, res) => {
   try {
-    const { PR_ID, PR_MOBILE_NO, PR_FULL_NAME, PR_DOB, otp } = req.body;
+    const { PR_ID, PR_MOBILE_NO, PR_FULL_NAME, PR_DOB, otp, PR_FCM_TOKEN } =
+      req.body;
 
     // Validate input data
     const schema = Joi.object({
@@ -528,6 +421,7 @@ export const updateProfile = async (req, res) => {
       PR_FULL_NAME,
       PR_DOB: formattedDOB,
       PR_MOBILE_NO,
+      ...(PR_FCM_TOKEN && { PR_FCM_TOKEN }),
     };
 
     let transferredFromUser = null;

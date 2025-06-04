@@ -12,6 +12,8 @@ app.use(express.json());
 async function EditProfile(req, res) {
   try {
     const PR_ID = req.headers.pr_id;
+    const { PR_FCM_TOKEN } = req.body;
+
     if (!PR_ID)
       return res
         .status(400)
@@ -177,6 +179,7 @@ async function EditProfile(req, res) {
       PR_UPDATED_AT: new Date(),
       PR_PHOTO_URL,
       PR_IS_COMPLETED: isCompleted,
+      ...(PR_FCM_TOKEN && { PR_FCM_TOKEN }),
     };
 
     // Handle location changes and unique ID generation
