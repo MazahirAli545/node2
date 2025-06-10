@@ -487,7 +487,7 @@ async function EditProfile(req, res) {
             SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 3), '-', -1) AS family,
             MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', -1) AS UNSIGNED)) AS max_member
           FROM PEOPLE_REGISTRY
-          WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_bin
+          WHERE PR_UNIQUE_ID LIKE CONCAT(SUBSTRING_INDEX(${prefix}, '-', 3), '-%')
           GROUP BY family
         `;
       } else {
@@ -502,8 +502,8 @@ async function EditProfile(req, res) {
             SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 3), '-', -1) AS family,
             MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', -1) AS UNSIGNED)) AS max_member
           FROM PEOPLE_REGISTRY
-          WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') 
-          AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO} COLLATE utf8mb4_bin
+          WHERE PR_UNIQUE_ID LIKE CONCAT(SUBSTRING_INDEX(${prefix}, '-', 3), '-%')
+          AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}
           GROUP BY family
         `;
       }
@@ -566,7 +566,7 @@ async function EditProfile(req, res) {
             SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 3), '-', -1) AS family,
             MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', -1) AS UNSIGNED)) AS max_member
           FROM PEOPLE_REGISTRY
-          WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_bin
+          WHERE PR_UNIQUE_ID LIKE CONCAT(SUBSTRING_INDEX(${prefix}, '-', 3), '-%')
           GROUP BY family
         `
         );
