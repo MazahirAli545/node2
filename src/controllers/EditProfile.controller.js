@@ -473,7 +473,7 @@ async function EditProfile(req, res) {
       const motherPrID = req.body.PR_MOTHER_ID || existingProfile.PR_MOTHER_ID;
 
       let query;
-
+      let mobileNo;
       if (fatherPrID || motherPrID) {
         const parentId = fatherPrID || motherPrID;
         query = prisma.$queryRaw`
@@ -488,6 +488,7 @@ async function EditProfile(req, res) {
             AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}
             LIMIT 1
           `;
+        mobileNo = `AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}`;
       }
 
       const existing = await query;
