@@ -512,11 +512,17 @@ async function EditProfile(req, res) {
       //   WHERE ${andCondition} COLLATE utf8mb4_bin
       //   LIMIT 1
       // `;
+      // console.log(
+      //   "Existing records found:",
+      //   existing,
+      //   `SELECT PR_UNIQUE_ID FROM PEOPLE_REGISTRY
+      //   WHERE ${andCondition} COLLATE utf8mb4_bin
+      //   LIMIT 1`
+      // );
       console.log(
         "Existing records found:",
         existing,
         `SELECT PR_UNIQUE_ID FROM PEOPLE_REGISTRY
-        WHERE ${andCondition} COLLATE utf8mb4_bin
         LIMIT 1`
       );
 
