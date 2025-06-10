@@ -474,7 +474,7 @@ async function EditProfile(req, res) {
 
       let query;
       let memberResult;
-
+      let existing;
       if (fatherPrID || motherPrID) {
         const parentId = fatherPrID || motherPrID;
 
@@ -483,13 +483,14 @@ async function EditProfile(req, res) {
           WHERE PR_ID = ${parentId}
           LIMIT 1
         `;
+        existing = await query;
 
         memberResult = await prisma.$queryRaw`
     SELECT
       SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci, '-', 3), '-', -1) AS family,
       MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci, '-', -1) AS UNSIGNED)) AS max_member
     FROM PEOPLE_REGISTRY
-    WHERE PR_UNIQUE_ID LIKE CONCAT(SUBSTRING_INDEX(${parentId} COLLATE utf8mb4_unicode_ci, '-', 3), '-%')
+    WHERE PR_UNIQUE_ID LIKE CONCAT(SUBSTRING_INDEX(${existing[0].PR_UNIQUE_ID} COLLATE utf8mb4_unicode_ci, '-', 3), '-%')
     GROUP BY family
   `;
         console.log(
@@ -511,6 +512,7 @@ async function EditProfile(req, res) {
           AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}
           LIMIT 1
         `;
+        existing = await query;
 
         memberResult = await prisma.$queryRaw`
     SELECT
@@ -536,8 +538,6 @@ async function EditProfile(req, res) {
         `
         );
       }
-
-      const existing = await query;
 
       // let andCondition = `PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%')
       //   AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}`;
