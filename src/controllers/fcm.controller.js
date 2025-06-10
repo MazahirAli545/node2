@@ -10,7 +10,7 @@ export async function registeredfcmToken(req, res) {
         success: false,
       });
     }
-    const result = await prisma.peopleRegistry.upsert({
+    const result = await prisma.fcmToken.upsert({
       where: {
         PR_ID_deviceId: {
           PR_ID,
