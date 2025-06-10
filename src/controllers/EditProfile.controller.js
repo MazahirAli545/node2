@@ -471,26 +471,47 @@ async function EditProfile(req, res) {
 
       const fatherPrID = req.body.PR_FATHER_ID || existingProfile.PR_FATHER_ID;
       const motherPrID = req.body.PR_MOTHER_ID || existingProfile.PR_MOTHER_ID;
-      let andCondition = `PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%')
-        AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}`;
-      let mobileNo = `AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}`;
+
+      let query;
+
       if (fatherPrID || motherPrID) {
-        if (fatherPrID && motherPrID) {
-          andCondition = ` PR_ID = ${fatherPrID}`;
-        } else if (fatherPrID) {
-          andCondition = ` PR_ID = ${fatherPrID}`;
-        } else if (motherPrID) {
-          andCondition = ` PR_ID = ${motherPrID}`;
-        }
-        mobileNo = "";
+        const parentId = fatherPrID || motherPrID;
+        query = prisma.$queryRaw`
+            SELECT PR_UNIQUE_ID FROM PEOPLE_REGISTRY
+            WHERE PR_ID = ${parentId}
+            LIMIT 1
+          `;
+      } else {
+        query = prisma.$queryRaw`
+            SELECT PR_UNIQUE_ID FROM PEOPLE_REGISTRY
+            WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%')
+            AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}
+            LIMIT 1
+          `;
       }
-      // Check existing records with same prefix and mobile
-      // Try without COLLATE first to test
-      const existing = await prisma.$queryRaw`
-        SELECT PR_UNIQUE_ID FROM PEOPLE_REGISTRY
-        WHERE ${andCondition}
-        LIMIT 1
-      `;
+
+      const existing = await query;
+
+      // let andCondition = `PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%')
+      //   AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}`;
+      // let mobileNo = `AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}`;
+      // if (fatherPrID || motherPrID) {
+      //   if (fatherPrID && motherPrID) {
+      //     andCondition = ` PR_ID = ${fatherPrID}`;
+      //   } else if (fatherPrID) {
+      //     andCondition = ` PR_ID = ${fatherPrID}`;
+      //   } else if (motherPrID) {
+      //     andCondition = ` PR_ID = ${motherPrID}`;
+      //   }
+      //   mobileNo = "";
+      // }
+
+      // // Check existing records with same prefix and mobile
+      // const existing = await prisma.$queryRaw`
+      //   SELECT PR_UNIQUE_ID FROM PEOPLE_REGISTRY
+      //   WHERE ${andCondition} COLLATE utf8mb4_bin
+      //   LIMIT 1
+      // `;
       console.log(
         "Existing records found:",
         existing,
