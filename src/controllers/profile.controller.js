@@ -66,6 +66,8 @@ async function getUserProfile(req, res) {
   try {
     const userId = req.userId;
 
+    console.log("Fetching profile for user ID:", userId);
+
     const user = await prisma.peopleRegistry.findUnique({
       where: { PR_ID: userId },
       include: {

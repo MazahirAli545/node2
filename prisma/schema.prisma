@@ -111,6 +111,19 @@ model PeopleRegistry {
   FatherOf PeopleRegistry[] @relation("FatherRelation")
   MotherOf PeopleRegistry[] @relation("MotherRelation")
   PeopleRegistry PeopleRegistry[] @relation("SpouseRelation")
+  FcmToken FcmToken[]
+}
+
+model FcmToken {
+  id         Int       @id @default(autoincrement())
+  prId     PeopleRegistry @relation(fields: [PR_ID], references: [PR_ID], onDelete: Cascade)
+  PR_ID   Int
+  fcmToken   String
+  deviceId   String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@unique([PR_ID, deviceId])
 }
 
 model PopulationStats {
