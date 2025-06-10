@@ -474,38 +474,41 @@ async function EditProfile(req, res) {
 
       let query;
       let memberResult;
+
       if (fatherPrID || motherPrID) {
         const parentId = fatherPrID || motherPrID;
+
         query = prisma.$queryRaw`
-            SELECT PR_UNIQUE_ID FROM PEOPLE_REGISTRY
-            WHERE PR_ID = ${parentId}
-            LIMIT 1
-          `;
+    SELECT PR_UNIQUE_ID FROM PEOPLE_REGISTRY
+    WHERE PR_ID = ${parentId}
+    LIMIT 1
+  `;
 
         memberResult = await prisma.$queryRaw`
-          SELECT
-            SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 3), '-', -1) AS family,
-            MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', -1) AS UNSIGNED)) AS max_member
-          FROM PEOPLE_REGISTRY
-          WHERE PR_UNIQUE_ID LIKE CONCAT(SUBSTRING_INDEX(${parentId}, '-', 3), '-%')
-          GROUP BY family
-        `;
+    SELECT
+      SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci, '-', 3), '-', -1) AS family,
+      MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci, '-', -1) AS UNSIGNED)) AS max_member
+    FROM PEOPLE_REGISTRY
+    WHERE PR_UNIQUE_ID LIKE CONCAT(SUBSTRING_INDEX(${parentId} COLLATE utf8mb4_unicode_ci, '-', 3), '-%')
+    GROUP BY family
+  `;
       } else {
         query = prisma.$queryRaw`
-            SELECT PR_UNIQUE_ID FROM PEOPLE_REGISTRY
-            WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%')
-            AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}
-            LIMIT 1
-          `;
+    SELECT PR_UNIQUE_ID FROM PEOPLE_REGISTRY
+    WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%')
+    AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}
+    LIMIT 1
+  `;
+
         memberResult = await prisma.$queryRaw`
-          SELECT
-            SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 3), '-', -1) AS family,
-            MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', -1) AS UNSIGNED)) AS max_member
-          FROM PEOPLE_REGISTRY
-          WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%')
-          AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}
-          GROUP BY family
-        `;
+    SELECT
+      SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci, '-', 3), '-', -1) AS family,
+      MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci, '-', -1) AS UNSIGNED)) AS max_member
+    FROM PEOPLE_REGISTRY
+    WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%')
+    AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}
+    GROUP BY family
+  `;
       }
 
       const existing = await query;
