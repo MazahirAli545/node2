@@ -722,7 +722,7 @@ async function EditProfile(req, res) {
         // );
 
         familyNumber = memberResult[0]?.family || "0001"; // Default to "0001" if no family found
-        const nextMember = Number(memberResult[0].max_member) + 1;
+        const nextMember = Number(memberResult[0]?.max_member || 0) + 1;
         memberNumber = String(nextMember).padStart(4, "0");
       } else {
         // Get next available family number - Fixed query
