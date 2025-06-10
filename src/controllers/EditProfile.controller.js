@@ -748,7 +748,7 @@ async function EditProfile(req, res) {
       }
 
       prUniqueId = `${prefix}-${familyNumber}-${memberNumber}`;
-
+      console.log("uNIQUE iD:", prUniqueId);
       Object.assign(updateData, {
         PR_UNIQUE_ID: prUniqueId,
         PR_STATE_CODE: newStateCode,
