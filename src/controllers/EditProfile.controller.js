@@ -473,7 +473,7 @@ async function EditProfile(req, res) {
       const motherPrID = req.body.PR_MOTHER_ID || existingProfile.PR_MOTHER_ID;
 
       let query;
-      let mobileNo;
+      let memberResult;
       if (fatherPrID || motherPrID) {
         const parentId = fatherPrID || motherPrID;
         query = prisma.$queryRaw`
@@ -481,6 +481,15 @@ async function EditProfile(req, res) {
             WHERE PR_ID = ${parentId}
             LIMIT 1
           `;
+
+        memberResult = await prisma.$queryRaw`
+          SELECT
+            SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 3), '-', -1) AS family,
+            MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', -1) AS UNSIGNED)) AS max_member
+          FROM PEOPLE_REGISTRY
+          WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_bin
+          GROUP BY family
+        `;
       } else {
         query = prisma.$queryRaw`
             SELECT PR_UNIQUE_ID FROM PEOPLE_REGISTRY
@@ -488,7 +497,15 @@ async function EditProfile(req, res) {
             AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}
             LIMIT 1
           `;
-        mobileNo = `AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}`;
+        memberResult = await prisma.$queryRaw`
+          SELECT
+            SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 3), '-', -1) AS family,
+            MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', -1) AS UNSIGNED)) AS max_member
+          FROM PEOPLE_REGISTRY
+          WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') 
+          AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO} COLLATE utf8mb4_bin
+          GROUP BY family
+        `;
       }
 
       const existing = await query;
@@ -531,15 +548,15 @@ async function EditProfile(req, res) {
 
       if (existing.length > 0) {
         // Get max member number in existing family
-        const memberResult = await prisma.$queryRaw`
-          SELECT
-            SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 3), '-', -1) AS family,
-            MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', -1) AS UNSIGNED)) AS max_member
-          FROM PEOPLE_REGISTRY
-          WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_bin
-          ${mobileNo}
-          GROUP BY family
-        `;
+        // const memberResult = await prisma.$queryRaw`
+        //   SELECT
+        //     SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', 3), '-', -1) AS family,
+        //     MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', -1) AS UNSIGNED)) AS max_member
+        //   FROM PEOPLE_REGISTRY
+        //   WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_bin
+        //   ${mobileNo}
+        //   GROUP BY family
+        // `;
 
         console.log(
           "Member result:",
