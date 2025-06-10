@@ -479,10 +479,10 @@ async function EditProfile(req, res) {
         const parentId = fatherPrID || motherPrID;
 
         query = prisma.$queryRaw`
-    SELECT PR_UNIQUE_ID FROM PEOPLE_REGISTRY
-    WHERE PR_ID = ${parentId}
-    LIMIT 1
-  `;
+          SELECT PR_UNIQUE_ID FROM PEOPLE_REGISTRY
+          WHERE PR_ID = ${parentId}
+          LIMIT 1
+        `;
 
         memberResult = await prisma.$queryRaw`
     SELECT
@@ -494,11 +494,11 @@ async function EditProfile(req, res) {
   `;
       } else {
         query = prisma.$queryRaw`
-    SELECT PR_UNIQUE_ID FROM PEOPLE_REGISTRY
-    WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%')
-    AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}
-    LIMIT 1
-  `;
+          SELECT PR_UNIQUE_ID FROM PEOPLE_REGISTRY
+          WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%')
+          AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}
+          LIMIT 1
+        `;
 
         memberResult = await prisma.$queryRaw`
     SELECT
