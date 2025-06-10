@@ -549,8 +549,8 @@ async function EditProfile(req, res) {
           SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci, '-', 3), '-', -1) AS family,
           MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci, '-', -1) AS UNSIGNED)) AS max_member
         FROM PEOPLE_REGISTRY
-        WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%')
-        AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}
+        WHERE  PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}
+    AND PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_unicode_ci
         GROUP BY family
       `;
 
@@ -586,8 +586,8 @@ async function EditProfile(req, res) {
         SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci, '-', 3), '-', -1) AS family,
         MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci, '-', -1) AS UNSIGNED)) AS max_member
       FROM PEOPLE_REGISTRY
-      WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%')
-      AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}
+      WHERE  PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}
+    AND PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_unicode_ci
       GROUP BY family
     `;
 
@@ -617,8 +617,8 @@ async function EditProfile(req, res) {
         );
         query = prisma.$queryRaw`
     SELECT PR_UNIQUE_ID FROM PEOPLE_REGISTRY
-    WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%')
-    AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}
+    WHERE  PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}
+    AND PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_unicode_ci
     LIMIT 1
   `;
         existing = await query;
@@ -642,8 +642,8 @@ async function EditProfile(req, res) {
       SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci, '-', 3), '-', -1) AS family,
       MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci, '-', -1) AS UNSIGNED)) AS max_member
     FROM PEOPLE_REGISTRY
-    WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%')
-    AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}
+    WHERE  PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}
+    AND PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_unicode_ci
     GROUP BY family
   `;
 
