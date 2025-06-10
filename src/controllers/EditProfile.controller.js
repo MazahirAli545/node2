@@ -500,67 +500,163 @@ async function EditProfile(req, res) {
           // Check if parent's location matches new location
           if (parentLocationPrefix === prefix) {
             // Same location - use parent's family pattern
+            console.log(
+              "Using parent location",
+              `SELECT
+          SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci, '-', 3), '-', -1) AS family,
+          MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci, '-', -1) AS UNSIGNED)) AS max_member
+        FROM PEOPLE_REGISTRY
+        WHERE PR_UNIQUE_ID LIKE CONCAT(${parentLocationPrefix}, '-%') COLLATE utf8mb4_unicode_ci
+        GROUP BY family`
+            );
+
             memberResult = await prisma.$queryRaw`
         SELECT
           SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci, '-', 3), '-', -1) AS family,
           MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci, '-', -1) AS UNSIGNED)) AS max_member
         FROM PEOPLE_REGISTRY
-        WHERE PR_UNIQUE_ID LIKE CONCAT(SUBSTRING_INDEX(${parentUniqueId} COLLATE utf8mb4_unicode_ci, '-', 3), '-%')
+        WHERE PR_UNIQUE_ID LIKE CONCAT(${parentLocationPrefix}, '-%') COLLATE utf8mb4_unicode_ci
         GROUP BY family
       `;
 
-            console.log("Using parent location - same location as new profile");
+            console.log(
+              "Using parent location - same location as new profile",
+              `
+        SELECT
+          SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci, '-', 3), '-', -1) AS family,
+          MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci, '-', -1) AS UNSIGNED)) AS max_member
+        FROM PEOPLE_REGISTRY
+        WHERE PR_UNIQUE_ID LIKE CONCAT(${parentLocationPrefix}, '-%') COLLATE utf8mb4_unicode_ci
+        GROUP BY family
+      `
+            );
           } else {
             // Different location - use mobile number query with new prefix
+            console.log(
+              "Using mobile number query ",
+              `
+        SELECT
+          SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci, '-', 3), '-', -1) AS family,
+          MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci, '-', -1) AS UNSIGNED)) AS max_member
+        FROM PEOPLE_REGISTRY
+        WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_unicode_ci
+        AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}
+        GROUP BY family
+      `
+            );
             memberResult = await prisma.$queryRaw`
         SELECT
           SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci, '-', 3), '-', -1) AS family,
           MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci, '-', -1) AS UNSIGNED)) AS max_member
         FROM PEOPLE_REGISTRY
-        WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%')
+        WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_unicode_ci
         AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}
         GROUP BY family
       `;
 
             console.log(
-              "Using mobile number query - different location from parent"
+              "Using mobile number query - different location from parent",
+              `
+        SELECT
+          SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci, '-', 3), '-', -1) AS family,
+          MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci, '-', -1) AS UNSIGNED)) AS max_member
+        FROM PEOPLE_REGISTRY
+        WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_unicode_ci
+        AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}
+        GROUP BY family
+      `
             );
           }
         } else {
+          console.log(
+            "Parent not found",
+            `
+      SELECT
+        SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci, '-', 3), '-', -1) AS family,
+        MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci, '-', -1) AS UNSIGNED)) AS max_member
+      FROM PEOPLE_REGISTRY
+      WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_unicode_ci
+      AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}
+      GROUP BY family
+    `
+          );
           // Parent not found - fallback to mobile number query
           memberResult = await prisma.$queryRaw`
       SELECT
         SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci, '-', 3), '-', -1) AS family,
         MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci, '-', -1) AS UNSIGNED)) AS max_member
       FROM PEOPLE_REGISTRY
-      WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%')
+      WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_unicode_ci
       AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}
       GROUP BY family
     `;
 
-          console.log("Parent not found - using mobile number query");
+          console.log(
+            "Parent not found - using mobile number query",
+            `
+      SELECT
+        SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci, '-', 3), '-', -1) AS family,
+        MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci, '-', -1) AS UNSIGNED)) AS max_member
+      FROM PEOPLE_REGISTRY
+      WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_unicode_ci
+      AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}
+      GROUP BY family
+    `
+          );
         }
       } else {
         // No parent IDs - use mobile number query
+        console.log(
+          "No parent IDs",
+          `
+    SELECT PR_UNIQUE_ID FROM PEOPLE_REGISTRY
+    WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_unicode_ci
+    AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}
+    LIMIT 1
+  `
+        );
         query = prisma.$queryRaw`
     SELECT PR_UNIQUE_ID FROM PEOPLE_REGISTRY
-    WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%')
+    WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_unicode_ci
     AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}
     LIMIT 1
   `;
         existing = await query;
+
+        console.log("Existing records found:", existing);
+        console.log(
+          "Using mobile number query for family and member numbers",
+          `
+   SELECT
+      SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci, '-', 3), '-', -1) AS family,
+      MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci, '-', -1) AS UNSIGNED)) AS max_member
+    FROM PEOPLE_REGISTRY
+    WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_unicode_ci
+    AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}
+    GROUP BY family
+  `
+        );
 
         memberResult = await prisma.$queryRaw`
     SELECT
       SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci, '-', 3), '-', -1) AS family,
       MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci, '-', -1) AS UNSIGNED)) AS max_member
     FROM PEOPLE_REGISTRY
-    WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%')
+    WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_unicode_ci
     AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}
     GROUP BY family
   `;
 
-        console.log("No parent IDs - using mobile number query");
+        console.log(
+          "No parent IDs - using mobile number query",
+          `SELECT
+      SUBSTRING_INDEX(SUBSTRING_INDEX(PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci, '-', 3), '-', -1) AS family,
+      MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID COLLATE utf8mb4_unicode_ci, '-', -1) AS UNSIGNED)) AS max_member
+    FROM PEOPLE_REGISTRY
+    WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_unicode_ci
+    AND PR_MOBILE_NO = ${existingProfile.PR_MOBILE_NO}
+    GROUP BY family`
+        );
       }
 
       console.log("Final memberResult:", memberResult);
