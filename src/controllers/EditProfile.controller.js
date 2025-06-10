@@ -493,12 +493,13 @@ async function EditProfile(req, res) {
             .split("-")
             .slice(0, 3)
             .join("-"); // e.g., "0806-12-0001"
+          const parentPrefix = parentUniqueId.split("-").slice(0, 2).join("-"); // e.g., "0806-12"
 
           console.log("Parent location prefix:", parentLocationPrefix);
           console.log("New location prefix:", prefix);
 
           // Check if parent's location matches new location
-          if (parentLocationPrefix === prefix) {
+          if (parentPrefix === prefix) {
             // Same location - use parent's family pattern
             console.log(
               "Using parent location",
