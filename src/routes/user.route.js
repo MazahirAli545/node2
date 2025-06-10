@@ -84,7 +84,15 @@ import { getFamilyMembers } from "../controllers/user.controller.js";
 import { checkPersonById } from "../controllers/user.controller.js";
 import { convertUniqueIdToId } from "../controllers/user.controller.js";
 import { getUserByUniqueId } from "../controllers/user.controller.js";
+// import {
+//   registeredfcmToken,
+//   removeFcmToken,
+// } from "../controllers/fcm.controller.js";
+
 const userRouter = Router();
+
+// userRouter.post("/register", registeredfcmToken);
+// userRouter.post("/remove", removeFcmToken);
 
 userRouter.get("/user/check/:uniqueId", getUserByUniqueId);
 userRouter.get("/checkPersonById/:id", checkPersonById);
@@ -175,4 +183,5 @@ userRouter.get("/getStats", getUserStats);
 
 // userRouter.get("/getDetailsLast", getNextFamilyNumber);
 // userRouter.get("/getDetailsss", familyRoutes);
+
 export default userRouter;

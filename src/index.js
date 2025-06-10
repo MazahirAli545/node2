@@ -1,9 +1,10 @@
 import express from "express";
 import dotenv from "dotenv";
 import userRouter from "./routes/user.route.js";
-import adminRouter from "./routes/admin.route.js"
+import adminRouter from "./routes/admin.route.js";
 import pkg from "twilio/lib/twiml/MessagingResponse.js";
 import cors from "cors";
+import { fcmRoutes } from "./routes/fcm.route.js";
 
 const { Message } = pkg;
 
@@ -22,9 +23,11 @@ const PORT = process.env.PORT || 3000;
 // User route
 app.use("/api/user", userRouter);
 
-
 // Admin route
-app.use("/api/admin", adminRouter); 
+app.use("/api/admin", adminRouter);
+
+// FCM route
+app.use("/api/fcm", fcmRoutes);
 
 // console.log("232", userRouter);
 
