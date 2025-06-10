@@ -485,9 +485,10 @@ async function EditProfile(req, res) {
         mobileNo = "";
       }
       // Check existing records with same prefix and mobile
+      // Try without COLLATE first to test
       const existing = await prisma.$queryRaw`
         SELECT PR_UNIQUE_ID FROM PEOPLE_REGISTRY
-        WHERE ${andCondition} COLLATE utf8mb4_bin
+        WHERE ${andCondition}
         LIMIT 1
       `;
       console.log(
