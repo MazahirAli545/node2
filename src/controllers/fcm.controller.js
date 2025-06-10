@@ -74,3 +74,25 @@ export async function removeFcmToken(req, res) {
     });
   }
 }
+
+export async function checkDeviceRegistration(req, res) {
+  try {
+    const { deviceId } = req.params;
+
+    const existing = await prisma.fcmToken.findFirst({
+      where: { deviceId },
+    });
+
+    if (existing) {
+      return res.json({
+        registered: true,
+        PR_ID: existing.PR_ID,
+      });
+    }
+
+    return res.json({ registered: false });
+  } catch (error) {
+    console.error("Device check failed", error);
+    res.status(500).json({ registered: false, error: "Server error" });
+  }
+}
