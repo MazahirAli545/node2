@@ -567,7 +567,6 @@ async function EditProfile(req, res) {
             MAX(CAST(SUBSTRING_INDEX(PR_UNIQUE_ID, '-', -1) AS UNSIGNED)) AS max_member
           FROM PEOPLE_REGISTRY
           WHERE PR_UNIQUE_ID LIKE CONCAT(${prefix}, '-%') COLLATE utf8mb4_bin
-          ${mobileNo}
           GROUP BY family
         `
         );
