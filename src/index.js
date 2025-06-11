@@ -27,7 +27,7 @@ app.use("/api/user", userRouter);
 app.use("/api/admin", adminRouter);
 
 // FCM route
-app.use("/api", fcmRoutes);
+app.use("/api/fcm", fcmRoutes);
 
 // console.log("232", userRouter);
 

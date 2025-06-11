@@ -12,5 +12,5 @@ const fcmRoutes = express.Router();
 fcmRoutes.post("/register", registeredfcmToken);
 fcmRoutes.post("/remove", removeFcmToken);
 fcmRoutes.post("/clear-association", clearDeviceUserAssociation);
-fcmRoutes.get("/fcm/device-status/:deviceId/:PR_ID", checkDeviceRegistration);
+fcmRoutes.get("/device-status/:deviceId/:PR_ID", checkDeviceRegistration);
 export { fcmRoutes };
