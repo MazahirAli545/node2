@@ -78,7 +78,7 @@ model PeopleRegistry {
   PR_MARRIED_YN      String?          @db.Char(1)
   PR_HOBBY           String?          @db.VarChar(200)
   PR_IS_COMPLETED    String?          @default("N") @db.Char(1)
-  PR_FCM_TOKEN        String?          @db.VarChar(500)
+  // PR_FCM_TOKEN        String?          @db.VarChar(500)
   PR_PR_ID           Int?
   Contact            Contact[]
   Children           Child[]          @relation("UserChildren")

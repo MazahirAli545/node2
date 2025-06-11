@@ -104,7 +104,7 @@ export const verifyotp = async (req, res) => {
       PR_ADDRESS,
       PR_FATHER_NAME,
       PR_MOTHER_NAME,
-      PR_FCM_TOKEN,
+      // PR_FCM_TOKEN,
     } = req.body;
 
     // Validate input data
@@ -124,7 +124,7 @@ export const verifyotp = async (req, res) => {
       PR_ADDRESS: Joi.string().allow("").optional(),
       PR_FATHER_NAME: Joi.string().allow("").optional(),
       PR_MOTHER_NAME: Joi.string().allow("").optional(),
-      PR_FCM_TOKEN: PR_FCM_TOKEN || null,
+      // PR_FCM_TOKEN: PR_FCM_TOKEN || null,
     });
 
     const { error } = schema.validate({
@@ -362,8 +362,14 @@ export async function verifyFunc(PR_MOBILE_NO, otp) {
 
 export const updateProfile = async (req, res) => {
   try {
-    const { PR_ID, PR_MOBILE_NO, PR_FULL_NAME, PR_DOB, otp, PR_FCM_TOKEN } =
-      req.body;
+    const {
+      PR_ID,
+      PR_MOBILE_NO,
+      PR_FULL_NAME,
+      PR_DOB,
+      otp,
+      //  PR_FCM_TOKEN
+    } = req.body;
 
     // Validate input data
     const schema = Joi.object({
@@ -421,7 +427,7 @@ export const updateProfile = async (req, res) => {
       PR_FULL_NAME,
       PR_DOB: formattedDOB,
       PR_MOBILE_NO,
-      ...(PR_FCM_TOKEN && { PR_FCM_TOKEN }),
+      // ...(PR_FCM_TOKEN && { PR_FCM_TOKEN }),
     };
 
     let transferredFromUser = null;

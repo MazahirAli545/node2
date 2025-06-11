@@ -135,7 +135,7 @@ export const registerUser = async (req, res) => {
           PR_DOB: new Date(profileData.PR_DOB).toISOString(),
           PR_CITY_CODE: city.CITY_ID,
           PR_BUSS_CODE: business?.BUSS_ID || null,
-          PR_FCM_TOKEN: PR_FCM_TOKEN || null,
+          // PR_FCM_TOKEN: PR_FCM_TOKEN || null,
           ...profileData,
           PR_IS_COMPLETED: "Y", // Assuming full registration
         },
