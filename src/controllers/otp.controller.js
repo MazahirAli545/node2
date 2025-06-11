@@ -238,7 +238,7 @@ export const verifyotp = async (req, res) => {
       const lastUniqueIdParts = lastUser.PR_UNIQUE_ID?.split("-") || [];
 
       if (lastUniqueIdParts.length === 4) {
-        familyNumber = lastUniqueIdParts[2];
+        familyNumber = lastUniqueIdParts[3];
         const lastMemberNumber = parseInt(lastUniqueIdParts[3]);
         memberNumber = (lastMemberNumber + 1).toString().padStart(4, "0");
       }
