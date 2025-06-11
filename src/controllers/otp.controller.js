@@ -327,7 +327,7 @@ export const verifyotp = async (req, res) => {
       error.meta?.target === "PEOPLE_REGISTRY_PR_UNIQUE_ID_key"
     ) {
       // Retry with next member number
-      const lastMemberNumber = parseInt(newMemberNumber);
+      const lastMemberNumber = parseInt(memberNumber);
       const newMemberNumber = (lastMemberNumber + 1)
         .toString()
         .padStart(4, "0");
