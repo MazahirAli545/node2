@@ -337,6 +337,8 @@ export const verifyotp = async (req, res) => {
     } else {
       throw error;
     }
+
+    ////////////////
     return res.status(500).json({
       message: error.message || "Internal server error",
       success: false,
