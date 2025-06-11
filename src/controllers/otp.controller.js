@@ -222,6 +222,9 @@ export const verifyotp = async (req, res) => {
     // Format the date as string (YYYY-MM-DD)
     const formattedDOB = new Date(PR_DOB).toISOString().split("T")[0];
 
+    let familyNumber = "0001";
+    let memberNumber = "0001";
+
     // Get all users with same mobile number (regardless of name) for family number calculation
     const allUsersSameMobile = await prisma.peopleRegistry.findMany({
       where: { PR_MOBILE_NO: PR_MOBILE_NO },
@@ -229,8 +232,8 @@ export const verifyotp = async (req, res) => {
     });
 
     // Generate family and member numbers
-    let familyNumber = "0001";
-    let memberNumber = "0001";
+    // let familyNumber = "0001";
+    // let memberNumber = "0001";
 
     if (allUsersSameMobile.length > 0) {
       // If users exist with same mobile number, use same family number and increment member number
@@ -316,29 +319,13 @@ export const verifyotp = async (req, res) => {
   } catch (error) {
     console.error("Error in OTP verification:", error);
 
-    // if (error.code === "P2002") {
-    //   return res.status(400).json({
-    //     message: "Mobile number already registered",
-    //     success: false,
-    //   });
-    // }
-    if (
-      error.code === "P2002" &&
-      error.meta?.target === "PEOPLE_REGISTRY_PR_UNIQUE_ID_key"
-    ) {
-      // Retry with next member number
-      const lastMemberNumber = parseInt(memberNumber);
-      const newMemberNumber = (lastMemberNumber + 1)
-        .toString()
-        .padStart(4, "0");
-      userData.PR_MEMBER_NO = newMemberNumber;
-      userData.PR_UNIQUE_ID = `${PR_STATE_CODE}${PR_DISTRICT_CODE}-${cityId}-${familyNumber}-${newMemberNumber}`;
-      user = await prisma.peopleRegistry.create({ data: userData });
-    } else {
-      throw error;
+    if (error.code === "P2002") {
+      return res.status(400).json({
+        message: "Mobile number already registered",
+        success: false,
+      });
     }
 
-    ////////////////
     return res.status(500).json({
       message: error.message || "Internal server error",
       success: false,
