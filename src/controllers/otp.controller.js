@@ -316,13 +316,27 @@ export const verifyotp = async (req, res) => {
   } catch (error) {
     console.error("Error in OTP verification:", error);
 
-    if (error.code === "P2002") {
-      return res.status(400).json({
-        message: "Mobile number already registered",
-        success: false,
-      });
+    // if (error.code === "P2002") {
+    //   return res.status(400).json({
+    //     message: "Mobile number already registered",
+    //     success: false,
+    //   });
+    // }
+    if (
+      error.code === "P2002" &&
+      error.meta?.target === "PEOPLE_REGISTRY_PR_UNIQUE_ID_key"
+    ) {
+      // Retry with next member number
+      const lastMemberNumber = parseInt(memberNumber);
+      const newMemberNumber = (lastMemberNumber + 1)
+        .toString()
+        .padStart(4, "0");
+      userData.PR_MEMBER_NO = newMemberNumber;
+      userData.PR_UNIQUE_ID = `${PR_STATE_CODE}${PR_DISTRICT_CODE}-${cityId}-${familyNumber}-${newMemberNumber}`;
+      user = await prisma.peopleRegistry.create({ data: userData });
+    } else {
+      throw error;
     }
-
     return res.status(500).json({
       message: error.message || "Internal server error",
       success: false,
