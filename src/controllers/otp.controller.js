@@ -237,10 +237,14 @@ export const verifyotp = async (req, res) => {
       const lastUser = allUsersSameMobile[0];
       const lastUniqueIdParts = lastUser.PR_UNIQUE_ID?.split("-") || [];
 
+      // if (lastUniqueIdParts.length === 4) {
+      //   familyNumber = lastUniqueIdParts[2];
+      //   const lastMemberNumber = parseInt(lastUniqueIdParts[3]);
+      //   memberNumber = (lastMemberNumber + 1).toString().padStart(4, "0");
+      // }
       if (lastUniqueIdParts.length === 4) {
-        familyNumber = lastUniqueIdParts[2];
-        const lastMemberNumber = parseInt(lastUniqueIdParts[3]);
-        memberNumber = (lastMemberNumber + 1).toString().padStart(4, "0");
+        const lastFamilyNumber = parseInt(lastUniqueIdParts[2]);
+        familyNumber = (lastFamilyNumber + 1).toString().padStart(4, "0"); // Changed to padStart(4, "0")
       }
     } else {
       // For new family (new mobile number), find the next available family number
@@ -257,7 +261,7 @@ export const verifyotp = async (req, res) => {
         const lastUniqueIdParts = lastFamily.PR_UNIQUE_ID?.split("-") || [];
         if (lastUniqueIdParts.length === 4) {
           const lastFamilyNumber = parseInt(lastUniqueIdParts[2]);
-          familyNumber = (lastFamilyNumber + 1).toString().padStart(3, "0");
+          familyNumber = (lastFamilyNumber + 1).toString().padStart(4, "0");
         }
       }
     }
