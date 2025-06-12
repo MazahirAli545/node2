@@ -7,7 +7,13 @@ import Joi from "joi";
 import twilio from "twilio";
 import dotenv from "dotenv";
 import otpGenerator from "otp-generator";
-import { generateToken, invalidateSession } from "../middlewares/jwt.js";
+// import { generateToken, invalidateSession } from "../middlewares/jwt.js";
+import {
+  generateTokens,
+  invalidateSession,
+  verifyToken,
+  refreshAccessToken,
+} from "../middlewares/jwt.js";
 import { getNextFamilyNumber } from "../controllers/utils/familyUtils.js";
 import { parse } from "path";
 
@@ -497,10 +503,14 @@ export const LoginUser = async (req, res) => {
         });
       }
     }
-    const deviceId = `${req.ip}-${req.headers["user-agent"]}`.replace(
-      /\s+/g,
-      "_"
-    );
+    // const deviceId = `${req.ip}-${req.headers["user-agent"]}`.replace(
+    //   /\s+/g,
+    //   "_"
+    // );
+    const deviceId = crypto
+      .createHash("sha256")
+      .update(`${req.ip}-${req.headers["user-agent"]}`)
+      .digest("hex");
 
     // Step 5: Generate token for the selected user
     // const token = generateToken(user);
@@ -571,6 +581,12 @@ export const logoutUser = async (req, res) => {
     // Get user ID from verified token
     const userId = req.userId;
 
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authenticated",
+      });
+    }
     // Invalidate session
     invalidateSession(userId);
 
