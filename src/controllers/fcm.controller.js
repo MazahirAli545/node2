@@ -344,22 +344,26 @@ export async function registeredfcmToken(req, res) {
       });
     }
 
-    // Check if this exact user-device-token combination already exists
-    const existing = await prisma.fcmToken.findFirst({
-      where: {
-        PR_ID,
-        deviceId,
-        fcmToken,
-      },
+    await prisma.fcmToken.deleteMany({
+      where: { PR_ID },
     });
 
-    if (existing) {
-      return res.status(200).json({
-        message: "FCM Token already registered",
-        success: true,
-        data: existing,
-      });
-    }
+    // Check if this exact user-device-token combination already exists
+    // const existing = await prisma.fcmToken.findFirst({
+    //   where: {
+    //     PR_ID,
+    //     deviceId,
+    //     fcmToken,
+    //   },
+    // });
+
+    // if (existing) {
+    //   return res.status(200).json({
+    //     message: "FCM Token already registered",
+    //     success: true,
+    //     data: existing,
+    //   });
+    // }
 
     // Create new registration
     const result = await prisma.fcmToken.create({
