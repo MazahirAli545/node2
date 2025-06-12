@@ -256,9 +256,4 @@ const invalidateSession = (userId) => {
   }
 };
 
-export default {
-  generateTokens,
-  verifyToken,
-  refreshAccessToken,
-  invalidateSession,
-};
+export { generateTokens, verifyToken, refreshAccessToken, invalidateSession };

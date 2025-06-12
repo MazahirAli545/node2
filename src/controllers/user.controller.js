@@ -8,12 +8,13 @@ import twilio from "twilio";
 import dotenv from "dotenv";
 import otpGenerator from "otp-generator";
 // import { generateToken, invalidateSession } from "../middlewares/jwt.js";
-import {
-  generateTokens,
-  invalidateSession,
-  verifyToken,
-  refreshAccessToken,
-} from "../middlewares/jwt.js";
+// import {
+//   generateTokens,
+//   invalidateSession,
+//   verifyToken,
+//   refreshAccessToken,
+// } from "../middlewares/jwt.js";
+import jwt from "../middlewares/jwt.js";
 import { getNextFamilyNumber } from "../controllers/utils/familyUtils.js";
 import { parse } from "path";
 import crypto from "crypto";
