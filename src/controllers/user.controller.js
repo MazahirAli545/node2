@@ -7,17 +7,9 @@ import Joi from "joi";
 import twilio from "twilio";
 import dotenv from "dotenv";
 import otpGenerator from "otp-generator";
-// import { generateToken, invalidateSession } from "../middlewares/jwt.js";
-import {
-  generateTokens,
-  invalidateSession,
-  verifyToken,
-  refreshAccessToken,
-} from "../middlewares/jwt.js";
-
+import { generateToken } from "../middlewares/jwt.js";
 import { getNextFamilyNumber } from "../controllers/utils/familyUtils.js";
 import { parse } from "path";
-import crypto from "crypto";
 
 dotenv.config();
 
@@ -143,7 +135,7 @@ export const registerUser = async (req, res) => {
           PR_DOB: new Date(profileData.PR_DOB).toISOString(),
           PR_CITY_CODE: city.CITY_ID,
           PR_BUSS_CODE: business?.BUSS_ID || null,
-          // PR_FCM_TOKEN: PR_FCM_TOKEN || null,
+          PR_FCM_TOKEN: PR_FCM_TOKEN || null,
           ...profileData,
           PR_IS_COMPLETED: "Y", // Assuming full registration
         },
@@ -197,190 +189,6 @@ const checkMobileVerified = async (mobile, otp) => {
 
   return true;
 };
-
-// export const LoginUser = async (req, res) => {
-//   try {
-//     const { PR_MOBILE_NO, otp, selectedUserId } = req.body;
-
-//     // Validate mobile number format
-//     const mobileNumberSchema = Joi.string()
-//       .pattern(/^[6-9]\d{9}$/)
-//       .required()
-//       .messages({ "string.pattern.base": "Invalid mobile number" });
-
-//     const { error } = mobileNumberSchema.validate(PR_MOBILE_NO);
-//     if (error) {
-//       return res
-//         .status(400)
-//         .json({ message: error.details[0].message, success: false });
-//     }
-
-//     // Step 1: First check if OTP is provided
-//     if (!otp) {
-//       // Check if mobile number exists in database
-//       const userCount = await prisma.peopleRegistry.count({
-//         where: { PR_MOBILE_NO },
-//       });
-
-//       if (userCount === 0) {
-//         return res.status(400).json({
-//           message: "This mobile number is not registered",
-//           success: false,
-//         });
-//       }
-
-//       // Create a mock request object for generateotp
-//       const mockReq = {
-//         body: { PR_MOBILE_NO },
-//       };
-
-//       // Create a mock response object to capture generateotp's response
-//       let otpResponse;
-//       const mockRes = {
-//         json: (data) => {
-//           otpResponse = data;
-//           return data;
-//         },
-//         status: (code) => ({
-//           json: (data) => {
-//             otpResponse = { ...data, statusCode: code };
-//             return data;
-//           },
-//         }),
-//       };
-
-//       // Call generateotp with mock request/response
-//       await generateotp(mockReq, mockRes);
-
-//       if (!otpResponse?.success) {
-//         return res.status(otpResponse?.statusCode || 500).json({
-//           message: otpResponse?.message || "Failed to send OTP",
-//           success: false,
-//         });
-//       }
-
-//       return res.status(200).json({
-//         message: "OTP sent successfully",
-//         success: true,
-//         otpRequired: true,
-//       });
-//     }
-
-//     // Step 2: Verify OTP
-//     const isVerified = await checkMobileVerified(PR_MOBILE_NO, otp);
-//     if (!isVerified) {
-//       return res.status(400).json({
-//         message: "Invalid or expired OTP",
-//         success: false,
-//       });
-//     }
-
-//     // Step 3: Now that OTP is verified, check for users
-//     const existingUsers = await prisma.peopleRegistry.findMany({
-//       where: { PR_MOBILE_NO },
-//       orderBy: { PR_ID: "desc" },
-//       include: {
-//         Profession: true,
-//         City: true,
-//         Children: true,
-//       },
-//     });
-
-//     if (!existingUsers || existingUsers.length === 0) {
-//       return res.status(400).json({
-//         message: "This mobile number is not registered",
-//         success: false,
-//       });
-//     }
-
-//     // Step 4: Handle user selection if multiple accounts exist
-//     let user;
-//     if (existingUsers.length === 1) {
-//       user = existingUsers[0];
-//     } else {
-//       if (!selectedUserId) {
-//         return res.status(200).json({
-//           message: "Multiple accounts found",
-//           success: true,
-//           multipleUsers: true,
-//           users: existingUsers.map((user) => ({
-//             PR_ID: user.PR_ID,
-//             PR_FULL_NAME: user.PR_FULL_NAME,
-//             PR_UNIQUE_ID: user.PR_UNIQUE_ID,
-//             PR_PROFESSION: user.Profession?.PROF_NAME,
-//             PR_PHOTO_URL: user.PR_PHOTO_URL,
-//           })),
-//         });
-//       }
-
-//       user = existingUsers.find((u) => u.PR_ID === selectedUserId);
-//       if (!user) {
-//         return res.status(400).json({
-//           message: "Invalid user selection",
-//           success: false,
-//         });
-//       }
-//     }
-
-//     // Step 5: Generate token for the selected user
-//     const token = generateToken(user);
-
-//     // Prepare complete user data for response
-//     const responseUser = {
-//       PR_ID: user.PR_ID,
-//       PR_FULL_NAME: user.PR_FULL_NAME,
-//       PR_UNIQUE_ID: user.PR_UNIQUE_ID,
-//       PR_MOBILE_NO: user.PR_MOBILE_NO,
-//       PR_GENDER: user.PR_GENDER,
-//       PR_ADDRESS: user.PR_ADDRESS,
-//       PR_PHOTO_URL: user.PR_PHOTO_URL,
-//       PR_DOB: user.PR_DOB,
-//       PR_PIN_CODE: user.PR_PIN_CODE,
-//       PR_STATE_CODE: user.PR_STATE_CODE,
-//       PR_DISTRICT_CODE: user.PR_DISTRICT_CODE,
-//       PR_AREA_NAME: user.PR_AREA_NAME,
-//       PR_EDUCATION: user.PR_EDUCATION,
-//       PR_EDUCATION_DESC: user.PR_EDUCATION_DESC,
-//       PR_PROFESSION_DETA: user.PR_PROFESSION_DETA,
-//       PR_FATHER_NAME: user.PR_FATHER_NAME,
-//       PR_MOTHER_NAME: user.PR_MOTHER_NAME,
-//       PR_SPOUSE_NAME: user.PR_SPOUSE_NAME,
-//       PR_MARRIED_YN: user.PR_MARRIED_YN,
-//       PR_BUSS_INTER: user.PR_BUSS_INTER || "N",
-//       PR_BUSS_STREAM: user.PR_BUSS_STREAM || "",
-//       PR_BUSS_TYPE: user.PR_BUSS_TYPE || "",
-//       PR_HOBBY: user.PR_HOBBY || [],
-//       Profession: {
-//         PROF_ID: user.Profession?.PROF_ID,
-//         PROF_NAME: user.Profession?.PROF_NAME,
-//       },
-//       City: {
-//         CITY_ST_NAME: user.City?.CITY_ST_NAME,
-//         CITY_DS_NAME: user.City?.CITY_DS_NAME,
-//       },
-//       Children: user.Children || [],
-//     };
-
-//     // Step 6: Delete the used OTP record
-//     await prisma.otp.deleteMany({
-//       where: { PR_MOBILE_NO },
-//     });
-
-//     return res.status(200).json({
-//       message: "Login successful",
-//       success: true,
-//       token,
-//       user: responseUser,
-//     });
-//   } catch (error) {
-//     console.error("Error logging in:", error);
-//     return res.status(500).json({
-//       message: "Something went wrong",
-//       success: false,
-//       error: process.env.NODE_ENV === "development" ? error.message : undefined,
-//     });
-//   }
-// };
 
 export const LoginUser = async (req, res) => {
   try {
@@ -505,18 +313,9 @@ export const LoginUser = async (req, res) => {
         });
       }
     }
-    // const deviceId = `${req.ip}-${req.headers["user-agent"]}`.replace(
-    //   /\s+/g,
-    //   "_"
-    // );
-    const deviceId = crypto
-      .createHash("sha256")
-      .update(`${req.ip}-${req.headers["user-agent"]}`)
-      .digest("hex");
 
     // Step 5: Generate token for the selected user
-    // const token = generateToken(user);
-    const { accessToken, refreshToken } = generateTokens(user, deviceId);
+    const token = generateToken(user);
 
     // Prepare complete user data for response
     const responseUser = {
@@ -562,10 +361,7 @@ export const LoginUser = async (req, res) => {
     return res.status(200).json({
       message: "Login successful",
       success: true,
-      tokens: {
-        accessToken,
-        refreshToken,
-      },
+      token,
       user: responseUser,
     });
   } catch (error) {
@@ -574,80 +370,6 @@ export const LoginUser = async (req, res) => {
       message: "Something went wrong",
       success: false,
       error: process.env.NODE_ENV === "development" ? error.message : undefined,
-    });
-  }
-};
-
-export const logoutUser = async (req, res) => {
-  try {
-    // Get user ID from verified token
-    const userId = req.userId;
-
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: "Not authenticated",
-      });
-    }
-    // Invalidate session
-    invalidateSession(userId);
-
-    res.status(200).json({
-      success: true,
-      message: "Logged out from all devices",
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Logout failed",
-    });
-  }
-};
-
-export const refreshToken = async (req, res) => {
-  try {
-    const { refreshToken } = req.body;
-
-    if (!refreshToken) {
-      return res.status(400).json({
-        success: false,
-        message: "Refresh token required",
-      });
-    }
-
-    // Verify refresh token
-    const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
-
-    // Check session validity
-    const session = activeSessions.get(decoded.PR_ID);
-    if (!session || session.refreshToken !== refreshToken) {
-      return res.status(401).json({
-        success: false,
-        code: "SESSION_EXPIRED",
-        message: "Logged in elsewhere",
-      });
-    }
-
-    // Generate new access token
-    const newAccessToken = jwt.sign(
-      {
-        PR_ID: decoded.PR_ID,
-        deviceId: decoded.deviceId,
-        type: "access",
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: "15m" }
-    );
-
-    res.json({
-      success: true,
-      accessToken: newAccessToken,
-    });
-  } catch (error) {
-    // Handle expired/malformed tokens
-    res.status(401).json({
-      success: false,
-      message: "Invalid refresh token",
     });
   }
 };

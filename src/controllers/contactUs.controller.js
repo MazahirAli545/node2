@@ -3,7 +3,7 @@ import prisma from "../db/prismaClient.js";
 // import { z } from "zod";
 import Joi from "joi";
 import dotenv from "dotenv";
-import { generateTokens } from "../middlewares/jwt.js";
+import { generateToken } from "../middlewares/jwt.js";
 import FormData from "form-data";
 import fs from "fs";
 import axios from "axios";
