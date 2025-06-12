@@ -255,5 +255,3 @@ export const invalidateSession = (userId) => {
     activeSessions.delete(userId);
   }
 };
-
-export { generateTokens, verifyToken, refreshAccessToken, invalidateSession };
