@@ -16,6 +16,7 @@ import {
 } from "../middlewares/jwt.js";
 import { getNextFamilyNumber } from "../controllers/utils/familyUtils.js";
 import { parse } from "path";
+import crypto from "crypto";
 
 dotenv.config();
 

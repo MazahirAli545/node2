@@ -90,7 +90,7 @@ const REFRESH_TOKEN_EXPIRY = "7d"; // Long-lived refresh token
 // Session store (use Redis in production)
 const activeSessions = new Map();
 
-export const generateTokens = (user, deviceId) => {
+const generateTokens = (user, deviceId) => {
   if (!user?.PR_ID || !user?.PR_MOBILE_NO) {
     throw new Error("Invalid user data for token generation");
   }
@@ -140,7 +140,7 @@ export const generateTokens = (user, deviceId) => {
   return { accessToken, refreshToken };
 };
 
-export const verifyToken = (req, res, next) => {
+const verifyToken = (req, res, next) => {
   const authHeader = req.header("Authorization");
 
   if (!authHeader) {
@@ -210,7 +210,7 @@ export const verifyToken = (req, res, next) => {
   }
 };
 
-export const refreshAccessToken = (refreshToken) => {
+const refreshAccessToken = (refreshToken) => {
   try {
     const decoded = jwt.verify(refreshToken, JWT_SECRET);
 
@@ -249,9 +249,16 @@ export const refreshAccessToken = (refreshToken) => {
   }
 };
 
-export const invalidateSession = (userId) => {
+const invalidateSession = (userId) => {
   if (activeSessions.has(userId)) {
     activeSessions.get(userId).valid = false;
     activeSessions.delete(userId);
   }
+};
+
+export default {
+  generateTokens,
+  verifyToken,
+  refreshAccessToken,
+  invalidateSession,
 };
