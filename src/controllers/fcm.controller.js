@@ -333,7 +333,8 @@
 // }
 import prisma from "../db/prismaClient.js";
 
-import { google } from "google-auth-library";
+import pkg from "google-auth-library";
+const { google } = pkg;
 import axios from "axios";
 const serviceAccount = {
   type: process.env.FIREBASE_TYPE,
