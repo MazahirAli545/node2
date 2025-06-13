@@ -333,9 +333,9 @@
 // }
 import prisma from "../db/prismaClient.js";
 
-import pkg from "google-auth-library";
-const { google } = pkg;
+import { GoogleAuth } from "google-auth-library";
 import axios from "axios";
+
 const serviceAccount = {
   type: process.env.FIREBASE_TYPE,
   project_id: process.env.FIREBASE_PROJECT_ID,
@@ -523,17 +523,16 @@ export async function getDeviceTokens(req, res) {
     });
   }
 }
-
 export async function getAnnouncement() {
   try {
-    const SCOPES = ["https://www.googleapis.com/auth/firebase.messaging"];
-
-    const auth = new google.auth.GoogleAuth({
+    // Create auth client directly
+    const auth = new GoogleAuth({
       credentials: serviceAccount,
-      scopes: SCOPES,
+      scopes: ["https://www.googleapis.com/auth/firebase.messaging"],
     });
 
-    const accessToken = await auth.getAccessToken();
+    const client = await auth.getClient();
+    const accessToken = await client.getAccessToken();
 
     const projectId = serviceAccount.project_id;
     const fcmUrl = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
@@ -551,14 +550,29 @@ export async function getAnnouncement() {
 
     const response = await axios.post(fcmUrl, message, {
       headers: {
-        Authorization: `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken.token}`,
         "Content-Type": "application/json",
       },
     });
 
-    console.log("FCM response:", response.data);
+    return {
+      success: true,
+      message: "Notification sent successfully",
+      data: response.data,
+      status: response.status,
+    };
   } catch (error) {
-    console.error("Error sending announcement:", error);
-    throw new Error("Failed to send announcement");
+    console.error("FCM error:", error.response?.data || error.message);
+
+    // Return detailed error response
+    return {
+      success: false,
+      message: "Failed to send notification",
+      error: {
+        code: error.response?.status || 500,
+        message: error.response?.data?.error?.message || error.message,
+        details: error.response?.data?.error?.details || null,
+      },
+    };
   }
 }
