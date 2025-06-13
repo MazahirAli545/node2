@@ -525,7 +525,7 @@ export async function getDeviceTokens(req, res) {
 
 export async function getAnnouncement() {
   try {
-    const SCOPES = ["https://www.googleapis.com/auth/firebase.messagings"];
+    const SCOPES = ["https://www.googleapis.com/auth/firebase.messaging"];
 
     const auth = new google.auth.GoogleAuth({
       credentials: serviceAccount,
