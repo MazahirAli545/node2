@@ -1,7 +1,7 @@
 // utils/notificationHandler.js
 import { GoogleAuth } from "google-auth-library";
 import axios from "axios";
-import prisma from "../../db/prismaClient";
+import prisma from "../../db/prismaClient.js";
 
 const serviceAccount = {
   type: process.env.FIREBASE_TYPE,
