@@ -84,10 +84,7 @@ import { getFamilyMembers } from "../controllers/user.controller.js";
 import { checkPersonById } from "../controllers/user.controller.js";
 import { convertUniqueIdToId } from "../controllers/user.controller.js";
 import { getUserByUniqueId } from "../controllers/user.controller.js";
-// import {
-//   registeredfcmToken,
-//   removeFcmToken,
-// } from "../controllers/fcm.controller.js";
+import { UpdateNotification } from "../controllers/UpdateNotification.controller.js";
 
 const userRouter = Router();
 
@@ -180,6 +177,8 @@ userRouter.get("/getDonationByDonar/:PR_ID", getDonationsByDonor);
 // userRouter.post("/create-order", createOrder);
 userRouter.get("/allDonationPayments", getAllDonationPayments);
 userRouter.get("/getStats", getUserStats);
+
+userRouter.post("/update-notification", UpdateNotification);
 
 // userRouter.get("/getDetailsLast", getNextFamilyNumber);
 // userRouter.get("/getDetailsss", familyRoutes);
