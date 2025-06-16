@@ -337,14 +337,14 @@ export const getUserStats = async (req, res) => {
       select: {
         id: true,
         amount: true,
-        userId: true,
+        PR_ID: true, // Changed from userId to PR_ID
       },
     });
 
     // Count unique donors
     donations.forEach((donation) => {
-      if (donation.userId) {
-        peopleWhoDonated.add(donation.userId);
+      if (donation.PR_ID) {
+        peopleWhoDonated.add(donation.PR_ID);
       }
     });
 
