@@ -143,6 +143,70 @@ export async function getUserProfile(req, res) {
   }
 }
 
+export const getUserByPrId = async (req, res) => {
+  try {
+    const { prId } = req.params;
+
+    if (!prId) {
+      return res.status(400).json({ success: false, message: "PR_ID parameter is missing." });
+    }
+
+    const userId = parseInt(prId, 10);
+
+    if (isNaN(userId)) {
+      return res.status(400).json({ success: false, message: "Invalid PR_ID provided. Must be a number." });
+    }
+
+    const user = await prisma.peopleRegistry.findUnique({
+      where: { PR_ID: userId },
+      include: {
+        Profession: true,
+        City: true,
+        Children: true,
+        BUSSINESS: true, // Include BUSSINESS model
+        // Add any other models that are part of your UserFormData
+        // e.g., Contact: true, if you need contact details
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: `User with PR_ID ${prId} not found.` });
+    }
+
+    // Convert related IDs (father, mother, spouse) to PR_UNIQUE_ID for consistency
+    // in the response, especially since the frontend mapping relies on it.
+    const convertedUser = { ...user };
+
+    if (user.PR_FATHER_ID) {
+      convertedUser.PR_FATHER_ID = await convertIdToUniqueId(user.PR_FATHER_ID);
+    }
+    if (user.PR_MOTHER_ID) {
+      convertedUser.PR_MOTHER_ID = await convertIdToUniqueId(user.PR_MOTHER_ID);
+    }
+    if (user.PR_SPOUSE_ID) {
+      convertedUser.PR_SPOUSE_ID = await convertIdToUniqueId(user.PR_SPOUSE_ID);
+    }
+    
+    // Ensure nested objects that are null from Prisma are handled for frontend
+    if (!convertedUser.Profession) convertedUser.Profession = null;
+    if (!convertedUser.City) convertedUser.City = null;
+    if (!convertedUser.BUSSINESS) convertedUser.BUSSINESS = null;
+
+
+    return res.status(200).json({
+      success: true,
+      message: `User with PR_ID ${prId} fetched successfully.`,
+      data: convertedUser,
+    });
+
+  } catch (error) {
+    console.error("Error fetching user by PR_ID:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch user by PR_ID.",
+    });
+  }
+};
 
 export const deleteUser = async (req, res) => {
   try {

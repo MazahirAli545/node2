@@ -3,7 +3,7 @@ import {
   generateUserOtp,
   verifyUserOtp,
 } from "../controllers/admin/adminOTP.controller.js";
-import { deleteUser, getAllUsers, getUserProfile } from "../controllers/admin/getAllUsers.controller.js";
+import { deleteUser, getAllUsers, getUserByPrId, getUserProfile } from "../controllers/admin/getAllUsers.controller.js";
 import { getCategories } from "../controllers/admin/category.controller.js";
 import {
   createBusiness,
@@ -43,6 +43,7 @@ router.post("/verify-otp", verifyUserOtp);
 
 // Get all users
 router.get("/users", getAllUsers);
+router.get("/users/:prId", getUserByPrId)
 router.get("/users/:uniqueID", getUserProfile)
 router.delete("/users/:prId", deleteUser)
 
