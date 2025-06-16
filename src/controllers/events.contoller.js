@@ -114,7 +114,12 @@ export async function createEvent(req, res) {
       },
     });
 
-    await sendEventNotification(newEvent);
+    const notificationResult = await sendEventNotification(newEvent);
+
+    if (!notificationResult.success) {
+      console.log("Notification failed:", notificationResult);
+      // You might choose to still return success since event was created
+    }
 
     return res.status(201).json({
       message: "Event created successfully",
@@ -136,7 +141,8 @@ export async function updateEvent(req, res) {
     const { ENVT_ID } = req.params;
     const updateData = req.body;
 
-    const updateEvent = await prisma.Events.update({
+    // const updateEvent = await prisma.Events.update({
+    const updateEvent = await prisma.events.update({
       where: { ENVT_ID: Number(ENVT_ID) },
       data: updateData,
     });
@@ -160,7 +166,8 @@ export async function deleteEvent(req, res) {
   try {
     const { ENVT_ID } = req.params;
 
-    await prisma.Events.delete({
+    // await prisma.Events.delete({
+    await prisma.events.delete({
       where: { ENVT_ID: Number(ENVT_ID) },
     });
 
