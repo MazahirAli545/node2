@@ -1,4 +1,4 @@
-import prisma from "../db/prismaClient.js";
+// import prisma from "../db/prismaClient.js";
 
 // export const getUserStats = async (req, res) => {
 //   try {
@@ -81,17 +81,19 @@ import prisma from "../db/prismaClient.js";
 
 //     const totalPopulation = maleCount + femaleCount + childCount;
 
-//     const malePercentage = totalPopulation
-//       ? Math.round((maleCount / totalPopulation) * 100)
+//     const expectedPopulation = totalPopulation;
+
+//     const malePercentage = expectedPopulation
+//       ? Math.round((maleCount / expectedPopulation) * 100)
 //       : 0;
-//     const femalePercentage = totalPopulation
-//       ? Math.round((femaleCount / totalPopulation) * 100)
+//     const femalePercentage = expectedPopulation
+//       ? Math.round((femaleCount / expectedPopulation) * 100)
 //       : 0;
-//     const childPercentage = totalPopulation
-//       ? Math.round((childCount / totalPopulation) * 100)
+//     const childPercentage = expectedPopulation
+//       ? Math.round((childCount / expectedPopulation) * 100)
 //       : 0;
-//     const businessInterestPercentage = totalPopulation
-//       ? Math.round((businessInterestCount / totalPopulation) * 100)
+//     const businessInterestPercentage = expectedPopulation
+//       ? Math.round((businessInterestCount / expectedPopulation) * 100)
 //       : 0;
 
 //     const childrenFromChildTable = await prisma.child.findMany({
@@ -150,12 +152,12 @@ import prisma from "../db/prismaClient.js";
 //       0
 //     );
 
-//     const donationPercentageOfPopulation = totalPopulation
-//       ? Math.round((totalDonations / totalPopulation) * 100)
+//     const donationPercentageOfPopulation = expectedPopulation
+//       ? Math.round((totalDonations / expectedPopulation) * 100)
 //       : 0;
 
 //     const stats = {
-//       totalPopulation,
+//       totalPopulation: expectedPopulation,
 //       familyCount,
 //       count: {
 //         male: maleCount,
@@ -189,6 +191,8 @@ import prisma from "../db/prismaClient.js";
 
 // export default getUserStats;
 
+import prisma from "../db/prismaClient.js";
+
 export const getUserStats = async (req, res) => {
   try {
     console.log("🔍 Fetching user stats...");
@@ -218,14 +222,15 @@ export const getUserStats = async (req, res) => {
         PR_GENDER: true,
         PR_FATHER_ID: true,
         PR_MOTHER_ID: true,
-        PR_BUSS_INTER: true, // Added this field for business interest calculation
+        PR_BUSS_INTER: true,
       },
     });
 
     let maleCount = 0;
     let femaleCount = 0;
     let childCount = 0;
-    let businessInterestCount = 0;
+    const peopleWithBusinessInterest = new Set();
+    const peopleWhoDonated = new Set();
 
     const parentMapFromPeopleRegistry = new Map();
 
@@ -264,20 +269,12 @@ export const getUserStats = async (req, res) => {
       }
 
       if (person.PR_BUSS_INTER === "Y") {
-        businessInterestCount++;
+        peopleWithBusinessInterest.add(person.PR_ID);
       }
     });
 
-    // Adjust male and female distribution to ensure the total population is correct
     const totalPopulation = maleCount + femaleCount + childCount;
-    // const expectedPopulation = 100; // Total expected population (for your example)
-    // const remainingCount = expectedPopulation - totalPopulation;
 
-    // // If there are remaining people (like missing males or females)
-    // if (remainingCount > 0) {
-    //   // By default, we are assigning the remaining people as males
-    //   maleCount += remainingCount;
-    // }
     const expectedPopulation = totalPopulation;
 
     const malePercentage = expectedPopulation
@@ -290,7 +287,7 @@ export const getUserStats = async (req, res) => {
       ? Math.round((childCount / expectedPopulation) * 100)
       : 0;
     const businessInterestPercentage = expectedPopulation
-      ? Math.round((businessInterestCount / expectedPopulation) * 100)
+      ? Math.round((peopleWithBusinessInterest.size / expectedPopulation) * 100)
       : 0;
 
     const childrenFromChildTable = await prisma.child.findMany({
@@ -340,7 +337,15 @@ export const getUserStats = async (req, res) => {
       select: {
         id: true,
         amount: true,
+        userId: true,
       },
+    });
+
+    // Count unique donors
+    donations.forEach((donation) => {
+      if (donation.userId) {
+        peopleWhoDonated.add(donation.userId);
+      }
     });
 
     const totalDonations = donations.length;
@@ -350,7 +355,7 @@ export const getUserStats = async (req, res) => {
     );
 
     const donationPercentageOfPopulation = expectedPopulation
-      ? Math.round((totalDonations / expectedPopulation) * 100)
+      ? Math.round((peopleWhoDonated.size / expectedPopulation) * 100)
       : 0;
 
     const stats = {
@@ -370,10 +375,11 @@ export const getUserStats = async (req, res) => {
       donationStats: {
         totalDonations,
         totalDonationAmount,
+        uniqueDonors: peopleWhoDonated.size,
         donationPercentageOfPopulation: `${donationPercentageOfPopulation}%`,
       },
       businessInterestStats: {
-        interestedCount: businessInterestCount,
+        interestedCount: peopleWithBusinessInterest.size,
         percentageOfPopulation: `${businessInterestPercentage}%`,
       },
     };
