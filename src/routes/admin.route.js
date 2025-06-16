@@ -17,19 +17,23 @@ import {
   updatePageById,
   deletePageById,
   addPage,
+  getPageByLinkUrl
 } from "../controllers/admin/page.controller.js";
 import {
-  createContentSection,
-  deleteContentSection,
   getAllContentSections,
+  getContentSectionById,
+  createContentSection,
   updateContentSection,
+  deleteContentSection,
 } from "../controllers/admin/contentSection.controller.js";
 import {
-  deleteContentSectionLang,
   getAllContentSectionsLang,
   getContentSectionLangById,
+  createContentSectionLang,
   updateContentSectionLang,
+  deleteContentSectionLang,
 } from "../controllers/admin/contentLang.controller.js";
+
 
 const router = Router();
 
@@ -59,22 +63,31 @@ router.delete("/business/:id", deleteBusiness);
 // router.get("/language/:locale", getTranslations)
 
 // Pages
-router.get("/pages", getAllPages);
-router.post("/pages", addPage);
-router.get("/pages/:id", getPageById);
-router.put("/pages/:id", updatePageById);
-router.delete("/pages/:id", deletePageById);
+// Public API for fetching page content by link_url (including multilingual content)
+router.get('/v1/pages/link/:link_url(*)', getPageByLinkUrl); // Catches /path, /path/sub-path, and empty string for root '/'
+
+// Admin API for managing pages by ID (existing functions)
+router.get('/v1/pages', getAllPages); // Get all pages (e.g., for admin list)
+router.post('/v1/pages', addPage); // Add a new page
+router.get('/v1/pages/:id', getPageById); // Get page by numeric ID
+router.put('/v1/pages/:id', updatePageById); // Update page by numeric ID
+router.delete('/v1/pages/:id', deletePageById); // Delete page by numeric ID
 
 // Content
-router.get("/content", getAllContentSections);
-router.post("/content", createContentSection);
-router.put("/content/:id", updateContentSection);
-router.delete("/content/:id", deleteContentSection);
+// Routes for content_sections (default/English content blocks)
+router.get('/v1/content-sections', getAllContentSections);        // GET /api/v1/content-sections?page_id=X&active_yn=1
+router.post('/v1/content-sections', createContentSection);        // POST /api/v1/content-sections
+router.get('/v1/content-sections/:id', getContentSectionById);    // GET /api/v1/content-sections/:id (with translations)
+router.put('/v1/content-sections/:id', updateContentSection);     // PUT /api/v1/content-sections/:id
+router.delete('/v1/content-sections/:id', deleteContentSection);  // DELETE /api/v1/content-sections/:id
+
 
 // Content lang
-router.get("/lang", getAllContentSectionsLang);
-router.get("/lang/:id/:lang_code", getContentSectionLangById);
-router.put("/lang/:id/:lang_code", updateContentSectionLang)
-router.delete("/lang/:id/:lang_code", deleteContentSectionLang)
+// Routes for content_sections_lang (multilingual content translations)
+router.get('/v1/content-sections-lang', getAllContentSectionsLang);         // GET /api/v1/content-sections-lang?id_id=X&lang_code=Y
+router.post('/v1/content-sections-lang', createContentSectionLang);         // POST /api/v1/content-sections-lang
+router.get('/v1/content-sections-lang/:id', getContentSectionLangById);     // GET /api/v1/content-sections-lang/:id
+router.put('/v1/content-sections-lang/:id', updateContentSectionLang);      // PUT /api/v1/content-sections-lang/:id
+router.delete('/v1/content-sections-lang/:id', deleteContentSectionLang);   // DELETE /api/v1/content-sections-lang/:id
 
 export default router;
