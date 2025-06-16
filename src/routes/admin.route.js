@@ -44,7 +44,7 @@ router.post("/verify-otp", verifyUserOtp);
 // Get all users
 router.get("/users", getAllUsers);
 router.get("/users/:prId", getUserByPrId)
-router.get("/users/:uniqueID", getUserProfile)
+router.get("/users/uniqueid/:uniqueID", getUserProfile)
 router.delete("/users/:prId", deleteUser)
 
 // Get catogeries
