@@ -1,34 +1,5 @@
 import prisma from "../../db/prismaClient.js";
 
-export const getAllUsers = async (req, res) => {
-  try {
-    const users = await prisma.peopleRegistry.findMany({
-      include: {
-        Children: true, // includes related children
-        City: true, // includes city name & code
-        Profession: true, // includes profession
-        BUSSINESS: true, // includes business details
-        Contact: true, // includes contact info if needed
-      },                                            
-      orderBy: {
-        PR_ID: "desc",
-      },
-    });
-
-    return res.status(200).json({
-      success: true,
-      message: "All users fetched successfully",
-      data: users,
-    });
-  } catch (error) {
-    console.error("Error fetching users:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Failed to fetch users",
-    });
-  }
-};
-
 // Helper function to convert PR_ID to PR_UNIQUE_ID
 const convertIdToUniqueId = async (prId) => {
   if (!prId) return null;
@@ -51,7 +22,6 @@ const convertIdToUniqueId = async (prId) => {
 };
 
 // Helper function to convert PR_UNIQUE_ID to PR_ID
-
 const convertUniqueIdToId = async (uniqueId) => {
   if (!uniqueId) return null;
 
@@ -69,6 +39,53 @@ const convertUniqueIdToId = async (uniqueId) => {
   } catch (error) {
     console.error(`Error converting PR_UNIQUE_ID ${uniqueId} to PR_ID:`, error);
     return null;
+  }
+};
+
+export const getAllUsers = async (req, res) => {
+  try {
+    const users = await prisma.peopleRegistry.findMany({
+      include: {
+        Children: true, // includes related children
+        City: true, // includes city name & code
+        Profession: true, // includes profession
+        BUSSINESS: true, // includes business details
+        Contact: true, // includes contact info if needed
+      },
+      orderBy: {
+        PR_ID: "desc",
+      },
+    });
+
+    // Process each user to replace PR_ID with PR_UNIQUE_ID for related persons
+    const processedUsers = await Promise.all(
+      users.map(async (user) => {
+        const newUser = { ...user }; // Create a mutable copy of the user object
+
+        if (newUser.PR_FATHER_ID) {
+          newUser.PR_FATHER_ID = await convertIdToUniqueId(newUser.PR_FATHER_ID);
+        }
+        if (newUser.PR_MOTHER_ID) {
+          newUser.PR_MOTHER_ID = await convertIdToUniqueId(newUser.PR_MOTHER_ID);
+        }
+        if (newUser.PR_SPOUSE_ID) {
+          newUser.PR_SPOUSE_ID = await convertIdToUniqueId(newUser.PR_SPOUSE_ID);
+        }
+        return newUser;
+      })
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "All users fetched successfully",
+      data: processedUsers, // Return the processed users
+    });
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch users",
+    });
   }
 };
 
@@ -125,4 +142,3 @@ export async function getUserProfile(req, res) {
     res.status(500).json({ message: "Something went wrong", success: false });
   }
 }
-
