@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import express from "express";
 import prisma from "../db/prismaClient.js";
-
+import { sendEventNotification } from "./utils/EventsNotification.controller.js";
 const app = express();
 // const prisma = new PrismaClient();
 
@@ -72,7 +72,6 @@ export async function getEventById(req, res) {
   }
 }
 
-
 export async function createEvent(req, res) {
   try {
     const {
@@ -89,7 +88,7 @@ export async function createEvent(req, res) {
       ENVT_CATE_ID,
       ENVT_CATE_CATE_ID,
       EVET_ACTIVE_YN,
-      EVET_CREATED_BY
+      EVET_CREATED_BY,
     } = req.body;
 
     const newEvent = await prisma.events.create({
@@ -107,20 +106,21 @@ export async function createEvent(req, res) {
         ENVT_CATE_ID,
         ENVT_CATE_CATE_ID,
         EVET_ACTIVE_YN,
-        EVET_CREATED_BY
+        EVET_CREATED_BY,
       },
       include: {
         Category: true,
         SubCategory: true,
-      }
+      },
     });
+
+    await sendEventNotification(newEvent);
 
     return res.status(201).json({
       message: "Event created successfully",
       success: true,
       event: newEvent,
     });
-
   } catch (error) {
     console.error("Error creating events:", error);
     return res.status(500).json({
@@ -130,7 +130,6 @@ export async function createEvent(req, res) {
     });
   }
 }
-
 
 export async function updateEvent(req, res) {
   try {
