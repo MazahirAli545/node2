@@ -42,7 +42,7 @@ model Profession {
 
 model PeopleRegistry {
   PR_ID              Int              @id @default(autoincrement())
-  PR_UNIQUE_ID       String            @db.VarChar(50)
+  PR_UNIQUE_ID       String            @db.VarChar(50)  
   PR_ROLE            PR_ROLE          @default(End_User)
   PR_FULL_NAME       String           @db.VarChar(100)
   PR_DOB             String

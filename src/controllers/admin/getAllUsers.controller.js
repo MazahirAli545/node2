@@ -56,7 +56,7 @@ const convertUniqueIdToId = async (uniqueId) => {
   if (!uniqueId) return null;
 
   try {
-    const person = await prisma.peopleRegistry.findUnique({
+    const person = await prisma.peopleRegistry.findFirst({
       where: {
         PR_UNIQUE_ID: uniqueId,
       },
@@ -81,6 +81,7 @@ export async function getUserProfile(req, res) {
     }
 
     const userId = await convertUniqueIdToId(uniqueID);
+    console.log("Received PR_UNIQUE_ID:", uniqueID);
 
     if (!userId) {
       return res.status(404).json({ message: "User not found", success: false });
