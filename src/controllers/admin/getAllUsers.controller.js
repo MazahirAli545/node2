@@ -152,33 +152,71 @@ export const deleteUser = async (req, res) => {
       return res.status(400).json({ success: false, message: "PR_ID is required for deletion." });
     }
 
-    // Ensure prId is an integer if your PR_ID field in the database is an integer
     const userIdToDelete = parseInt(prId, 10);
 
     if (isNaN(userIdToDelete)) {
       return res.status(400).json({ success: false, message: "Invalid PR_ID provided." });
     }
 
-    // Delete the user from the PeopleRegistry
-    await prisma.peopleRegistry.delete({
-      where: {
-        PR_ID: userIdToDelete,
-      },
+    // Use a Prisma transaction to ensure atomicity:
+    // All operations within this transaction will either succeed together or fail together.
+    await prisma.$transaction(async (prisma) => {
+      // Step 1: Delete all related Child records for this user
+      // IMPORTANT: Ensure 'userId' (or whatever your foreign key field is named in Child model)
+      // correctly links to the PeopleRegistry's PR_ID.
+      await prisma.child.deleteMany({
+        where: {
+          userId: userIdToDelete, // This line targets children linked by 'userId'
+        },
+      });
+
+      // Step 2: Delete all related Contact records for this user
+      // Corrected: Assuming 'CON_CREATED_BY' is the foreign key in your Contact table linking to PeopleRegistry.
+      // If it's different (e.g., a direct relation field like 'user' or another scalar field), please adjust accordingly.
+      await prisma.contact.deleteMany({
+        where: {
+          CON_CREATED_BY: userIdToDelete, // Changed from PR_ID to CON_CREATED_BY
+        },
+      });
+
+      // Add any other related models that directly reference PeopleRegistry
+      // For example, if you have an 'Address' table linked by PR_ID (or userId):
+      // await prisma.address.deleteMany({
+      //   where: {
+      //     PR_ID: userIdToDelete, // Adjust based on your schema
+      //   },
+      // });
+
+      // Step 3: Finally, delete the PeopleRegistry record itself
+      await prisma.peopleRegistry.delete({
+        where: {
+          PR_ID: userIdToDelete,
+        },
+      });
     });
 
     return res.status(200).json({
       success: true,
-      message: `User with PR_ID ${prId} deleted successfully.`,
+      message: `User with PR_ID ${prId} and all related records (including children) deleted successfully.`,
     });
   } catch (error) {
     console.error("Error deleting user:", error);
-    // Check if the error is due to a record not found
-    if (error.code === 'P2025') { // Prisma's error code for record not found
-      return res.status(404).json({ success: false, message: "User not found." });
+    if (error.code === 'P2025') {
+      return res.status(404).json({ success: false, message: "User not found or already deleted." });
+    }
+    if (error.code === 'P2003') {
+      let errorMessage = `Cannot delete user with PR_ID ${prId} because there are still dependent entries linked to this user.`;
+      if (error.meta && error.meta.field_name) {
+        errorMessage += ` Specific dependency found in field: '${error.meta.field_name}'.`;
+      }
+      errorMessage += ` Please ensure all related entries (e.g., Children, Contacts, or any other linked data) are deleted first or review your Prisma schema for cascading deletes.`;
+      return res.status(409).json({ success: false, message: errorMessage });
     }
     return res.status(500).json({
       success: false,
-      message: "Failed to delete user.",
+      message: "Failed to delete user. Please check server logs for more details.",
     });
   }
 };
+
+
