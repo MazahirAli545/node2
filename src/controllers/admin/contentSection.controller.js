@@ -159,8 +159,8 @@ export const createContentSection = async (req, res) => {
           data: {
             id: newMainSection.id, // Use the ID of the newly created main section
             lang_code: 'hi', // Hardcode 'hi' for the automatic translation
-            title: `(hi) ${newMainSection.title}`, // Placeholder title
-            description: `(hi) ${newMainSection.description}`, // Placeholder description
+            title: `${newMainSection.title}`, // Placeholder title
+            description: `${newMainSection.description}`, // Placeholder description
             image_path: newMainSection.image_path,
             icon_path: newMainSection.icon_path,
             active_yn: newMainSection.active_yn, // Copy from main section
