@@ -295,37 +295,58 @@ model LanguageContent {
 }
 
 model content_sections {
-  id               Int       @id @default(autoincrement())
-  title            String    @db.VarChar(50)
-  id_id            Int? // Ambiguous; purpose undefined in this context.
-  description      String    @db.Text
-  image_path       String?   @db.VarChar(250)
-  icon_path        String?   @db.VarChar(250)
-  active_yn        Int // Interpreted as 0 for false/inactive, 1 for true/active
-  created_by       Int
-  created_date     DateTime  @db.Date
-  updated_by       Int?
-  updated_date     DateTime? @db.Date
-  page_id          Int // Foreign key to pages.id (implied)
-  refrence_page_id Int?
-  lang_code        String    @default("en") @db.VarChar(2) // Primarily for English content
+  id                 Int       @id @default(autoincrement())
+  title              String    @db.VarChar(50)
+  id_id              Int? // Purpose of this field needs to be strictly defined if not for translations
+  description        String    @db.Text
+  image_path         String?   @db.VarChar(250)
+  icon_path          String?   @db.VarChar(250)
+  active_yn          Int
+  created_by         Int
+  created_date       DateTime  @db.Date @default(now()) // Ensure this is auto-generated
+  updated_by         Int?
+  updated_date       DateTime? @db.Date
+  page_id            Int
+  refrence_page_id   Int?
+  lang_code          String    @default("en") @db.VarChar(2) // This indicates the main content is "en"
+
+  // Add the relation field to link to translations
+  translations       content_sections_lang[]
 }
 
 model content_sections_lang {
-  id               Int       @id // Primary key, but not auto-incrementing. Manual ID assignment?
-  title            String    @db.VarChar(50)
-  id_id            Int?      // Crucial: Interpreted as FK to content_sections.id, but nullable.
-  description      String    @db.Text
-  image_path       String?   @db.VarChar(250)
-  icon_path        String?   @db.VarChar(250)
-  active_yn        Int
-  created_by       Int
-  created_date     DateTime  @db.Date
-  updated_by       Int?
-  updated_date     DateTime? @db.Date
-  page_id          Int // Redundant if id_id links to content_sections which has page_id
-  refrence_page_id Int? // Redundant
-  lang_code        String    @default("en") @db.VarChar(2) // Defaults to "en" here too, potential for overrides/duplication
+  // 'id' field is now explicitly defined as the Foreign Key to content_sections.id.
+  // It is part of the composite primary key and is NOT auto-incrementing.
+  // It will be provided from the 'content_sections' entry it translates.
+  id                 Int
+
+  // 'lang_code' is the other part of the composite primary key.
+  // REMOVED @default("en") as 'en' translations will not be stored here.
+  lang_code          String    @db.VarChar(5) // Using VarChar(5) for broader language codes (e.g., 'zh-CN')
+
+  // These are the truly translatable fields (title, description, image_path, icon_path)
+  title              String    @db.VarChar(50)
+  description        String    @db.Text
+  image_path         String?   @db.VarChar(250)
+  icon_path          String?   @db.VarChar(250)
+
+  // Duplicated fields from content_sections - manage consistency carefully
+  active_yn          Int
+  created_by         Int
+  created_date       DateTime  @db.Date
+  updated_by         Int?
+  updated_date       DateTime? @db.Date
+  page_id            Int
+  refrence_page_id   Int?
+
+  // Defines the composite primary key using 'id' (from content_sections) and 'lang_code'.
+  // This ensures that for a given parent content section, there's only one entry per language.
+  @@id([id, lang_code])
+
+  // Defines the explicit foreign key relationship to the content_sections table.
+  // The 'id' field in this table references the 'id' field in the content_sections table.
+  // This also enables Prisma's relation queries (e.g., contentSection.translations).
+  content_section    content_sections @relation(fields: [id], references: [id])
 }
 
 model pages {

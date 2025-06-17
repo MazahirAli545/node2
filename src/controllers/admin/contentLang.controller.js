@@ -8,38 +8,37 @@ const formatDateToYYYYMMDD = (date) => {
 
 export const getAllContentSectionsLang = async (req, res) => {
   try {
-    const { id_id, lang_code, active_yn } = req.query; // Add filters for id_id and lang_code
+    const { id, lang_code } = req.query; // 'id' now refers to the parent content section ID
 
     const where = {};
-    if (id_id) {
-      where.id_id = parseInt(id_id); // Filter by the original content section ID
+    if (id) {
+      where.id = parseInt(id); // Filter by the parent content section ID
     }
     if (lang_code) {
       where.lang_code = lang_code.toLowerCase(); // Filter by language code
     }
-    if (active_yn !== undefined) {
-      where.active_yn = parseInt(active_yn); // Filter by active status
-    }
+    // IMPORTANT: Automatically filter out 'en' as they are in the main table
+    where.lang_code = {
+      not: 'en'
+    };
 
     const data = await prisma.content_sections_lang.findMany({
-      where, // Apply filters
+      where, // Apply filters (including auto-filtering 'en')
       orderBy: {
-        id: "asc",
+        id: "asc", // Order by parent content ID
       },
     });
 
     // Format dates for consistency
     const formattedData = data.map(entry => ({
       ...entry,
-      // from_date: formatDateToYYYYMMDD(entry.from_date),
-      // upto_date: formatDateToYYYYMMDD(entry.upto_date),
       created_date: formatDateToYYYYMMDD(entry.created_date),
       updated_date: formatDateToYYYYMMDD(entry.updated_date),
     }));
 
     return res.status(200).json({
       success: true,
-      message: "All multilingual content sections fetched successfully",
+      message: "All multilingual content sections fetched successfully (excluding 'en')",
       data: formattedData,
     });
   } catch (error) {
@@ -52,38 +51,55 @@ export const getAllContentSectionsLang = async (req, res) => {
   }
 };
 
-// --- NEW API FUNCTION: createContentSectionLang ---
 export const createContentSectionLang = async (req, res) => {
   try {
     const {
-      id, // <-- ADDED: Destructure 'id' from req.body
-      id_id, // This is the ID of the original content_sections entry
-      lang_code,
+      id,              // This is the ID of the original content_sections entry (part of PK)
+      lang_code,       // This is the language code (part of PK)
       title,
       description,
       image_path,
       icon_path,
       active_yn,
       created_by,
-      created_date, // <-- ADDED: Destructure created_date from req.body
+      created_date,
       page_id,
       refrence_page_id,
+      id_id // This field is ambiguous and might be redundant given the new schema.
+            // If it's not the FK, you might consider removing it from the schema.
+            // For now, we'll process it if provided.
     } = req.body;
 
-    // Basic Validation: Ensure ALL required fields are present
-    // 'id' is now required as per your schema and frontend payload
-    // 'created_date' is also explicitly required by your schema
+    // Enforce no 'en' translations allowed in content_sections_lang
+    if (lang_code.toLowerCase() === 'en') {
+      return res.status(400).json({
+        success: false,
+        message: "English (en) translations are stored in the main content_sections table and cannot be added here.",
+      });
+    }
+
+    // Basic Validation: Ensure ALL required fields are present for the composite PK
     if (!id || !lang_code || !title || !description || typeof active_yn !== 'number' || !created_by || !created_date || typeof page_id !== 'number') {
       return res.status(400).json({
         success: false,
-        message: "Missing required fields for translation: id, lang_code, title, description, active_yn, created_by, created_date, page_id.",
+        message: "Missing required fields for translation: id (parent content ID), lang_code, title, description, active_yn, created_by, created_date, page_id.",
+      });
+    }
+
+    // Check if parent content section exists
+    const parentSection = await prisma.content_sections.findUnique({
+      where: { id: parseInt(id) }
+    });
+    if (!parentSection) {
+      return res.status(404).json({
+        success: false,
+        message: `Parent content section with ID ${id} not found. Cannot create translation.`,
       });
     }
 
     const newEntry = await prisma.content_sections_lang.create({
       data: {
-        id: parseInt(id), // <-- ADDED: Pass the 'id' to Prisma
-        id_id: id_id ? parseInt(id_id) : null, // Handle nullable id_id
+        id: parseInt(id), // This is the FK to content_sections.id
         lang_code: lang_code.toLowerCase(),
         title,
         description,
@@ -91,9 +107,10 @@ export const createContentSectionLang = async (req, res) => {
         icon_path: icon_path || null,
         active_yn,
         created_by,
-        created_date: new Date(created_date), // Use the created_date from the frontend
-        page_id: parseInt(page_id), // Ensure page_id is parsed as number and non-null
-        refrence_page_id: refrence_page_id ? parseInt(refrence_page_id) : null, // Handle nullable refrence_page_id
+        created_date: new Date(created_date),
+        page_id: parseInt(page_id),
+        refrence_page_id: refrence_page_id ? parseInt(refrence_page_id) : null,
+        id_id: id_id ? parseInt(id_id) : null, // Process id_id if present
       },
     });
 
@@ -104,12 +121,10 @@ export const createContentSectionLang = async (req, res) => {
     });
   } catch (error) {
     console.error("Error creating multilingual content section:", error);
-    // Handle specific Prisma error for unique constraint violation (P2002)
-    // This could happen if you try to create a translation with an 'id' that already exists.
     if (error.code === 'P2002') {
         return res.status(409).json({
             success: false,
-            message: `A translation with ID ${req.body.id} already exists. Please provide a unique ID.`,
+            message: `A translation for content section ID ${req.body.id} and language ${req.body.lang_code} already exists.`,
             error: error.message
         });
     }
@@ -121,35 +136,34 @@ export const createContentSectionLang = async (req, res) => {
   }
 };
 
-
-
 export const getContentSectionLangById = async (req, res) => {
   try {
-    const { id } = req.params; // Expecting the primary key 'id' from URL
+    const { id, lang_code } = req.params; // Composite PK from URL parameters
 
-    // Validate if ID is a number
-    if (isNaN(parseInt(id))) {
-        return res.status(400).json({ success: false, message: "Invalid ID provided." });
+    if (isNaN(parseInt(id)) || !lang_code) {
+        return res.status(400).json({ success: false, message: "Invalid ID or language code provided." });
     }
 
     const entry = await prisma.content_sections_lang.findUnique({
       where: {
-        id: parseInt(id), // Only use 'id' as it's the primary key
+        // Use the composite primary key syntax for findUnique
+        id_lang_code: {
+          id: parseInt(id),
+          lang_code: lang_code.toLowerCase(),
+        },
       },
     });
 
     if (!entry) {
       return res.status(404).json({
         success: false,
-        message: `Content section language entry with ID ${id} not found`,
+        message: `Content section language entry with ID ${id} and lang_code ${lang_code} not found`,
       });
     }
 
     // Format dates for consistency
     const formattedEntry = {
       ...entry,
-      // from_date: formatDateToYYYYMMDD(entry.from_date),
-      // upto_date: formatDateToYYYYMMDD(entry.upto_date),
       created_date: formatDateToYYYYMMDD(entry.created_date),
       updated_date: formatDateToYYYYMMDD(entry.updated_date),
     };
@@ -169,67 +183,80 @@ export const getContentSectionLangById = async (req, res) => {
   }
 };
 
-
 export const updateContentSectionLang = async (req, res) => {
   try {
-    const { id } = req.params; // Primary key 'id' from URL
+    const { id, lang_code } = req.params; // Composite PK from URL parameters
     const {
       title,
       description,
       image_path,
       icon_path,
-      // from_date,
-      // upto_date,
       active_yn,
       updated_by,
       page_id,
       refrence_page_id,
-      // lang_code and id_id are typically part of the unique identifier
-      // and not meant to be updated via a PUT operation on an existing record.
-      // If you need to change lang_code/id_id, it's usually a delete then re-create.
+      id_id // Also process id_id if it's potentially updated (unlikely for a FK-like field)
     } = req.body;
 
-    // Validate ID
-    if (isNaN(parseInt(id))) {
-        return res.status(400).json({ success: false, message: "Invalid ID provided." });
+    if (isNaN(parseInt(id)) || !lang_code) {
+        return res.status(400).json({ success: false, message: "Invalid ID or language code provided." });
+    }
+
+    // Enforce no 'en' translations allowed to be updated here
+    if (lang_code.toLowerCase() === 'en') {
+      return res.status(400).json({
+        success: false,
+        message: "English (en) translations are stored in the main content_sections table and cannot be updated here.",
+      });
     }
 
     const existingEntry = await prisma.content_sections_lang.findUnique({
-      where: { id: parseInt(id) },
+      where: {
+        id_lang_code: {
+          id: parseInt(id),
+          lang_code: lang_code.toLowerCase(),
+        },
+      },
     });
 
     if (!existingEntry) {
       return res.status(404).json({
         success: false,
-        message: `Content section language entry with ID ${id} not found`,
+        message: `Content section language entry with ID ${id} and lang_code ${lang_code} not found`,
       });
     }
 
-    // Use Prisma's update method directly. No need for raw SQL.
     const updatedEntry = await prisma.content_sections_lang.update({
-      where: { id: parseInt(id) },
+      where: {
+        id_lang_code: {
+          id: parseInt(id),
+          lang_code: lang_code.toLowerCase(),
+        },
+      },
       data: {
         title: title !== undefined ? title : existingEntry.title,
         description: description !== undefined ? description : existingEntry.description,
         image_path: image_path !== undefined ? image_path : existingEntry.image_path,
         icon_path: icon_path !== undefined ? icon_path : existingEntry.icon_path,
-        // from_date: from_date ? new Date(from_date) : existingEntry.from_date,
-        // upto_date: upto_date ? new Date(upto_date) : existingEntry.upto_date,
         active_yn: active_yn !== undefined ? active_yn : existingEntry.active_yn,
         updated_by: updated_by !== undefined ? updated_by : existingEntry.updated_by,
         updated_date: new Date(), // Auto-set current date
-        page_id: page_id !== undefined ? page_id : existingEntry.page_id,
-        refrence_page_id: refrence_page_id !== undefined ? refrence_page_id : existingEntry.refrence_page_id,
+        page_id: page_id !== undefined ? parseInt(page_id) : existingEntry.page_id,
+        refrence_page_id: refrence_page_id !== undefined ? parseInt(refrence_page_id) : existingEntry.refrence_page_id,
+        id_id: id_id !== undefined ? parseInt(id_id) : existingEntry.id_id, // Update id_id if provided
       },
     });
 
     return res.status(200).json({
       success: true,
       message: "Language content section updated successfully",
-      data: updatedEntry, // Return the updated record
+      data: updatedEntry,
     });
   } catch (error) {
     console.error("Error updating content section lang:", error);
+    if (error.code === 'P2025') {
+        return res.status(404).json({ success: false, message: "Content section language entry not found for update." });
+    }
     return res.status(500).json({
       success: false,
       message: "Failed to update content section language entry",
@@ -238,30 +265,45 @@ export const updateContentSectionLang = async (req, res) => {
   }
 };
 
-
 export const deleteContentSectionLang = async (req, res) => {
   try {
-    const { id } = req.params; // Primary key 'id' from URL
+    const { id, lang_code } = req.params; // Composite PK from URL parameters
 
-    if (isNaN(parseInt(id))) {
-        return res.status(400).json({ success: false, message: "Invalid ID provided." });
+    if (isNaN(parseInt(id)) || !lang_code) {
+        return res.status(400).json({ success: false, message: "Invalid ID or language code provided." });
     }
 
-    // Check if the record exists before attempting to delete
+    // Enforce no 'en' translations allowed to be deleted here
+    if (lang_code.toLowerCase() === 'en') {
+      return res.status(400).json({
+        success: false,
+        message: "English (en) translations are stored in the main content_sections table and cannot be deleted here.",
+      });
+    }
+
     const existingEntry = await prisma.content_sections_lang.findUnique({
-      where: { id: parseInt(id) },
+      where: {
+        id_lang_code: {
+          id: parseInt(id),
+          lang_code: lang_code.toLowerCase(),
+        },
+      },
     });
 
     if (!existingEntry) {
       return res.status(404).json({
         success: false,
-        message: `No content section language entry found with ID ${id}`,
+        message: `No content section language entry found with ID ${id} and lang_code ${lang_code}`,
       });
     }
 
-    // Use Prisma's delete method directly
     await prisma.content_sections_lang.delete({
-      where: { id: parseInt(id) },
+      where: {
+        id_lang_code: {
+          id: parseInt(id),
+          lang_code: lang_code.toLowerCase(),
+        },
+      },
     });
 
     return res.status(200).json({
@@ -270,7 +312,6 @@ export const deleteContentSectionLang = async (req, res) => {
     });
   } catch (error) {
     console.error("Error deleting content section lang:", error);
-    // Handle Prisma's P2025 (Record not found) if it happens, though unlikely after findUnique
     if (error.code === 'P2025') {
         return res.status(404).json({ success: false, message: "Content section language entry not found for deletion." });
     }
