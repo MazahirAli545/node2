@@ -3,7 +3,7 @@ import prisma from "../../db/prismaClient.js";
 // Helper for date formatting, if needed in responses (though your existing code handles it)
 const formatDateToYYYYMMDD = (date) => {
   if (!date) return null;
-  return new Date(date).toISOString().split('T')[0];
+  return new Date(date).toISOString().split("T")[0];
 };
 
 export const getAllContentSections = async (req, res) => {
@@ -14,7 +14,8 @@ export const getAllContentSections = async (req, res) => {
     if (page_id) {
       where.page_id = parseInt(page_id); // Convert to number
     }
-    if (active_yn !== undefined) { // Check for undefined to allow 0 (false)
+    if (active_yn !== undefined) {
+      // Check for undefined to allow 0 (false)
       where.active_yn = parseInt(active_yn); // Convert to number
     }
 
@@ -26,14 +27,13 @@ export const getAllContentSections = async (req, res) => {
     });
 
     // Format dates for consistency in output
-    const formattedSections = sections.map(section => ({
+    const formattedSections = sections.map((section) => ({
       ...section,
       // from_date: formatDateToYYYYMMDD(section.from_date),
       // upto_date: formatDateToYYYYMMDD(section.upto_date),
       created_date: formatDateToYYYYMMDD(section.created_date),
       updated_date: formatDateToYYYYMMDD(section.updated_date),
     }));
-
 
     return res.status(200).json({
       success: true,
@@ -74,8 +74,8 @@ export const getContentSectionById = async (req, res) => {
         id: section.id, // <-- CORRECTED: Changed from id_id to id
       },
       orderBy: {
-        lang_code: 'asc', // Order translations by language code
-      }
+        lang_code: "asc", // Order translations by language code
+      },
     });
 
     // Format dates for the main section
@@ -86,7 +86,7 @@ export const getContentSectionById = async (req, res) => {
     };
 
     // Format dates for translations
-    const formattedTranslations = translations.map(translation => ({
+    const formattedTranslations = translations.map((translation) => ({
       ...translation,
       created_date: formatDateToYYYYMMDD(translation.created_date),
       updated_date: formatDateToYYYYMMDD(translation.updated_date),
@@ -105,11 +105,10 @@ export const getContentSectionById = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to fetch content section",
-      error: error.message // Include error message for debugging on frontend
+      error: error.message, // Include error message for debugging on frontend
     });
   }
 };
-
 
 export const createContentSection = async (req, res) => {
   try {
@@ -127,10 +126,17 @@ export const createContentSection = async (req, res) => {
     } = req.body;
 
     // Basic validation for content_sections
-    if (!title || !description || typeof active_yn !== 'number' || !created_by || !page_id) {
+    if (
+      !title ||
+      !description ||
+      typeof active_yn !== "number" ||
+      !created_by ||
+      !page_id
+    ) {
       return res.status(400).json({
         success: false,
-        message: "Missing required fields for content section: title, description, active_yn, created_by, page_id",
+        message:
+          "Missing required fields for content section: title, description, active_yn, created_by, page_id",
       });
     }
 
@@ -147,18 +153,18 @@ export const createContentSection = async (req, res) => {
         created_date: new Date(), // Prisma @default(now()) should handle, but explicit is fine
         page_id,
         refrence_page_id: refrence_page_id || null,
-        lang_code: lang_code || 'en', // Default to 'en' if not provided for main section
+        lang_code: lang_code || "en", // Default to 'en' if not provided for main section
       },
     });
 
     // 2. Automatically create a 'hi' translation in content_sections_lang
     // Only if the main section created is NOT 'hi' (i.e., 'en' as expected)
-    if (newMainSection.lang_code.toLowerCase() === 'en') {
+    if (newMainSection.lang_code.toLowerCase() === "en") {
       try {
         await prisma.content_sections_lang.create({
           data: {
             id: newMainSection.id, // Use the ID of the newly created main section
-            lang_code: 'hi', // Hardcode 'hi' for the automatic translation
+            lang_code: "hi", // Hardcode 'hi' for the automatic translation
             title: `${newMainSection.title}`, // Placeholder title
             description: `${newMainSection.description}`, // Placeholder description
             image_path: newMainSection.image_path,
@@ -170,17 +176,23 @@ export const createContentSection = async (req, res) => {
             refrence_page_id: newMainSection.refrence_page_id,
           },
         });
-        console.log(`Auto-created 'hi' translation for content section ID: ${newMainSection.id}`);
+        console.log(
+          `Auto-created 'hi' translation for content section ID: ${newMainSection.id}`
+        );
       } catch (translationError) {
         // Log translation error but don't fail the main section creation
-        console.error(`Error auto-creating 'hi' translation for ID ${newMainSection.id}:`, translationError);
+        console.error(
+          `Error auto-creating 'hi' translation for ID ${newMainSection.id}:`,
+          translationError
+        );
         // You might want to add a warning message to the response here
       }
     }
 
     return res.status(201).json({
       success: true,
-      message: "Content section and default 'hi' translation created successfully",
+      message:
+        "Content section and default 'hi' translation created successfully",
       data: newMainSection,
     });
   } catch (error) {
@@ -188,7 +200,7 @@ export const createContentSection = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to create content section",
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -214,11 +226,14 @@ export const updateContentSection = async (req, res) => {
     // Basic Validation: Ensure at least the ID exists (checked by findUnique below implicitly)
     // You might want to validate if any fields are actually provided for update.
     const existingSection = await prisma.content_sections.findUnique({
-        where: { id: parseInt(id) }
+      where: { id: parseInt(id) },
     });
 
     if (!existingSection) {
-        return res.status(404).json({ success: false, message: `Content section with ID ${id} not found.` });
+      return res.status(404).json({
+        success: false,
+        message: `Content section with ID ${id} not found.`,
+      });
     }
 
     const updatedSection = await prisma.content_sections.update({
@@ -226,17 +241,26 @@ export const updateContentSection = async (req, res) => {
       data: {
         title: title !== undefined ? title : existingSection.title, // Only update if provided
         id_id: id_id !== undefined ? id_id : existingSection.id_id, // Only update if provided
-        description: description !== undefined ? description : existingSection.description,
-        image_path: image_path !== undefined ? image_path : existingSection.image_path,
-        icon_path: icon_path !== undefined ? icon_path : existingSection.icon_path,
+        description:
+          description !== undefined ? description : existingSection.description,
+        image_path:
+          image_path !== undefined ? image_path : existingSection.image_path,
+        icon_path:
+          icon_path !== undefined ? icon_path : existingSection.icon_path,
         // from_date: from_date ? new Date(from_date) : existingSection.from_date, // Convert if provided
         // upto_date: upto_date ? new Date(upto_date) : existingSection.upto_date, // Convert if provided
-        active_yn: active_yn !== undefined ? active_yn : existingSection.active_yn,
-        updated_by: updated_by !== undefined ? updated_by : existingSection.updated_by,
+        active_yn:
+          active_yn !== undefined ? active_yn : existingSection.active_yn,
+        updated_by:
+          updated_by !== undefined ? updated_by : existingSection.updated_by,
         updated_date: new Date(), // Always update updated_date on update
         page_id: page_id !== undefined ? page_id : existingSection.page_id,
-        refrence_page_id: refrence_page_id !== undefined ? refrence_page_id : existingSection.refrence_page_id,
-        lang_code: lang_code !== undefined ? lang_code : existingSection.lang_code,
+        refrence_page_id:
+          refrence_page_id !== undefined
+            ? refrence_page_id
+            : existingSection.refrence_page_id,
+        lang_code:
+          lang_code !== undefined ? lang_code : existingSection.lang_code,
       },
     });
 
@@ -250,11 +274,10 @@ export const updateContentSection = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to update content section",
-      error: error.message
+      error: error.message,
     });
   }
 };
-
 
 export const deleteContentSection = async (req, res) => {
   try {
@@ -278,7 +301,7 @@ export const deleteContentSection = async (req, res) => {
     await prisma.$transaction(async (tx) => {
       // Delete all associated translations first
       await tx.content_sections_lang.deleteMany({
-        where: { id_id: sectionId },
+        where: { id: sectionId },
       });
 
       // Then delete the main content section
@@ -294,13 +317,17 @@ export const deleteContentSection = async (req, res) => {
   } catch (error) {
     console.error("Error deleting content section:", error);
     // Check for Prisma's RecordNotFound if delete fails due to missing ID (unlikely after initial findUnique)
-    if (error.code === 'P2025') { // Prisma error code for record not found
-        return res.status(404).json({ success: false, message: "Content section not found for deletion." });
+    if (error.code === "P2025") {
+      // Prisma error code for record not found
+      return res.status(404).json({
+        success: false,
+        message: "Content section not found for deletion.",
+      });
     }
     return res.status(500).json({
       success: false,
       message: "Failed to delete content section",
-      error: error.message
+      error: error.message,
     });
   }
 };
