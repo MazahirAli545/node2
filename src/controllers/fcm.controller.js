@@ -191,9 +191,65 @@ export async function getDeviceTokens(req, res) {
   }
 }
 
-export async function getAnnouncement() {
+// export async function getAnnouncement() {
+//   try {
+//     // Create auth client directly
+//     const auth = new GoogleAuth({
+//       credentials: serviceAccount,
+//       scopes: ["https://www.googleapis.com/auth/firebase.messaging"],
+//     });
+
+//     const client = await auth.getClient();
+//     const accessToken = await client.getAccessToken();
+
+//     const projectId = serviceAccount.project_id;
+//     const fcmUrl = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
+
+//     const message = {
+//       message: {
+//         token:
+//           "eAUb9VtfTVC1gafrPvzCTT:APA91bHlkQGZU0FsttcTLwsHsbk5-YFfw9oYDs5X69leUvBBGTbHt7zO3JbgPCan-S8mlbXZLcbktoC8dV9si9gcAff1iFNzKMC_VrLsGpufOnja-5eQ-tE",
+//         notification: {
+//           title: "Hello!",
+//           body: "This is an FCM HTTP v1 test message.",
+//         },
+//       },
+//     };
+
+//     const response = await axios.post(fcmUrl, message, {
+//       headers: {
+//         Authorization: `Bearer ${accessToken.token}`,
+//         "Content-Type": "application/json",
+//       },
+//     });
+
+//     return {
+//       success: true,
+//       message: "Notification sent successfully",
+//       data: response.data,
+//       status: response.status,
+//     };
+//   } catch (error) {
+//     console.error("FCM error:", error.response?.data || error.message);
+
+//     // Return detailed error response
+//     return {
+//       success: false,
+//       message: "Failed to send notification",
+//       error: {
+//         code: error.response?.status || 500,
+//         message: error.response?.data?.error?.message || error.message,
+//         details: error.response?.data?.error?.details || null,
+//       },
+//     };
+//   }
+// }
+
+export async function sendNotificationToTokens(tokens, title, body) {
+  console.log("Received tokens in sendNotificationToTokens:", tokens);
+  console.log("Type of received tokens:", typeof tokens);
+  console.log("Is received tokens an array?", Array.isArray(tokens));
   try {
-    // Create auth client directly
     const auth = new GoogleAuth({
       credentials: serviceAccount,
       scopes: ["https://www.googleapis.com/auth/firebase.messaging"],
@@ -203,39 +259,79 @@ export async function getAnnouncement() {
     const accessToken = await client.getAccessToken();
 
     const projectId = serviceAccount.project_id;
+    console.log("FCM Project ID used in URL:", projectId);
     const fcmUrl = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
 
-    const message = {
-      message: {
-        token:
-          "eAUb9VtfTVC1gafrPvzCTT:APA91bHlkQGZU0FsttcTLwsHsbk5-YFfw9oYDs5X69leUvBBGTbHt7zO3JbgPCan-S8mlbXZLcbktoC8dV9si9gcAff1iFNzKMC_VrLsGpufOnja-5eQ-tE",
-        notification: {
-          title: "Hello!",
-          body: "This is an FCM HTTP v1 test message.",
-        },
-      },
-    };
+    if (!tokens || tokens.length === 0) {
+      console.log("No FCM tokens provided to send notifications.");
+      return {
+        success: true, // It's still a success if there are no tokens to send to.
+        message: "No tokens to send notifications to.",
+        successfulCount: 0,
+        failedCount: 0,
+      };
+    }
 
-    const response = await axios.post(fcmUrl, message, {
-      headers: {
-        Authorization: `Bearer ${accessToken.token}`,
-        "Content-Type": "application/json",
-      },
+    const sendPromises = tokens.map(async (token) => {
+      const message = {
+        message: {
+          token: token,
+          notification: {
+            title: title,
+            body: body,
+          },
+          data: {
+            eventType: "newEvent",
+            // You might want to include the actual event ID here for client-side routing
+            // eventId: newEvent.ENVT_ID.toString(), // If newEvent is accessible, or pass it as an argument
+          },
+        },
+      };
+      try {
+        const response = await axios.post(fcmUrl, message, {
+          headers: {
+            Authorization: `Bearer ${accessToken.token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        return { status: "fulfilled", value: response.data }; // Return data for successful sends
+      } catch (error) {
+        // Capture only relevant error info to avoid circular structures
+        return {
+          status: "rejected",
+          reason: {
+            message: error.message,
+            code: error.code,
+            status: error.response?.status,
+            data: error.response?.data,
+          },
+        };
+      }
     });
+
+    const responses = await Promise.allSettled(sendPromises);
+
+    const successfulSends = responses.filter(
+      (res) => res.status === "fulfilled"
+    ).length;
+    const failedSends = responses.filter((res) => res.status === "rejected");
+
+    if (failedSends.length > 0) {
+      console.error("Some notifications failed to send:", failedSends);
+    }
 
     return {
       success: true,
-      message: "Notification sent successfully",
-      data: response.data,
-      status: response.status,
+      message: `Sent ${successfulSends} notifications, failed ${failedSends.length}`,
+      successfulCount: successfulSends,
+      failedCount: failedSends.length,
+      detailedResponses: responses,
     };
   } catch (error) {
     console.error("FCM error:", error.response?.data || error.message);
-
-    // Return detailed error response
     return {
       success: false,
-      message: "Failed to send notification",
+      message: "Failed to send notification(s)",
       error: {
         code: error.response?.status || 500,
         message: error.response?.data?.error?.message || error.message,

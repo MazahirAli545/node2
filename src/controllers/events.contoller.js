@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import express from "express";
 import prisma from "../db/prismaClient.js";
+import { sendNotificationToTokens } from "./fcm.controller.js";
 
 const app = express();
 // const prisma = new PrismaClient();
@@ -114,10 +115,53 @@ export async function createEvent(req, res) {
       },
     });
 
+    const allFcmTokens = await prisma.fcmToken.findMany({
+      select: {
+        fcmToken: true,
+      },
+    });
+
+    console.log("Event fcm: ", allFcmTokens);
+
+    // Extract just the token strings
+    const tokens = allFcmTokens.map((tokenData) => tokenData.fcmToken);
+    console.log("Tokens being sent to FCM controller:", tokens);
+    console.log("Type of tokens:", typeof tokens);
+    console.log("Is tokens an array?", Array.isArray(tokens));
+
+    const notificationTitle = "New Event Added!";
+    const notificationBody = `Check out the new event: ${newEvent.ENVT_DESC}`;
+
+    const notificationResult = await sendNotificationToTokens(
+      tokens,
+      notificationTitle,
+      notificationBody
+    );
+
+    if (notificationResult.success) {
+      console.log(
+        "FCM Notification sent successfully:",
+        notificationResult.data
+      );
+    } else {
+      console.error(
+        "Failed to send FCM notification:",
+        notificationResult.error
+      );
+    }
+
     return res.status(201).json({
       message: "Event created successfully",
       success: true,
       event: newEvent,
+      notificationStatus: {
+        success: notificationResult.success,
+        message: notificationResult.message,
+        successfulCount: notificationResult.successfulCount,
+        failedCount: notificationResult.failedCount,
+        // Optionally, include simplified error details if needed by the client
+        // failedReasons: notificationResult.simplifiedFailedReasons
+      },
     });
   } catch (error) {
     console.error("Error creating events:", error);
