@@ -301,8 +301,6 @@ model content_sections {
   description      String    @db.Text
   image_path       String?   @db.VarChar(250)
   icon_path        String?   @db.VarChar(250)
-  from_date        DateTime  @db.Date
-  upto_date        DateTime  @db.Date
   active_yn        Int // Interpreted as 0 for false/inactive, 1 for true/active
   created_by       Int
   created_date     DateTime  @db.Date
@@ -320,8 +318,6 @@ model content_sections_lang {
   description      String    @db.Text
   image_path       String?   @db.VarChar(250)
   icon_path        String?   @db.VarChar(250)
-  from_date        DateTime  @db.Date
-  upto_date        DateTime  @db.Date
   active_yn        Int
   created_by       Int
   created_date     DateTime  @db.Date

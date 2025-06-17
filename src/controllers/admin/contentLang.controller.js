@@ -31,8 +31,8 @@ export const getAllContentSectionsLang = async (req, res) => {
     // Format dates for consistency
     const formattedData = data.map(entry => ({
       ...entry,
-      from_date: formatDateToYYYYMMDD(entry.from_date),
-      upto_date: formatDateToYYYYMMDD(entry.upto_date),
+      // from_date: formatDateToYYYYMMDD(entry.from_date),
+      // upto_date: formatDateToYYYYMMDD(entry.upto_date),
       created_date: formatDateToYYYYMMDD(entry.created_date),
       updated_date: formatDateToYYYYMMDD(entry.updated_date),
     }));
@@ -62,8 +62,8 @@ export const createContentSectionLang = async (req, res) => {
       description,
       image_path,
       icon_path,
-      from_date,
-      upto_date,
+      // from_date,
+      // upto_date,
       active_yn,
       created_by,
       page_id,
@@ -71,10 +71,10 @@ export const createContentSectionLang = async (req, res) => {
     } = req.body;
 
     // Basic Validation: Ensure required fields are present
-    if (!id_id || !lang_code || !title || !description || !from_date || !upto_date || typeof active_yn !== 'number' || !created_by) {
+    if (!id_id || !lang_code || !title || !description || typeof active_yn !== 'number' || !created_by) {
       return res.status(400).json({
         success: false,
-        message: "Missing required fields for translation: id_id, lang_code, title, description, from_date, upto_date, active_yn, created_by",
+        message: "Missing required fields for translation: id_id, lang_code, title, description, active_yn, created_by",
       });
     }
 
@@ -96,8 +96,8 @@ export const createContentSectionLang = async (req, res) => {
         description,
         image_path: image_path || null,
         icon_path: icon_path || null,
-        from_date: new Date(from_date),
-        upto_date: new Date(upto_date),
+        // from_date: new Date(from_date),
+        // upto_date: new Date(upto_date),
         active_yn,
         created_by,
         created_date: new Date(), // Set current date automatically
@@ -147,8 +147,8 @@ export const getContentSectionLangById = async (req, res) => {
     // Format dates for consistency
     const formattedEntry = {
       ...entry,
-      from_date: formatDateToYYYYMMDD(entry.from_date),
-      upto_date: formatDateToYYYYMMDD(entry.upto_date),
+      // from_date: formatDateToYYYYMMDD(entry.from_date),
+      // upto_date: formatDateToYYYYMMDD(entry.upto_date),
       created_date: formatDateToYYYYMMDD(entry.created_date),
       updated_date: formatDateToYYYYMMDD(entry.updated_date),
     };
@@ -177,8 +177,8 @@ export const updateContentSectionLang = async (req, res) => {
       description,
       image_path,
       icon_path,
-      from_date,
-      upto_date,
+      // from_date,
+      // upto_date,
       active_yn,
       updated_by,
       page_id,
@@ -212,8 +212,8 @@ export const updateContentSectionLang = async (req, res) => {
         description: description !== undefined ? description : existingEntry.description,
         image_path: image_path !== undefined ? image_path : existingEntry.image_path,
         icon_path: icon_path !== undefined ? icon_path : existingEntry.icon_path,
-        from_date: from_date ? new Date(from_date) : existingEntry.from_date,
-        upto_date: upto_date ? new Date(upto_date) : existingEntry.upto_date,
+        // from_date: from_date ? new Date(from_date) : existingEntry.from_date,
+        // upto_date: upto_date ? new Date(upto_date) : existingEntry.upto_date,
         active_yn: active_yn !== undefined ? active_yn : existingEntry.active_yn,
         updated_by: updated_by !== undefined ? updated_by : existingEntry.updated_by,
         updated_date: new Date(), // Auto-set current date

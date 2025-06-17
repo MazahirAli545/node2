@@ -28,8 +28,8 @@ export const getAllContentSections = async (req, res) => {
     // Format dates for consistency in output
     const formattedSections = sections.map(section => ({
       ...section,
-      from_date: formatDateToYYYYMMDD(section.from_date),
-      upto_date: formatDateToYYYYMMDD(section.upto_date),
+      // from_date: formatDateToYYYYMMDD(section.from_date),
+      // upto_date: formatDateToYYYYMMDD(section.upto_date),
       created_date: formatDateToYYYYMMDD(section.created_date),
       updated_date: formatDateToYYYYMMDD(section.updated_date),
     }));
@@ -78,8 +78,8 @@ export const getContentSectionById = async (req, res) => {
     // Format dates for the main section
     const formattedSection = {
       ...section,
-      from_date: formatDateToYYYYMMDD(section.from_date),
-      upto_date: formatDateToYYYYMMDD(section.upto_date),
+      // from_date: formatDateToYYYYMMDD(section.from_date),
+      // upto_date: formatDateToYYYYMMDD(section.upto_date),
       created_date: formatDateToYYYYMMDD(section.created_date),
       updated_date: formatDateToYYYYMMDD(section.updated_date),
     };
@@ -87,8 +87,8 @@ export const getContentSectionById = async (req, res) => {
     // Format dates for translations
     const formattedTranslations = translations.map(translation => ({
       ...translation,
-      from_date: formatDateToYYYYMMDD(translation.from_date),
-      upto_date: formatDateToYYYYMMDD(translation.upto_date),
+      // from_date: formatDateToYYYYMMDD(translation.from_date),
+      // upto_date: formatDateToYYYYMMDD(translation.upto_date),
       created_date: formatDateToYYYYMMDD(translation.created_date),
       updated_date: formatDateToYYYYMMDD(translation.updated_date),
     }));
@@ -121,8 +121,8 @@ export const createContentSection = async (req, res) => {
       description,
       image_path,
       icon_path,
-      from_date,
-      upto_date,
+      // from_date,
+      // upto_date,
       active_yn,
       created_by,
       page_id,
@@ -131,10 +131,10 @@ export const createContentSection = async (req, res) => {
     } = req.body;
 
     // Basic Validation: Ensure required fields are present
-    if (!title || !description || !from_date || !upto_date || typeof active_yn !== 'number' || !created_by || !page_id) {
+    if (!title || !description  || typeof active_yn !== 'number' || !created_by || !page_id) {
         return res.status(400).json({
             success: false,
-            message: "Missing required fields: title, description, from_date, upto_date, active_yn, created_by, page_id",
+            message: "Missing required fields: title, description, active_yn, created_by, page_id",
         });
     }
 
@@ -145,8 +145,8 @@ export const createContentSection = async (req, res) => {
         description,
         image_path,
         icon_path,
-        from_date: new Date(from_date),
-        upto_date: new Date(upto_date),
+        // from_date: new Date(from_date),
+        // upto_date: new Date(upto_date),
         active_yn,
         created_by,
         created_date: new Date(), // Automatically set to current time
@@ -181,8 +181,8 @@ export const updateContentSection = async (req, res) => {
       description,
       image_path,
       icon_path,
-      from_date,
-      upto_date,
+      // from_date,
+      // upto_date,
       active_yn,
       updated_by,
       page_id,
@@ -208,8 +208,8 @@ export const updateContentSection = async (req, res) => {
         description: description !== undefined ? description : existingSection.description,
         image_path: image_path !== undefined ? image_path : existingSection.image_path,
         icon_path: icon_path !== undefined ? icon_path : existingSection.icon_path,
-        from_date: from_date ? new Date(from_date) : existingSection.from_date, // Convert if provided
-        upto_date: upto_date ? new Date(upto_date) : existingSection.upto_date, // Convert if provided
+        // from_date: from_date ? new Date(from_date) : existingSection.from_date, // Convert if provided
+        // upto_date: upto_date ? new Date(upto_date) : existingSection.upto_date, // Convert if provided
         active_yn: active_yn !== undefined ? active_yn : existingSection.active_yn,
         updated_by: updated_by !== undefined ? updated_by : existingSection.updated_by,
         updated_date: new Date(), // Always update updated_date on update
