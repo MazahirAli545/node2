@@ -1,336 +1,3 @@
-// import prisma from "../db/prismaClient.js";
-
-// // export async function registeredfcmToken(req, res) {
-// //   try {
-// //     const { PR_ID, fcmToken, deviceId } = req.body;
-
-// //     if (!PR_ID || !fcmToken || !deviceId) {
-// //       return res.status(400).json({
-// //         message: "Missing required fields",
-// //         success: false,
-// //       });
-// //     }
-// //     const result = await prisma.fcmToken.upsert({
-// //       where: {
-// //         PR_ID_deviceId: {
-// //           PR_ID,
-// //           deviceId,
-// //         },
-// //       },
-// //       update: {
-// //         fcmToken,
-// //       },
-// //       create: {
-// //         PR_ID,
-// //         fcmToken,
-// //         deviceId,
-// //       },
-// //     });
-
-// //     return res.status(200).json({
-// //       message: "FCM Token registered successfully",
-// //       success: true,
-// //       data: result,
-// //     });
-// //   } catch (error) {
-// //     console.error("Error registering FCM token:", error);
-// //     return res.status(500).json({
-// //       message: "Error registering FCM token",
-// //       success: false,
-// //       error: error.message,
-// //     });
-// //   }
-// // }
-// export async function registeredfcmToken(req, res) {
-//   try {
-//     const { PR_ID, fcmToken, deviceId } = req.body;
-
-//     if (!PR_ID || !fcmToken || !deviceId) {
-//       return res.status(400).json({
-//         message: "Missing required fields",
-//         success: false,
-//       });
-//     }
-
-//     // First, remove any existing token for this user-device combination
-//     await prisma.fcmToken.deleteMany({
-//       where: {
-//         PR_ID,
-//         deviceId,
-//       },
-//     });
-
-//     // Then create/update the new token
-//     const result = await prisma.fcmToken.create({
-//       data: {
-//         PR_ID,
-//         fcmToken,
-//         deviceId,
-//       },
-//     });
-
-//     return res.status(200).json({
-//       message: "FCM Token registered successfully",
-//       success: true,
-//       data: result,
-//     });
-//   } catch (error) {
-//     console.error("Error registering FCM token:", error);
-//     return res.status(500).json({
-//       message: "Error registering FCM token",
-//       success: false,
-//       error: error.message,
-//     });
-//   }
-// }
-// export async function removeFcmToken(req, res) {
-//   try {
-//     const { fcmToken, deviceId } = req.body;
-
-//     if (!fcmToken || !deviceId) {
-//       return res.status(400).json({
-//         message: "Missing required fields",
-//         success: false,
-//       });
-//     }
-
-//     const result = await prisma.fcmToken.deleteMany({
-//       where: {
-//         fcmToken,
-//         deviceId,
-//       },
-//     });
-
-//     return res.status(200).json({
-//       message: "FCM token removed successfully",
-//       success: true,
-//       deletedCount: result.count,
-//     });
-//   } catch (error) {
-//     console.error("Error removing FCM token:", error);
-//     return res.status(500).json({
-//       message: "Error removing FCM token",
-//       success: false,
-//       error: error.message,
-//     });
-//   }
-// }
-
-// export async function checkDeviceRegistration(req, res) {
-//   try {
-//     const { deviceId, PR_ID } = req.params;
-
-//     // Check if this specific user-device combination exists
-//     const existing = await prisma.fcmToken.findFirst({
-//       where: {
-//         deviceId,
-//         PR_ID,
-//       },
-//     });
-
-//     return res.json({
-//       registered: !!existing,
-//       isRegisteredToOtherUser: existing && existing.PR_ID !== PR_ID,
-//     });
-//   } catch (error) {
-//     console.error("Device check failed", error);
-//     res.status(500).json({
-//       registered: false,
-//       isRegisteredToOtherUser: false,
-//       error: "Server error",
-//     });
-//   }
-// }
-
-// export async function clearDeviceUserAssociation(req, res) {
-//   try {
-//     const { PR_ID, deviceId } = req.body;
-
-//     const result = await prisma.fcmToken.deleteMany({
-//       where: {
-//         PR_ID,
-//         deviceId,
-//       },
-//     });
-
-//     return res.status(200).json({
-//       message: "Device-user association cleared successfully",
-//       success: true,
-//       deletedCount: result.count,
-//     });
-//   } catch (error) {
-//     console.error("Error clearing device association:", error);
-//     return res.status(500).json({
-//       message: "Error clearing device association",
-//       success: false,
-//       error: error.message,
-//     });
-//   }
-// }
-
-///////////////////////////////////////////////////////////////////////
-// import prisma from "../db/prismaClient.js";
-
-// export async function registeredfcmToken(req, res) {
-//   try {
-//     const { PR_ID, fcmToken, deviceId } = req.body;
-
-//     if (!PR_ID || !fcmToken || !deviceId) {
-//       return res.status(400).json({
-//         message: "Missing required fields",
-//         success: false,
-//       });
-//     }
-
-//     // Check if device is already registered to another user
-//     const existingRegistration = await prisma.fcmToken.findFirst({
-//       where: {
-//         deviceId,
-//         NOT: {
-//           PR_ID: PR_ID,
-//         },
-//       },
-//     });
-
-//     if (existingRegistration) {
-//       return res.status(400).json({
-//         message: "Device already registered to another user",
-//         success: false,
-//         existingPR_ID: existingRegistration.PR_ID,
-//       });
-//     }
-
-//     // Atomic operation to update or create
-//     const result = await prisma.fcmToken.upsert({
-//       where: {
-//         PR_ID_deviceId: {
-//           PR_ID,
-//           deviceId,
-//         },
-//       },
-//       update: {
-//         fcmToken,
-//       },
-//       create: {
-//         PR_ID,
-//         fcmToken,
-//         deviceId,
-//       },
-//     });
-
-//     return res.status(200).json({
-//       message: "FCM Token registered successfully",
-//       success: true,
-//       data: result,
-//     });
-//   } catch (error) {
-//     console.error("Error registering FCM token:", error);
-//     return res.status(500).json({
-//       message: "Error registering FCM token",
-//       success: false,
-//       error: error.message,
-//     });
-//   }
-// }
-
-// export async function removeFcmToken(req, res) {
-//   try {
-//     const { fcmToken, deviceId } = req.body;
-
-//     if (!fcmToken || !deviceId) {
-//       return res.status(400).json({
-//         message: "Missing required fields",
-//         success: false,
-//       });
-//     }
-
-//     const result = await prisma.fcmToken.deleteMany({
-//       where: {
-//         fcmToken,
-//         deviceId,
-//       },
-//     });
-
-//     return res.status(200).json({
-//       message: "FCM token removed successfully",
-//       success: true,
-//       deletedCount: result.count,
-//     });
-//   } catch (error) {
-//     console.error("Error removing FCM token:", error);
-//     return res.status(500).json({
-//       message: "Error removing FCM token",
-//       success: false,
-//       error: error.message,
-//     });
-//   }
-// }
-
-// export async function checkDeviceRegistration(req, res) {
-//   try {
-//     const { deviceId, PR_ID } = req.params;
-
-//     // Check all registrations for this device
-//     const registrations = await prisma.fcmToken.findMany({
-//       where: { deviceId },
-//     });
-
-//     const isRegisteredToCurrentUser = registrations.some(
-//       (reg) => reg.PR_ID === PR_ID
-//     );
-//     const isRegisteredToOtherUser = registrations.some(
-//       (reg) => reg.PR_ID !== PR_ID
-//     );
-
-//     return res.json({
-//       registered: registrations.length > 0,
-//       isRegisteredToCurrentUser,
-//       isRegisteredToOtherUser,
-//       existingRegistrations: registrations,
-//     });
-//   } catch (error) {
-//     console.error("Device check failed", error);
-//     res.status(500).json({
-//       registered: false,
-//       isRegisteredToCurrentUser: false,
-//       isRegisteredToOtherUser: false,
-//       error: "Server error",
-//     });
-//   }
-// }
-
-// export async function clearDeviceUserAssociation(req, res) {
-//   try {
-//     const { PR_ID, deviceId } = req.body;
-
-//     if (!PR_ID || !deviceId) {
-//       return res.status(400).json({
-//         message: "Missing required fields",
-//         success: false,
-//       });
-//     }
-
-//     const result = await prisma.fcmToken.deleteMany({
-//       where: {
-//         PR_ID,
-//         deviceId,
-//       },
-//     });
-
-//     return res.status(200).json({
-//       message: "Device-user association cleared successfully",
-//       success: true,
-//       deletedCount: result.count,
-//     });
-//   } catch (error) {
-//     console.error("Error clearing device association:", error);
-//     return res.status(500).json({
-//       message: "Error clearing device association",
-//       success: false,
-//       error: error.message,
-//     });
-//   }
-// }
 import prisma from "../db/prismaClient.js";
 
 import { GoogleAuth } from "google-auth-library";
@@ -523,85 +190,10 @@ export async function getDeviceTokens(req, res) {
     });
   }
 }
-// export async function getAnnouncement() {
-//   try {
-//     // Create auth client directly
-//     const auth = new GoogleAuth({
-//       credentials: serviceAccount,
-//       scopes: ["https://www.googleapis.com/auth/firebase.messaging"],
-//     });
 
-//     const client = await auth.getClient();
-//     const accessToken = await client.getAccessToken();
-
-//     const projectId = serviceAccount.project_id;
-//     const fcmUrl = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
-
-//     const message = {
-//       message: {
-//         token:
-//           "eAUb9VtfTVC1gafrPvzCTT:APA91bHlkQGZU0FsttcTLwsHsbk5-YFfw9oYDs5X69leUvBBGTbHt7zO3JbgPCan-S8mlbXZLcbktoC8dV9si9gcAff1iFNzKMC_VrLsGpufOnja-5eQ-tE",
-//         notification: {
-//           title: "Hello!",
-//           body: "This is an FCM HTTP v1 test message.",
-//         },
-//       },
-//     };
-
-//     const response = await axios.post(fcmUrl, message, {
-//       headers: {
-//         Authorization: `Bearer ${accessToken.token}`,
-//         "Content-Type": "application/json",
-//       },
-//     });
-
-//     return {
-//       success: true,
-//       message: "Notification sent successfully",
-//       data: response.data,
-//       status: response.status,
-//     };
-//   } catch (error) {
-//     console.error("FCM error:", error.response?.data || error.message);
-
-//     // Return detailed error response
-//     return {
-//       success: false,
-//       message: "Failed to send notification",
-//       error: {
-//         code: error.response?.status || 500,
-//         message: error.response?.data?.error?.message || error.message,
-//         details: error.response?.data?.error?.details || null,
-//       },
-//     };
-//   }
-// }
-export async function getAnnouncement(req, res) {
+export async function getAnnouncement() {
   try {
-    const { title, body } = req.body;
-
-    if (!title || !body) {
-      return res.status(400).json({
-        message: "Title and body are required",
-        success: false,
-      });
-    }
-
-    // Get all registered FCM tokens
-    const allTokens = await prisma.fcmToken.findMany({
-      select: {
-        fcmToken: true,
-      },
-    });
-
-    if (allTokens.length === 0) {
-      return res.status(200).json({
-        success: true,
-        message: "No devices registered to receive notifications",
-      });
-    }
-
-    // Create auth client
+    // Create auth client directly
     const auth = new GoogleAuth({
       credentials: serviceAccount,
       scopes: ["https://www.googleapis.com/auth/firebase.messaging"],
@@ -609,78 +201,46 @@ export async function getAnnouncement(req, res) {
 
     const client = await auth.getClient();
     const accessToken = await client.getAccessToken();
+
     const projectId = serviceAccount.project_id;
     const fcmUrl = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
 
-    // Prepare notification message
-    const notificationMessage = {
-      title,
-      body,
+    const message = {
+      message: {
+        token:
+          "eAUb9VtfTVC1gafrPvzCTT:APA91bHlkQGZU0FsttcTLwsHsbk5-YFfw9oYDs5X69leUvBBGTbHt7zO3JbgPCan-S8mlbXZLcbktoC8dV9si9gcAff1iFNzKMC_VrLsGpufOnja-5eQ-tE",
+        notification: {
+          title: "Hello!",
+          body: "This is an FCM HTTP v1 test message.",
+        },
+      },
     };
 
-    // Send in batches
-    const BATCH_SIZE = 500;
-    const results = [];
-
-    for (let i = 0; i < allTokens.length; i += BATCH_SIZE) {
-      const batch = allTokens.slice(i, i + BATCH_SIZE);
-
-      const batchResults = await Promise.all(
-        batch.map(async (tokenObj) => {
-          try {
-            const response = await axios.post(
-              fcmUrl,
-              {
-                message: {
-                  token: tokenObj.fcmToken,
-                  notification: notificationMessage,
-                },
-              },
-              {
-                headers: {
-                  Authorization: `Bearer ${accessToken.token}`,
-                  "Content-Type": "application/json",
-                },
-                timeout: 5000,
-              }
-            );
-            return { success: true, token: tokenObj.fcmToken };
-          } catch (error) {
-            console.error(`Error sending to token:`, {
-              token: tokenObj.fcmToken?.slice(0, 10) + "...",
-              error: error.message,
-            });
-
-            if (error.response?.data?.error?.status === "NOT_FOUND") {
-              await prisma.fcmToken.deleteMany({
-                where: { fcmToken: tokenObj.fcmToken },
-              });
-            }
-            return {
-              success: false,
-              token: tokenObj.fcmToken,
-              error: error.message,
-            };
-          }
-        })
-      );
-      results.push(...batchResults);
-    }
-
-    const successCount = results.filter((r) => r.success).length;
-    const failCount = results.length - successCount;
-
-    return res.status(200).json({
-      success: true,
-      message: `Notifications sent to ${successCount} devices, ${failCount} failed`,
-      results,
+    const response = await axios.post(fcmUrl, message, {
+      headers: {
+        Authorization: `Bearer ${accessToken.token}`,
+        "Content-Type": "application/json",
+      },
     });
+
+    return {
+      success: true,
+      message: "Notification sent successfully",
+      data: response.data,
+      status: response.status,
+    };
   } catch (error) {
     console.error("FCM error:", error.response?.data || error.message);
-    return res.status(500).json({
+
+    // Return detailed error response
+    return {
       success: false,
-      message: "Failed to send notifications",
-      error: error.message,
-    });
+      message: "Failed to send notification",
+      error: {
+        code: error.response?.status || 500,
+        message: error.response?.data?.error?.message || error.message,
+        details: error.response?.data?.error?.details || null,
+      },
+    };
   }
 }

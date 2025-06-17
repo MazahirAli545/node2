@@ -1,7 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import express from "express";
 import prisma from "../db/prismaClient.js";
-import { getAnnouncement } from "../controllers/fcm.controller.js";
 
 const app = express();
 // const prisma = new PrismaClient();
@@ -115,20 +114,10 @@ export async function createEvent(req, res) {
       },
     });
 
-    const notification = await getAnnouncement({
-      title: "New Event Created!",
-      body: ENVT_EXCERPT || "Check out our new event",
-    });
-
-    if (!notification.success) {
-      console.error("Failed to send notification:", notification.error);
-    }
-
     return res.status(201).json({
       message: "Event created successfully",
       success: true,
       event: newEvent,
-      notificationSent: notification.success,
     });
   } catch (error) {
     console.error("Error creating events:", error);
