@@ -245,10 +245,105 @@ export async function getDeviceTokens(req, res) {
 //   }
 // }
 
+// export async function sendNotificationToTokens(tokens, title, body) {
+//   console.log("Received tokens in sendNotificationToTokens:", tokens);
+//   console.log("Type of received tokens:", typeof tokens);
+//   console.log("Is received tokens an array?", Array.isArray(tokens));
+//   try {
+//     const auth = new GoogleAuth({
+//       credentials: serviceAccount,
+//       scopes: ["https://www.googleapis.com/auth/firebase.messaging"],
+//     });
+
+//     const client = await auth.getClient();
+//     const accessToken = await client.getAccessToken();
+
+//     const projectId = serviceAccount.project_id;
+//     console.log("FCM Project ID used in URL:", projectId);
+//     const fcmUrl = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
+
+//     if (!tokens || tokens.length === 0) {
+//       console.log("No FCM tokens provided to send notifications.");
+//       return {
+//         success: true, // It's still a success if there are no tokens to send to.
+//         message: "No tokens to send notifications to.",
+//         successfulCount: 0,
+//         failedCount: 0,
+//       };
+//     }
+
+//     const sendPromises = tokens.map(async (token) => {
+//       const message = {
+//         message: {
+//           token: token,
+//           notification: {
+//             title: title,
+//             body: body,
+//           },
+//           data: {
+//             eventType: "newEvent",
+//             // You might want to include the actual event ID here for client-side routing
+//             // eventId: newEvent.ENVT_ID.toString(), // If newEvent is accessible, or pass it as an argument
+//           },
+//         },
+//       };
+//       try {
+//         const response = await axios.post(fcmUrl, message, {
+//           headers: {
+//             Authorization: `Bearer ${accessToken.token}`,
+//             "Content-Type": "application/json",
+//           },
+//         });
+//         return { status: "fulfilled", value: response.data }; // Return data for successful sends
+//       } catch (error) {
+//         // Capture only relevant error info to avoid circular structures
+//         return {
+//           status: "rejected",
+//           reason: {
+//             message: error.message,
+//             code: error.code,
+//             status: error.response?.status,
+//             data: error.response?.data,
+//           },
+//         };
+//       }
+//     });
+
+//     const responses = await Promise.allSettled(sendPromises);
+
+//     const successfulSends = responses.filter(
+//       (res) => res.status === "fulfilled"
+//     ).length;
+//     const failedSends = responses.filter((res) => res.status === "rejected");
+
+//     if (failedSends.length > 0) {
+//       console.error("Some notifications failed to send:", failedSends);
+//     }
+
+//     return {
+//       success: true,
+//       message: `Sent ${successfulSends} notifications, failed ${failedSends.length}`,
+//       successfulCount: successfulSends,
+//       failedCount: failedSends.length,
+//       detailedResponses: responses,
+//     };
+//   } catch (error) {
+//     console.error("FCM error:", error.response?.data || error.message);
+//     return {
+//       success: false,
+//       message: "Failed to send notification(s)",
+//       error: {
+//         code: error.response?.status || 500,
+//         message: error.response?.data?.error?.message || error.message,
+//         details: error.response?.data?.error?.details || null,
+//       },
+//     };
+//   }
+// }
+
 export async function sendNotificationToTokens(tokens, title, body) {
-  console.log("Received tokens in sendNotificationToTokens:", tokens);
-  console.log("Type of received tokens:", typeof tokens);
-  console.log("Is received tokens an array?", Array.isArray(tokens));
+  console.log("Original tokens received:", tokens);
+
   try {
     const auth = new GoogleAuth({
       credentials: serviceAccount,
@@ -259,20 +354,30 @@ export async function sendNotificationToTokens(tokens, title, body) {
     const accessToken = await client.getAccessToken();
 
     const projectId = serviceAccount.project_id;
-    console.log("FCM Project ID used in URL:", projectId);
     const fcmUrl = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
 
     if (!tokens || tokens.length === 0) {
       console.log("No FCM tokens provided to send notifications.");
       return {
-        success: true, // It's still a success if there are no tokens to send to.
+        success: true,
         message: "No tokens to send notifications to.",
         successfulCount: 0,
         failedCount: 0,
       };
     }
 
-    const sendPromises = tokens.map(async (token) => {
+    // Deduplicate tokens - keep only the last occurrence of each token
+    const uniqueTokensMap = new Map();
+
+    // Process tokens in reverse order so last occurrence overwrites previous ones
+    [...tokens].reverse().forEach((token) => {
+      uniqueTokensMap.set(token, true);
+    });
+
+    const uniqueTokens = Array.from(uniqueTokensMap.keys());
+    console.log("Deduplicated tokens to send:", uniqueTokens);
+
+    const sendPromises = uniqueTokens.map(async (token) => {
       const message = {
         message: {
           token: token,
@@ -282,11 +387,10 @@ export async function sendNotificationToTokens(tokens, title, body) {
           },
           data: {
             eventType: "newEvent",
-            // You might want to include the actual event ID here for client-side routing
-            // eventId: newEvent.ENVT_ID.toString(), // If newEvent is accessible, or pass it as an argument
           },
         },
       };
+
       try {
         const response = await axios.post(fcmUrl, message, {
           headers: {
@@ -294,9 +398,8 @@ export async function sendNotificationToTokens(tokens, title, body) {
             "Content-Type": "application/json",
           },
         });
-        return { status: "fulfilled", value: response.data }; // Return data for successful sends
+        return { status: "fulfilled", value: response.data };
       } catch (error) {
-        // Capture only relevant error info to avoid circular structures
         return {
           status: "rejected",
           reason: {
@@ -322,9 +425,10 @@ export async function sendNotificationToTokens(tokens, title, body) {
 
     return {
       success: true,
-      message: `Sent ${successfulSends} notifications, failed ${failedSends.length}`,
+      message: `Sent ${successfulSends} notifications (${uniqueTokens.length} unique tokens), failed ${failedSends.length}`,
       successfulCount: successfulSends,
       failedCount: failedSends.length,
+      totalUniqueTokens: uniqueTokens.length,
       detailedResponses: responses,
     };
   } catch (error) {
@@ -338,5 +442,57 @@ export async function sendNotificationToTokens(tokens, title, body) {
         details: error.response?.data?.error?.details || null,
       },
     };
+  }
+}
+
+// Add this to fcm.controller.js
+
+export async function getAllAdminFcmTokens(req, res) {
+  try {
+    // First, get all admin users from the peopleRegistry table
+    const adminUsers = await prisma.peopleRegistry.findMany({
+      where: {
+        PR_ROLE: "Admin", // Assuming you have a field to identify admin users
+      },
+      select: {
+        PR_ID: true,
+      },
+    });
+
+    if (!adminUsers || adminUsers.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: "No admin users found",
+        data: [],
+      });
+    }
+
+    // Get all FCM tokens for these admin users
+    const adminUserIds = adminUsers.map((user) => user.PR_ID);
+    const fcmTokens = await prisma.fcmToken.findMany({
+      where: {
+        PR_ID: {
+          in: adminUserIds,
+        },
+      },
+      select: {
+        fcmToken: true,
+        PR_ID: true,
+        deviceId: true,
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Admin FCM tokens retrieved successfully",
+      data: fcmTokens,
+    });
+  } catch (error) {
+    console.error("Error getting admin FCM tokens:", error);
+    return res.status(500).json({
+      message: "Error getting admin FCM tokens",
+      success: false,
+      error: error.message,
+    });
   }
 }
