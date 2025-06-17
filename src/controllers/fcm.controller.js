@@ -523,16 +523,74 @@ export async function getDeviceTokens(req, res) {
     });
   }
 }
-export async function getAnnouncement() {
+// export async function getAnnouncement() {
+//   try {
+//     // Create auth client directly
+//     const auth = new GoogleAuth({
+//       credentials: serviceAccount,
+//       scopes: ["https://www.googleapis.com/auth/firebase.messaging"],
+//     });
+
+//     const client = await auth.getClient();
+//     const accessToken = await client.getAccessToken();
+
+//     const projectId = serviceAccount.project_id;
+//     const fcmUrl = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
+
+//     const message = {
+//       message: {
+//         token:
+//           "eAUb9VtfTVC1gafrPvzCTT:APA91bHlkQGZU0FsttcTLwsHsbk5-YFfw9oYDs5X69leUvBBGTbHt7zO3JbgPCan-S8mlbXZLcbktoC8dV9si9gcAff1iFNzKMC_VrLsGpufOnja-5eQ-tE",
+//         notification: {
+//           title: "Hello!",
+//           body: "This is an FCM HTTP v1 test message.",
+//         },
+//       },
+//     };
+
+//     const response = await axios.post(fcmUrl, message, {
+//       headers: {
+//         Authorization: `Bearer ${accessToken.token}`,
+//         "Content-Type": "application/json",
+//       },
+//     });
+
+//     return {
+//       success: true,
+//       message: "Notification sent successfully",
+//       data: response.data,
+//       status: response.status,
+//     };
+//   } catch (error) {
+//     console.error("FCM error:", error.response?.data || error.message);
+
+//     // Return detailed error response
+//     return {
+//       success: false,
+//       message: "Failed to send notification",
+//       error: {
+//         code: error.response?.status || 500,
+//         message: error.response?.data?.error?.message || error.message,
+//         details: error.response?.data?.error?.details || null,
+//       },
+//     };
+//   }
+// }
+export async function getAnnouncement(req, res) {
   try {
-    // Create auth client directly
+    // Create auth client directly with cached credentials
     const auth = new GoogleAuth({
       credentials: serviceAccount,
       scopes: ["https://www.googleapis.com/auth/firebase.messaging"],
     });
 
-    const client = await auth.getClient();
-    const accessToken = await client.getAccessToken();
+    // Get access token with timeout
+    const accessToken = await Promise.race([
+      auth.getAccessToken(),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Auth timeout")), 5000)
+      ),
+    ]);
 
     const projectId = serviceAccount.project_id;
     const fcmUrl = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
@@ -548,31 +606,26 @@ export async function getAnnouncement() {
       },
     };
 
+    // Add axios timeout
     const response = await axios.post(fcmUrl, message, {
       headers: {
         Authorization: `Bearer ${accessToken.token}`,
         "Content-Type": "application/json",
       },
+      timeout: 5000, // 5 second timeout
     });
 
-    return {
+    return res.status(200).json({
       success: true,
       message: "Notification sent successfully",
       data: response.data,
-      status: response.status,
-    };
+    });
   } catch (error) {
-    console.error("FCM error:", error.response?.data || error.message);
-
-    // Return detailed error response
-    return {
+    console.error("FCM error:", error.message);
+    return res.status(500).json({
       success: false,
       message: "Failed to send notification",
-      error: {
-        code: error.response?.status || 500,
-        message: error.response?.data?.error?.message || error.message,
-        details: error.response?.data?.error?.details || null,
-      },
-    };
+      error: error.message,
+    });
   }
 }
