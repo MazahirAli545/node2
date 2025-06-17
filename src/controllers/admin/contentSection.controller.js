@@ -54,6 +54,7 @@ export const getContentSectionById = async (req, res) => {
   try {
     const { id } = req.params;
 
+    // Fetch the main content section
     const section = await prisma.content_sections.findUnique({
       where: { id: parseInt(id) },
     });
@@ -66,9 +67,11 @@ export const getContentSectionById = async (req, res) => {
     }
 
     // Fetch all translations for this content section
+    // IMPORTANT: Use 'id' for filtering here, as 'id' in content_sections_lang
+    // is now the foreign key referencing content_sections.id
     const translations = await prisma.content_sections_lang.findMany({
       where: {
-        id_id: section.id, // Link to the parent content_sections ID
+        id: section.id, // <-- CORRECTED: Changed from id_id to id
       },
       orderBy: {
         lang_code: 'asc', // Order translations by language code
@@ -78,8 +81,6 @@ export const getContentSectionById = async (req, res) => {
     // Format dates for the main section
     const formattedSection = {
       ...section,
-      // from_date: formatDateToYYYYMMDD(section.from_date),
-      // upto_date: formatDateToYYYYMMDD(section.upto_date),
       created_date: formatDateToYYYYMMDD(section.created_date),
       updated_date: formatDateToYYYYMMDD(section.updated_date),
     };
@@ -87,12 +88,9 @@ export const getContentSectionById = async (req, res) => {
     // Format dates for translations
     const formattedTranslations = translations.map(translation => ({
       ...translation,
-      // from_date: formatDateToYYYYMMDD(translation.from_date),
-      // upto_date: formatDateToYYYYMMDD(translation.upto_date),
       created_date: formatDateToYYYYMMDD(translation.created_date),
       updated_date: formatDateToYYYYMMDD(translation.updated_date),
     }));
-
 
     return res.status(200).json({
       success: true,
@@ -107,6 +105,7 @@ export const getContentSectionById = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to fetch content section",
+      error: error.message // Include error message for debugging on frontend
     });
   }
 };
@@ -116,58 +115,80 @@ export const createContentSection = async (req, res) => {
   try {
     const {
       title,
-      // id_id, // This field is for content_sections_lang linking to content_sections.id
-                // Not relevant for content_sections itself. Remove if not needed.
+      id_id,
       description,
       image_path,
       icon_path,
-      // from_date,
-      // upto_date,
       active_yn,
       created_by,
       page_id,
       refrence_page_id,
-      lang_code, // Should typically be 'en' for default sections
+      lang_code, // Main content's language code (should be 'en')
     } = req.body;
 
-    // Basic Validation: Ensure required fields are present
-    if (!title || !description  || typeof active_yn !== 'number' || !created_by || !page_id) {
-        return res.status(400).json({
-            success: false,
-            message: "Missing required fields: title, description, active_yn, created_by, page_id",
-        });
+    // Basic validation for content_sections
+    if (!title || !description || typeof active_yn !== 'number' || !created_by || !page_id) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields for content section: title, description, active_yn, created_by, page_id",
+      });
     }
 
-    const newSection = await prisma.content_sections.create({
+    // 1. Create the main content_sections entry
+    const newMainSection = await prisma.content_sections.create({
       data: {
         title,
-        // id_id: id_id || null, // Assuming this is an optional self-referencing field, otherwise remove
+        id_id: id_id || null, // Keep as nullable
         description,
-        image_path,
-        icon_path,
-        // from_date: new Date(from_date),
-        // upto_date: new Date(upto_date),
+        image_path: image_path || null,
+        icon_path: icon_path || null,
         active_yn,
         created_by,
-        created_date: new Date(), // Automatically set to current time
+        created_date: new Date(), // Prisma @default(now()) should handle, but explicit is fine
         page_id,
-        refrence_page_id: refrence_page_id || null, // Allow null if optional
-        lang_code: lang_code || "en", // Default to "en" as this is the primary content
+        refrence_page_id: refrence_page_id || null,
+        lang_code: lang_code || 'en', // Default to 'en' if not provided for main section
       },
     });
 
+    // 2. Automatically create a 'hi' translation in content_sections_lang
+    // Only if the main section created is NOT 'hi' (i.e., 'en' as expected)
+    if (newMainSection.lang_code.toLowerCase() === 'en') {
+      try {
+        await prisma.content_sections_lang.create({
+          data: {
+            id: newMainSection.id, // Use the ID of the newly created main section
+            lang_code: 'hi', // Hardcode 'hi' for the automatic translation
+            title: `(hi) ${newMainSection.title}`, // Placeholder title
+            description: `(hi) ${newMainSection.description}`, // Placeholder description
+            image_path: newMainSection.image_path,
+            icon_path: newMainSection.icon_path,
+            active_yn: newMainSection.active_yn, // Copy from main section
+            created_by: newMainSection.created_by,
+            created_date: new Date(), // Current date for translation record
+            page_id: newMainSection.page_id,
+            refrence_page_id: newMainSection.refrence_page_id,
+          },
+        });
+        console.log(`Auto-created 'hi' translation for content section ID: ${newMainSection.id}`);
+      } catch (translationError) {
+        // Log translation error but don't fail the main section creation
+        console.error(`Error auto-creating 'hi' translation for ID ${newMainSection.id}:`, translationError);
+        // You might want to add a warning message to the response here
+      }
+    }
+
     return res.status(201).json({
       success: true,
-      message: "Content section created successfully",
-      data: newSection,
+      message: "Content section and default 'hi' translation created successfully",
+      data: newMainSection,
     });
   } catch (error) {
     console.error("Error creating content section:", error);
-    // Handle Prisma validation errors specifically if needed (e.g., date format issues)
     return res.status(500).json({
       success: false,
       message: "Failed to create content section",
-      error: error.message // Include error message for debugging
+      error: error.message
     });
   }
 };
