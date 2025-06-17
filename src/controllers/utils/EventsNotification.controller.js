@@ -67,46 +67,6 @@ export async function sendEventNotification(event) {
       body: event.ENVT_DESC || "Check out our latest event",
     };
 
-    //     // Send to each token (consider using multicast for better performance)
-    //     const sendPromises = allTokens.map(async (tokenObj) => {
-    //       const message = {
-    //         message: {
-    //           token: tokenObj.fcmToken,
-    //           notification: notificationMessage,
-    //           data: {
-    //             eventId: event.ENVT_ID.toString(),
-    //             type: "NEW_EVENT",
-    //           },
-    //         },
-    //       };
-
-    //       try {
-    //         await axios.post(fcmUrl, message, {
-    //           headers: {
-    //             Authorization: `Bearer ${accessToken.token}`,
-    //             "Content-Type": "application/json",
-    //           },
-    //         });
-    //       } catch (error) {
-    //         console.error(
-    //           `Error sending to token ${tokenObj.fcmToken}:`,
-    //           error.message
-    //         );
-    //         // Optionally remove invalid tokens
-    //         if (error.response?.data?.error?.status === "NOT_FOUND") {
-    //           await prisma.fcmToken.deleteMany({
-    //             where: { fcmToken: tokenObj.fcmToken },
-    //           });
-    //         }
-    //       }
-    //     });
-
-    //     await Promise.all(sendPromises);
-    //     console.log(`Notifications sent for new event ${event.ENVT_ID}`);
-    //   } catch (error) {
-    //     console.error("Error in sendEventNotification:", error);
-    //   }
-    // }
     const BATCH_SIZE = 500;
     for (let i = 0; i < allTokens.length; i += BATCH_SIZE) {
       const batch = allTokens.slice(i, i + BATCH_SIZE);

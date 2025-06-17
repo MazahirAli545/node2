@@ -523,9 +523,85 @@ export async function getDeviceTokens(req, res) {
     });
   }
 }
-export async function getAnnouncement() {
+// export async function getAnnouncement() {
+//   try {
+//     // Create auth client directly
+//     const auth = new GoogleAuth({
+//       credentials: serviceAccount,
+//       scopes: ["https://www.googleapis.com/auth/firebase.messaging"],
+//     });
+
+//     const client = await auth.getClient();
+//     const accessToken = await client.getAccessToken();
+
+//     const projectId = serviceAccount.project_id;
+//     const fcmUrl = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
+
+//     const message = {
+//       message: {
+//         token:
+//           "eAUb9VtfTVC1gafrPvzCTT:APA91bHlkQGZU0FsttcTLwsHsbk5-YFfw9oYDs5X69leUvBBGTbHt7zO3JbgPCan-S8mlbXZLcbktoC8dV9si9gcAff1iFNzKMC_VrLsGpufOnja-5eQ-tE",
+//         notification: {
+//           title: "Hello!",
+//           body: "This is an FCM HTTP v1 test message.",
+//         },
+//       },
+//     };
+
+//     const response = await axios.post(fcmUrl, message, {
+//       headers: {
+//         Authorization: `Bearer ${accessToken.token}`,
+//         "Content-Type": "application/json",
+//       },
+//     });
+
+//     return {
+//       success: true,
+//       message: "Notification sent successfully",
+//       data: response.data,
+//       status: response.status,
+//     };
+//   } catch (error) {
+//     console.error("FCM error:", error.response?.data || error.message);
+
+//     // Return detailed error response
+//     return {
+//       success: false,
+//       message: "Failed to send notification",
+//       error: {
+//         code: error.response?.status || 500,
+//         message: error.response?.data?.error?.message || error.message,
+//         details: error.response?.data?.error?.details || null,
+//       },
+//     };
+//   }
+// }
+export async function getAnnouncement(req, res) {
   try {
-    // Create auth client directly
+    const { title, body } = req.body;
+
+    if (!title || !body) {
+      return res.status(400).json({
+        message: "Title and body are required",
+        success: false,
+      });
+    }
+
+    // Get all registered FCM tokens
+    const allTokens = await prisma.fcmToken.findMany({
+      select: {
+        fcmToken: true,
+      },
+    });
+
+    if (allTokens.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: "No devices registered to receive notifications",
+      });
+    }
+
+    // Create auth client
     const auth = new GoogleAuth({
       credentials: serviceAccount,
       scopes: ["https://www.googleapis.com/auth/firebase.messaging"],
@@ -533,46 +609,78 @@ export async function getAnnouncement() {
 
     const client = await auth.getClient();
     const accessToken = await client.getAccessToken();
-
     const projectId = serviceAccount.project_id;
     const fcmUrl = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
 
-    const message = {
-      message: {
-        token:
-          "eAUb9VtfTVC1gafrPvzCTT:APA91bHlkQGZU0FsttcTLwsHsbk5-YFfw9oYDs5X69leUvBBGTbHt7zO3JbgPCan-S8mlbXZLcbktoC8dV9si9gcAff1iFNzKMC_VrLsGpufOnja-5eQ-tE",
-        notification: {
-          title: "Hello!",
-          body: "This is an FCM HTTP v1 test message.",
-        },
-      },
+    // Prepare notification message
+    const notificationMessage = {
+      title,
+      body,
     };
 
-    const response = await axios.post(fcmUrl, message, {
-      headers: {
-        Authorization: `Bearer ${accessToken.token}`,
-        "Content-Type": "application/json",
-      },
-    });
+    // Send in batches
+    const BATCH_SIZE = 500;
+    const results = [];
 
-    return {
+    for (let i = 0; i < allTokens.length; i += BATCH_SIZE) {
+      const batch = allTokens.slice(i, i + BATCH_SIZE);
+
+      const batchResults = await Promise.all(
+        batch.map(async (tokenObj) => {
+          try {
+            const response = await axios.post(
+              fcmUrl,
+              {
+                message: {
+                  token: tokenObj.fcmToken,
+                  notification: notificationMessage,
+                },
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${accessToken.token}`,
+                  "Content-Type": "application/json",
+                },
+                timeout: 5000,
+              }
+            );
+            return { success: true, token: tokenObj.fcmToken };
+          } catch (error) {
+            console.error(`Error sending to token:`, {
+              token: tokenObj.fcmToken?.slice(0, 10) + "...",
+              error: error.message,
+            });
+
+            if (error.response?.data?.error?.status === "NOT_FOUND") {
+              await prisma.fcmToken.deleteMany({
+                where: { fcmToken: tokenObj.fcmToken },
+              });
+            }
+            return {
+              success: false,
+              token: tokenObj.fcmToken,
+              error: error.message,
+            };
+          }
+        })
+      );
+      results.push(...batchResults);
+    }
+
+    const successCount = results.filter((r) => r.success).length;
+    const failCount = results.length - successCount;
+
+    return res.status(200).json({
       success: true,
-      message: "Notification sent successfully",
-      data: response.data,
-      status: response.status,
-    };
+      message: `Notifications sent to ${successCount} devices, ${failCount} failed`,
+      results,
+    });
   } catch (error) {
     console.error("FCM error:", error.response?.data || error.message);
-
-    // Return detailed error response
-    return {
+    return res.status(500).json({
       success: false,
-      message: "Failed to send notification",
-      error: {
-        code: error.response?.status || 500,
-        message: error.response?.data?.error?.message || error.message,
-        details: error.response?.data?.error?.details || null,
-      },
-    };
+      message: "Failed to send notifications",
+      error: error.message,
+    });
   }
 }
