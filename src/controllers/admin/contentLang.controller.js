@@ -56,53 +56,44 @@ export const getAllContentSectionsLang = async (req, res) => {
 export const createContentSectionLang = async (req, res) => {
   try {
     const {
+      id, // <-- ADDED: Destructure 'id' from req.body
       id_id, // This is the ID of the original content_sections entry
       lang_code,
       title,
       description,
       image_path,
       icon_path,
-      // from_date,
-      // upto_date,
       active_yn,
       created_by,
+      created_date, // <-- ADDED: Destructure created_date from req.body
       page_id,
       refrence_page_id,
     } = req.body;
 
-    // Basic Validation: Ensure required fields are present
-    if (!id_id || !lang_code || !title || !description || typeof active_yn !== 'number' || !created_by) {
+    // Basic Validation: Ensure ALL required fields are present
+    // 'id' is now required as per your schema and frontend payload
+    // 'created_date' is also explicitly required by your schema
+    if (!id || !lang_code || !title || !description || typeof active_yn !== 'number' || !created_by || !created_date || typeof page_id !== 'number') {
       return res.status(400).json({
         success: false,
-        message: "Missing required fields for translation: id_id, lang_code, title, description, active_yn, created_by",
+        message: "Missing required fields for translation: id, lang_code, title, description, active_yn, created_by, created_date, page_id.",
       });
     }
 
-    // Optional: Check if a translation for this id_id and lang_code already exists
-    // (This prevents creating duplicates if id_id and lang_code should be unique combination)
-    // If you add @@unique([id_id, lang_code]) to your schema, Prisma will handle this automatically.
-    // const existingTranslation = await prisma.content_sections_lang.findFirst({
-    //   where: { id_id: parseInt(id_id), lang_code: lang_code }
-    // });
-    // if (existingTranslation) {
-    //   return res.status(409).json({ success: false, message: "Translation for this section and language already exists." });
-    // }
-
     const newEntry = await prisma.content_sections_lang.create({
       data: {
-        id_id: parseInt(id_id),
+        id: parseInt(id), // <-- ADDED: Pass the 'id' to Prisma
+        id_id: id_id ? parseInt(id_id) : null, // Handle nullable id_id
         lang_code: lang_code.toLowerCase(),
         title,
         description,
         image_path: image_path || null,
         icon_path: icon_path || null,
-        // from_date: new Date(from_date),
-        // upto_date: new Date(upto_date),
         active_yn,
         created_by,
-        created_date: new Date(), // Set current date automatically
-        page_id: page_id || null, // Optional, allow null
-        refrence_page_id: refrence_page_id || null, // Optional, allow null
+        created_date: new Date(created_date), // Use the created_date from the frontend
+        page_id: parseInt(page_id), // Ensure page_id is parsed as number and non-null
+        refrence_page_id: refrence_page_id ? parseInt(refrence_page_id) : null, // Handle nullable refrence_page_id
       },
     });
 
@@ -113,6 +104,15 @@ export const createContentSectionLang = async (req, res) => {
     });
   } catch (error) {
     console.error("Error creating multilingual content section:", error);
+    // Handle specific Prisma error for unique constraint violation (P2002)
+    // This could happen if you try to create a translation with an 'id' that already exists.
+    if (error.code === 'P2002') {
+        return res.status(409).json({
+            success: false,
+            message: `A translation with ID ${req.body.id} already exists. Please provide a unique ID.`,
+            error: error.message
+        });
+    }
     return res.status(500).json({
       success: false,
       message: "Failed to create multilingual content section",
@@ -120,6 +120,7 @@ export const createContentSectionLang = async (req, res) => {
     });
   }
 };
+
 
 
 export const getContentSectionLangById = async (req, res) => {
