@@ -447,6 +447,55 @@ export async function sendNotificationToTokens(tokens, title, body) {
 
 // Add this to fcm.controller.js
 
+// export async function getAllAdminFcmTokens(req, res) {
+//   try {
+//     // First, get all admin users from the peopleRegistry table
+//     const adminUsers = await prisma.peopleRegistry.findMany({
+//       where: {
+//         PR_ROLE: "Admin", // Assuming you have a field to identify admin users
+//       },
+//       select: {
+//         PR_ID: true,
+//       },
+//     });
+
+//     if (!adminUsers || adminUsers.length === 0) {
+//       return res.status(200).json({
+//         success: true,
+//         message: "No admin users found",
+//         data: [],
+//       });
+//     }
+
+//     // Get all FCM tokens for these admin users
+//     const adminUserIds = adminUsers.map((user) => user.PR_ID);
+//     const fcmTokens = await prisma.fcmToken.findMany({
+//       where: {
+//         PR_ID: {
+//           in: adminUserIds,
+//         },
+//       },
+//       select: {
+//         fcmToken: true,
+//         PR_ID: true,
+//         deviceId: true,
+//       },
+//     });
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Admin FCM tokens retrieved successfully",
+//       data: fcmTokens,
+//     });
+//   } catch (error) {
+//     console.error("Error getting admin FCM tokens:", error);
+//     return res.status(500).json({
+//       message: "Error getting admin FCM tokens",
+//       success: false,
+//       error: error.message,
+//     });
+//   }
+// }
 export async function getAllAdminFcmTokens(req, res) {
   try {
     // First, get all admin users from the peopleRegistry table
@@ -456,6 +505,8 @@ export async function getAllAdminFcmTokens(req, res) {
       },
       select: {
         PR_ID: true,
+        // You can add other admin user details here if needed,
+        // but for getting *their tokens*, PR_ID is sufficient.
       },
     });
 
@@ -477,8 +528,8 @@ export async function getAllAdminFcmTokens(req, res) {
       },
       select: {
         fcmToken: true,
-        PR_ID: true,
-        deviceId: true,
+        PR_ID: true, // Includes the PR_ID so you know which token belongs to which admin
+        deviceId: true, // Includes deviceId to distinguish tokens from the same admin on different devices
       },
     });
 

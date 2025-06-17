@@ -24,6 +24,7 @@ import {
   getDeviceTokens,
   // getAnnouncement,
   sendNotificationToTokens,
+  getAllAdminFcmTokens,
 } from "../controllers/fcm.controller.js";
 
 const fcmRoutes = express.Router();
@@ -35,5 +36,6 @@ fcmRoutes.get("/device-status/:deviceId/:PR_ID", checkDeviceRegistration);
 fcmRoutes.get("/device-tokens/:deviceId", getDeviceTokens);
 // fcmRoutes.get("/announcement", getAnnouncement);
 fcmRoutes.get("/announcement", sendNotificationToTokens);
+fcmRoutes.get("/get-all-admin-fcm-tokens", getAllAdminFcmTokens);
 
 export { fcmRoutes };
