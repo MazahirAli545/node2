@@ -297,26 +297,26 @@ model LanguageContent {
 model content_sections {
   id               Int       @id @default(autoincrement())
   title            String    @db.VarChar(50)
-  id_id            Int?
+  id_id            Int? // Ambiguous; purpose undefined in this context.
   description      String    @db.Text
   image_path       String?   @db.VarChar(250)
   icon_path        String?   @db.VarChar(250)
   from_date        DateTime  @db.Date
   upto_date        DateTime  @db.Date
-  active_yn        Int
+  active_yn        Int // Interpreted as 0 for false/inactive, 1 for true/active
   created_by       Int
   created_date     DateTime  @db.Date
   updated_by       Int?
   updated_date     DateTime? @db.Date
-  page_id          Int
+  page_id          Int // Foreign key to pages.id (implied)
   refrence_page_id Int?
-  lang_code        String    @default("en") @db.VarChar(2)
+  lang_code        String    @default("en") @db.VarChar(2) // Primarily for English content
 }
 
 model content_sections_lang {
-  id               Int       @id // <- add this for Prisma only
+  id               Int       @id // Primary key, but not auto-incrementing. Manual ID assignment?
   title            String    @db.VarChar(50)
-  id_id            Int?
+  id_id            Int?      // Crucial: Interpreted as FK to content_sections.id, but nullable.
   description      String    @db.Text
   image_path       String?   @db.VarChar(250)
   icon_path        String?   @db.VarChar(250)
@@ -327,16 +327,15 @@ model content_sections_lang {
   created_date     DateTime  @db.Date
   updated_by       Int?
   updated_date     DateTime? @db.Date
-  page_id          Int
-  refrence_page_id Int?
-  lang_code        String    @default("en") @db.VarChar(2)
+  page_id          Int // Redundant if id_id links to content_sections which has page_id
+  refrence_page_id Int? // Redundant
+  lang_code        String    @default("en") @db.VarChar(2) // Defaults to "en" here too, potential for overrides/duplication
 }
-
 
 model pages {
   id           Int       @id @default(autoincrement())
   title        String    @db.VarChar(20)
-  link_url     String?   @default("/") @db.VarChar(50)
+  link_url     String    @unique @default("/") @db.VarChar(50) // <<< ADDED @unique
   active_yn    Int
   created_by   Int
   created_date DateTime  @db.Date
