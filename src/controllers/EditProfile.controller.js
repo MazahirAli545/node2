@@ -442,6 +442,7 @@ async function EditProfile(req, res) {
       PR_BUSS_INTER: req.body.PR_BUSS_INTER,
       PR_BUSS_STREAM: req.body.PR_BUSS_STREAM,
       PR_BUSS_TYPE: req.body.PR_BUSS_TYPE,
+      PR_BUSS_CODE: req.body.PR_BUSS_CODE,
       PR_HOBBY: req.body.PR_HOBBY,
       // Convert integer fields properly - handle empty strings
       PR_FATHER_ID: convertToNumberOrNull(req.body.PR_FATHER_ID),
