@@ -125,9 +125,9 @@ export async function createEvent(req, res) {
 
     // Extract just the token strings
     const tokens = allFcmTokens.map((tokenData) => tokenData.fcmToken);
-    console.log("Tokens being sent to FCM controller:", tokens);
-    console.log("Type of tokens:", typeof tokens);
-    console.log("Is tokens an array?", Array.isArray(tokens));
+    // console.log("Tokens being sent to FCM controller:", tokens);
+    // console.log("Type of tokens:", typeof tokens);
+    // console.log("Is tokens an array?", Array.isArray(tokens));
 
     const notificationTitle = "New Event Added!";
     const notificationBody = `Check out the new event: ${newEvent.ENVT_DESC}`;
@@ -139,10 +139,7 @@ export async function createEvent(req, res) {
     );
 
     if (notificationResult.success) {
-      console.log(
-        "FCM Notification sent successfully:",
-        notificationResult.data
-      );
+      console.log("FCM Notification sent successfully:", notificationResult);
     } else {
       console.error(
         "Failed to send FCM notification:",
