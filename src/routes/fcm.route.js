@@ -22,7 +22,7 @@ import {
   checkDeviceRegistration,
   clearDeviceUserAssociation,
   getDeviceTokens,
-  // getAnnouncement,
+  getAnnouncement,
   sendNotificationToTokens,
   getAllAdminFcmTokens,
   sendNotificationToAdmins,
@@ -35,7 +35,7 @@ fcmRoutes.post("/remove", removeFcmToken);
 fcmRoutes.post("/clear-association", clearDeviceUserAssociation);
 fcmRoutes.get("/device-status/:deviceId/:PR_ID", checkDeviceRegistration);
 fcmRoutes.get("/device-tokens/:deviceId", getDeviceTokens);
-// fcmRoutes.get("/announcement", getAnnouncement);
+fcmRoutes.get("/announcementt", getAnnouncement);
 fcmRoutes.get("/announcement", sendNotificationToTokens);
 fcmRoutes.get("/get-all-admin-fcm-tokens", getAllAdminFcmTokens);
 fcmRoutes.post("/send-notification-to-admins", sendNotificationToAdmins);

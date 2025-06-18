@@ -3,6 +3,11 @@ import prisma from "../db/prismaClient.js";
 import { GoogleAuth } from "google-auth-library";
 import axios from "axios";
 
+console.log(
+  "Raw FIREBASE_PRIVATE_KEY from env:",
+  process.env.FIREBASE_PRIVATE_KEY
+);
+
 const serviceAccount = {
   type: process.env.FIREBASE_TYPE,
   project_id: process.env.FIREBASE_PROJECT_ID,
@@ -191,59 +196,59 @@ export async function getDeviceTokens(req, res) {
   }
 }
 
-// export async function getAnnouncement() {
-//   try {
-//     // Create auth client directly
-//     const auth = new GoogleAuth({
-//       credentials: serviceAccount,
-//       scopes: ["https://www.googleapis.com/auth/firebase.messaging"],
-//     });
+export async function getAnnouncement() {
+  try {
+    // Create auth client directly
+    const auth = new GoogleAuth({
+      credentials: serviceAccount,
+      scopes: ["https://www.googleapis.com/auth/firebase.messaging"],
+    });
 
-//     const client = await auth.getClient();
-//     const accessToken = await client.getAccessToken();
+    const client = await auth.getClient();
+    const accessToken = await client.getAccessToken();
 
-//     const projectId = serviceAccount.project_id;
-//     const fcmUrl = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
+    const projectId = serviceAccount.project_id;
+    const fcmUrl = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
 
-//     const message = {
-//       message: {
-//         token:
-//           "eAUb9VtfTVC1gafrPvzCTT:APA91bHlkQGZU0FsttcTLwsHsbk5-YFfw9oYDs5X69leUvBBGTbHt7zO3JbgPCan-S8mlbXZLcbktoC8dV9si9gcAff1iFNzKMC_VrLsGpufOnja-5eQ-tE",
-//         notification: {
-//           title: "Hello!",
-//           body: "This is an FCM HTTP v1 test message.",
-//         },
-//       },
-//     };
+    const message = {
+      message: {
+        token:
+          "eAUb9VtfTVC1gafrPvzCTT:APA91bHlkQGZU0FsttcTLwsHsbk5-YFfw9oYDs5X69leUvBBGTbHt7zO3JbgPCan-S8mlbXZLcbktoC8dV9si9gcAff1iFNzKMC_VrLsGpufOnja-5eQ-tE",
+        notification: {
+          title: "Hello!",
+          body: "This is an FCM HTTP v1 test message.",
+        },
+      },
+    };
 
-//     const response = await axios.post(fcmUrl, message, {
-//       headers: {
-//         Authorization: `Bearer ${accessToken.token}`,
-//         "Content-Type": "application/json",
-//       },
-//     });
+    const response = await axios.post(fcmUrl, message, {
+      headers: {
+        Authorization: `Bearer ${accessToken.token}`,
+        "Content-Type": "application/json",
+      },
+    });
 
-//     return {
-//       success: true,
-//       message: "Notification sent successfully",
-//       data: response.data,
-//       status: response.status,
-//     };
-//   } catch (error) {
-//     console.error("FCM error:", error.response?.data || error.message);
+    return {
+      success: true,
+      message: "Notification sent successfully",
+      data: response.data,
+      status: response.status,
+    };
+  } catch (error) {
+    console.error("FCM error:", error.response?.data || error.message);
 
-//     // Return detailed error response
-//     return {
-//       success: false,
-//       message: "Failed to send notification",
-//       error: {
-//         code: error.response?.status || 500,
-//         message: error.response?.data?.error?.message || error.message,
-//         details: error.response?.data?.error?.details || null,
-//       },
-//     };
-//   }
-// }
+    // Return detailed error response
+    return {
+      success: false,
+      message: "Failed to send notification",
+      error: {
+        code: error.response?.status || 500,
+        message: error.response?.data?.error?.message || error.message,
+        details: error.response?.data?.error?.details || null,
+      },
+    };
+  }
+}
 
 // export async function sendNotificationToTokens(tokens, title, body) {
 //   console.log("Received tokens in sendNotificationToTokens:", tokens);
