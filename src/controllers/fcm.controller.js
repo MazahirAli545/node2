@@ -595,7 +595,7 @@ export async function sendNotificationToAdmins(req, res) {
     console.log("Received request to send admin notification:", {
       title,
       body,
-    }); // Added log
+    }); // Debug Log
 
     if (!title || !body) {
       return res.status(400).json({
@@ -604,6 +604,7 @@ export async function sendNotificationToAdmins(req, res) {
       });
     }
 
+    // 1. Get all admin FCM tokens using the existing function's logic
     const adminUsers = await prisma.peopleRegistry.findMany({
       where: {
         PR_ROLE: "Admin",
@@ -612,14 +613,21 @@ export async function sendNotificationToAdmins(req, res) {
         PR_ID: true,
       },
     });
-    console.log("Found admin users:", adminUsers.length); // Added log
+    console.log(`Found ${adminUsers.length} admin users.`); // Debug Log
 
     if (!adminUsers || adminUsers.length === 0) {
-      // ... (existing code)
+      return res.status(200).json({
+        success: true,
+        message: "No admin users found to send notifications to.",
+        notificationResult: {
+          successfulCount: 0,
+          failedCount: 0,
+        },
+      });
     }
 
     const adminUserIds = adminUsers.map((user) => user.PR_ID);
-    console.log("Admin User IDs:", adminUserIds); // Added log
+    console.log("Admin User IDs for token lookup:", adminUserIds); // Debug Log
 
     const adminFcmTokensResult = await prisma.fcmToken.findMany({
       where: {
@@ -631,38 +639,59 @@ export async function sendNotificationToAdmins(req, res) {
         fcmToken: true,
       },
     });
-    console.log("Admin FCM tokens result:", adminFcmTokensResult.length); // Added log
+    console.log(
+      `Found ${adminFcmTokensResult.length} FCM tokens for admin users.`
+    ); // Debug Log
 
     const adminTokens = adminFcmTokensResult.map((item) => item.fcmToken);
-    console.log("Extracted Admin FCM Tokens:", adminTokens); // Added log
+    console.log("Extracted Admin FCM Tokens:", adminTokens); // Debug Log
 
     if (adminTokens.length === 0) {
-      // ... (existing code)
+      return res.status(200).json({
+        success: true,
+        message: "No FCM tokens found for admin users.",
+        notificationResult: {
+          successfulCount: 0,
+          failedCount: 0,
+        },
+      });
     }
 
+    // 2. Send notifications to these tokens using the existing sendNotificationToTokens function
     const notificationResult = await sendNotificationToTokens(
       adminTokens,
       title,
       body
     );
-    console.log("Notification send result:", notificationResult); // Added log
+    console.log("Result from sendNotificationToTokens:", notificationResult); // Debug Log
 
     if (notificationResult.success) {
-      // ... (existing code)
+      return res.status(200).json({
+        success: true,
+        message: "Notifications sent to admins successfully",
+        notificationResult: {
+          successfulCount: notificationResult.successfulCount,
+          failedCount: notificationResult.failedCount,
+          totalUniqueTokens: notificationResult.totalUniqueTokens,
+          detailedResponses: notificationResult.detailedResponses,
+        },
+      });
     } else {
-      // ... (existing code)
+      return res.status(500).json({
+        success: false,
+        message: "Failed to send notifications to admins",
+        error: notificationResult.error,
+      });
     }
   } catch (error) {
     console.error("Critical error in sendNotificationToAdmins:", error); // More specific error log
-    // It's helpful to also log error.stack in development for deeper insight
-    if (process.env.NODE_ENV !== "production") {
-      console.error("Error stack:", error.stack);
-    }
+    console.error("Error stack (sendNotificationToAdmins):", error.stack); // Stack trace for debugging
     return res.status(500).json({
       message: "Error sending notification to admins",
       success: false,
       error: error.message,
-      // Consider including more error details for debugging (but not in production)
+      // You can uncomment the line below for more detailed error in development,
+      // but be cautious with sensitive data in production
       // details: error.response?.data || error.code || null
     });
   }
