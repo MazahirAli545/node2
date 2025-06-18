@@ -349,7 +349,7 @@ export async function getDeviceTokens(req, res) {
 // }
 
 export async function sendNotificationToTokens(tokens, title, body) {
-  console.log("Original tokens received:", tokens);
+  // console.log("Original tokens received:", tokens);
 
   try {
     const auth = new GoogleAuth({
