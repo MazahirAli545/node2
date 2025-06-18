@@ -497,9 +497,105 @@ export async function getAllAdminFcmTokens(req, res) {
   }
 }
 
+// export async function sendNotificationToAdmins(req, res) {
+//   try {
+//     const { title, body } = req.body;
+
+//     if (!title || !body) {
+//       return res.status(400).json({
+//         message: "Missing required fields: title and body for the notification",
+//         success: false,
+//       });
+//     }
+
+//     // 1. Get all admin FCM tokens using the existing function's logic
+//     const adminUsers = await prisma.peopleRegistry.findMany({
+//       where: {
+//         PR_ROLE: "Admin",
+//       },
+//       select: {
+//         PR_ID: true,
+//       },
+//     });
+
+//     if (!adminUsers || adminUsers.length === 0) {
+//       return res.status(200).json({
+//         success: true,
+//         message: "No admin users found to send notifications to.",
+//         notificationResult: {
+//           successfulCount: 0,
+//           failedCount: 0,
+//         },
+//       });
+//     }
+
+//     const adminUserIds = adminUsers.map((user) => user.PR_ID);
+//     const adminFcmTokensResult = await prisma.fcmToken.findMany({
+//       where: {
+//         PR_ID: {
+//           in: adminUserIds,
+//         },
+//       },
+//       select: {
+//         fcmToken: true,
+//       },
+//     });
+
+//     const adminTokens = adminFcmTokensResult.map((item) => item.fcmToken);
+
+//     if (adminTokens.length === 0) {
+//       return res.status(200).json({
+//         success: true,
+//         message: "No FCM tokens found for admin users.",
+//         notificationResult: {
+//           successfulCount: 0,
+//           failedCount: 0,
+//         },
+//       });
+//     }
+
+//     // 2. Send notifications to these tokens using the existing sendNotificationToTokens function
+//     const notificationResult = await sendNotificationToTokens(
+//       adminTokens,
+//       title,
+//       body
+//     );
+
+//     if (notificationResult.success) {
+//       return res.status(200).json({
+//         success: true,
+//         message: "Notifications sent to admins successfully",
+//         notificationResult: {
+//           successfulCount: notificationResult.successfulCount,
+//           failedCount: notificationResult.failedCount,
+//           totalUniqueTokens: notificationResult.totalUniqueTokens,
+//           detailedResponses: notificationResult.detailedResponses,
+//         },
+//       });
+//     } else {
+//       return res.status(500).json({
+//         success: false,
+//         message: "Failed to send notifications to admins",
+//         error: notificationResult.error,
+//       });
+//     }
+//   } catch (error) {
+//     console.error("Error sending notification to admins:", error);
+//     return res.status(500).json({
+//       message: "Error sending notification to admins",
+//       success: false,
+//       error: error.message,
+//     });
+//   }
+// }
+
 export async function sendNotificationToAdmins(req, res) {
   try {
     const { title, body } = req.body;
+    console.log("Received request to send admin notification:", {
+      title,
+      body,
+    }); // Added log
 
     if (!title || !body) {
       return res.status(400).json({
@@ -508,7 +604,6 @@ export async function sendNotificationToAdmins(req, res) {
       });
     }
 
-    // 1. Get all admin FCM tokens using the existing function's logic
     const adminUsers = await prisma.peopleRegistry.findMany({
       where: {
         PR_ROLE: "Admin",
@@ -517,19 +612,15 @@ export async function sendNotificationToAdmins(req, res) {
         PR_ID: true,
       },
     });
+    console.log("Found admin users:", adminUsers.length); // Added log
 
     if (!adminUsers || adminUsers.length === 0) {
-      return res.status(200).json({
-        success: true,
-        message: "No admin users found to send notifications to.",
-        notificationResult: {
-          successfulCount: 0,
-          failedCount: 0,
-        },
-      });
+      // ... (existing code)
     }
 
     const adminUserIds = adminUsers.map((user) => user.PR_ID);
+    console.log("Admin User IDs:", adminUserIds); // Added log
+
     const adminFcmTokensResult = await prisma.fcmToken.findMany({
       where: {
         PR_ID: {
@@ -540,51 +631,39 @@ export async function sendNotificationToAdmins(req, res) {
         fcmToken: true,
       },
     });
+    console.log("Admin FCM tokens result:", adminFcmTokensResult.length); // Added log
 
     const adminTokens = adminFcmTokensResult.map((item) => item.fcmToken);
+    console.log("Extracted Admin FCM Tokens:", adminTokens); // Added log
 
     if (adminTokens.length === 0) {
-      return res.status(200).json({
-        success: true,
-        message: "No FCM tokens found for admin users.",
-        notificationResult: {
-          successfulCount: 0,
-          failedCount: 0,
-        },
-      });
+      // ... (existing code)
     }
 
-    // 2. Send notifications to these tokens using the existing sendNotificationToTokens function
     const notificationResult = await sendNotificationToTokens(
       adminTokens,
       title,
       body
     );
+    console.log("Notification send result:", notificationResult); // Added log
 
     if (notificationResult.success) {
-      return res.status(200).json({
-        success: true,
-        message: "Notifications sent to admins successfully",
-        notificationResult: {
-          successfulCount: notificationResult.successfulCount,
-          failedCount: notificationResult.failedCount,
-          totalUniqueTokens: notificationResult.totalUniqueTokens,
-          detailedResponses: notificationResult.detailedResponses,
-        },
-      });
+      // ... (existing code)
     } else {
-      return res.status(500).json({
-        success: false,
-        message: "Failed to send notifications to admins",
-        error: notificationResult.error,
-      });
+      // ... (existing code)
     }
   } catch (error) {
-    console.error("Error sending notification to admins:", error);
+    console.error("Critical error in sendNotificationToAdmins:", error); // More specific error log
+    // It's helpful to also log error.stack in development for deeper insight
+    if (process.env.NODE_ENV !== "production") {
+      console.error("Error stack:", error.stack);
+    }
     return res.status(500).json({
       message: "Error sending notification to admins",
       success: false,
       error: error.message,
+      // Consider including more error details for debugging (but not in production)
+      // details: error.response?.data || error.code || null
     });
   }
 }
