@@ -14,7 +14,7 @@ const serviceAccount = {
   private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
   // private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"), // unescape
   private_key: process.env.FIREBASE_PRIVATE_KEY
-    ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n") // Properly handle newlines
+    ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n").replace(/"/g, "")
     : "",
   client_email: process.env.FIREBASE_CLIENT_EMAIL,
   client_id: process.env.FIREBASE_CLIENT_ID,
@@ -28,6 +28,15 @@ if (!serviceAccount.private_key) {
   console.error("Firebase private key is missing or invalid");
   throw new Error("Firebase private key is missing or invalid");
 }
+
+console.log("Service account config verified:", {
+  project_id: serviceAccount.project_id,
+  client_email: serviceAccount.client_email,
+  private_key_present: !!serviceAccount.private_key,
+  private_key_starts_with: serviceAccount.private_key
+    ? serviceAccount.private_key.substring(0, 20) + "..."
+    : "MISSING",
+});
 
 export async function registeredfcmToken(req, res) {
   try {
