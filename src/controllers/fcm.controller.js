@@ -595,7 +595,7 @@ export async function sendNotificationToAdmins(req, res) {
     console.log("Received request to send admin notification:", {
       title,
       body,
-    }); // Debug Log
+    });
 
     if (!title || !body) {
       return res.status(400).json({
@@ -604,7 +604,7 @@ export async function sendNotificationToAdmins(req, res) {
       });
     }
 
-    // 1. Get all admin FCM tokens using the existing function's logic
+    // 1. Get all admin FCM tokens
     const adminUsers = await prisma.peopleRegistry.findMany({
       where: {
         PR_ROLE: "Admin",
@@ -613,7 +613,7 @@ export async function sendNotificationToAdmins(req, res) {
         PR_ID: true,
       },
     });
-    console.log(`Found ${adminUsers.length} admin users.`); // Debug Log
+    console.log(`Found ${adminUsers.length} admin users.`);
 
     if (!adminUsers || adminUsers.length === 0) {
       return res.status(200).json({
@@ -627,7 +627,7 @@ export async function sendNotificationToAdmins(req, res) {
     }
 
     const adminUserIds = adminUsers.map((user) => user.PR_ID);
-    console.log("Admin User IDs for token lookup:", adminUserIds); // Debug Log
+    console.log("Admin User IDs for token lookup:", adminUserIds);
 
     const adminFcmTokensResult = await prisma.fcmToken.findMany({
       where: {
@@ -641,10 +641,10 @@ export async function sendNotificationToAdmins(req, res) {
     });
     console.log(
       `Found ${adminFcmTokensResult.length} FCM tokens for admin users.`
-    ); // Debug Log
+    );
 
     const adminTokens = adminFcmTokensResult.map((item) => item.fcmToken);
-    console.log("Extracted Admin FCM Tokens:", adminTokens); // Debug Log
+    console.log("Extracted Admin FCM Tokens:", adminTokens);
 
     if (adminTokens.length === 0) {
       return res.status(200).json({
@@ -657,42 +657,145 @@ export async function sendNotificationToAdmins(req, res) {
       });
     }
 
-    // 2. Send notifications to these tokens using the existing sendNotificationToTokens function
-    const notificationResult = await sendNotificationToTokens(
-      adminTokens,
-      title,
-      body
+    // 2. Directly send notifications to these tokens (logic moved from sendNotificationToTokens)
+    const tokensToSend = adminTokens; // Renamed for clarity within this scope
+    console.log(
+      "Original tokens received by sendNotificationToAdmins for sending:",
+      tokensToSend
     );
-    console.log("Result from sendNotificationToTokens:", notificationResult); // Debug Log
 
-    if (notificationResult.success) {
+    try {
+      const auth = new GoogleAuth({
+        credentials: serviceAccount,
+        scopes: ["https://www.googleapis.com/auth/firebase.messaging"],
+      });
+
+      const client = await auth.getClient();
+      const accessToken = await client.getAccessToken();
+      console.log("FCM Access Token acquired.");
+
+      const projectId = serviceAccount.project_id;
+      const fcmUrl = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
+      console.log("FCM URL:", fcmUrl);
+
+      if (!tokensToSend || tokensToSend.length === 0) {
+        console.log(
+          "No FCM tokens provided to send notifications (after admin lookup)."
+        );
+        return res.status(200).json({
+          success: true,
+          message: "No tokens to send notifications to.",
+          notificationResult: {
+            successfulCount: 0,
+            failedCount: 0,
+          },
+        });
+      }
+
+      // Deduplicate tokens - keep only the last occurrence of each token
+      const uniqueTokensMap = new Map();
+      [...tokensToSend].reverse().forEach((token) => {
+        uniqueTokensMap.set(token, true);
+      });
+      const uniqueTokens = Array.from(uniqueTokensMap.keys());
+      console.log("Deduplicated tokens to send:", uniqueTokens);
+
+      const sendPromises = uniqueTokens.map(async (token) => {
+        const message = {
+          message: {
+            token: token,
+            notification: {
+              title: title,
+              body: body,
+            },
+            data: {
+              eventType: "newEvent",
+            },
+          },
+        };
+
+        try {
+          const response = await axios.post(fcmUrl, message, {
+            headers: {
+              Authorization: `Bearer ${accessToken.token}`,
+              "Content-Type": "application/json",
+            },
+          });
+          return { status: "fulfilled", value: response.data };
+        } catch (error) {
+          console.error(
+            `Error sending notification to token ${token}:`,
+            error.response?.data || error.message
+          );
+          return {
+            status: "rejected",
+            reason: {
+              message: error.message,
+              code: error.code,
+              status: error.response?.status,
+              data: error.response?.data,
+            },
+          };
+        }
+      });
+
+      const responses = await Promise.allSettled(sendPromises);
+      console.log("All notification send promises settled.");
+
+      const successfulSends = responses.filter(
+        (res) => res.status === "fulfilled"
+      ).length;
+      const failedSends = responses.filter((res) => res.status === "rejected");
+
+      if (failedSends.length > 0) {
+        console.error("Some notifications failed to send:", failedSends);
+      }
+
+      // Respond to the client with the result of sending notifications
       return res.status(200).json({
         success: true,
-        message: "Notifications sent to admins successfully",
+        message: `Notifications sent to admins successfully`,
         notificationResult: {
-          successfulCount: notificationResult.successfulCount,
-          failedCount: notificationResult.failedCount,
-          totalUniqueTokens: notificationResult.totalUniqueTokens,
-          detailedResponses: notificationResult.detailedResponses,
+          successfulCount: successfulSends,
+          failedCount: failedSends.length,
+          totalUniqueTokens: uniqueTokens.length,
+          detailedResponses: responses,
         },
       });
-    } else {
+    } catch (firebaseError) {
+      console.error(
+        "FCM error during notification sending in sendNotificationToAdmins:",
+        firebaseError.response?.data || firebaseError.message
+      );
+      console.error(
+        "FCM error stack (sendNotificationToAdmins inner catch):",
+        firebaseError.stack
+      );
       return res.status(500).json({
         success: false,
-        message: "Failed to send notifications to admins",
-        error: notificationResult.error,
+        message: "Failed to send notification(s) to admins due to FCM error",
+        error: {
+          code: firebaseError.response?.status || 500,
+          message:
+            firebaseError.response?.data?.error?.message ||
+            firebaseError.message,
+          details: firebaseError.response?.data?.error?.details || null,
+        },
       });
     }
   } catch (error) {
-    console.error("Critical error in sendNotificationToAdmins:", error); // More specific error log
-    console.error("Error stack (sendNotificationToAdmins):", error.stack); // Stack trace for debugging
+    console.error(
+      "Critical error in sendNotificationToAdmins (outer catch):",
+      error
+    );
+    console.error(
+      "Error stack (sendNotificationToAdmins outer catch):",
+      error.stack
+    );
     return res.status(500).json({
-      message: "Error sending notification to admins",
+      message: "Error processing admin notification request",
       success: false,
       error: error.message,
-      // You can uncomment the line below for more detailed error in development,
-      // but be cautious with sensitive data in production
-      // details: error.response?.data || error.code || null
     });
   }
 }
