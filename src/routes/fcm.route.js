@@ -25,6 +25,7 @@ import {
   // getAnnouncement,
   sendNotificationToTokens,
   getAllAdminFcmTokens,
+  sendNotificationToAdmins,
 } from "../controllers/fcm.controller.js";
 
 const fcmRoutes = express.Router();
@@ -37,5 +38,6 @@ fcmRoutes.get("/device-tokens/:deviceId", getDeviceTokens);
 // fcmRoutes.get("/announcement", getAnnouncement);
 fcmRoutes.get("/announcement", sendNotificationToTokens);
 fcmRoutes.get("/get-all-admin-fcm-tokens", getAllAdminFcmTokens);
+fcmRoutes.post("/send-notification-to-admins", sendNotificationToAdmins);
 
 export { fcmRoutes };
