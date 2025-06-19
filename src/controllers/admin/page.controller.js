@@ -105,12 +105,6 @@ export const getPageByLinkUrl = async (req, res) => {
       description: section.description,
       image_path: section.image_path,
       icon_path: section.icon_path,
-      from_date: section.from_date
-        ? section.from_date.toISOString().split("T")[0]
-        : null,
-      upto_date: section.upto_date
-        ? section.upto_date.toISOString().split("T")[0]
-        : null,
       active_yn: section.active_yn,
       lang_code: section.lang_code || requestedLang,
     }));
