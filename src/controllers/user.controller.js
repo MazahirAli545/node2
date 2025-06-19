@@ -374,12 +374,65 @@ export const LoginUser = async (req, res) => {
   }
 };
 
+// export const checkPersonById = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { type } = req.query; // type: 'father', 'mother', 'spouse'
+
+//     // Make sure id is a non-empty string
+//     if (!id || typeof id !== "string") {
+//       return res
+//         .status(400)
+//         .json({ success: false, message: "Invalid PR_UNIQUE_ID format" });
+//     }
+
+//     const person = await prisma.peopleRegistry.findFirst({
+//       where: { PR_UNIQUE_ID: id },
+//       select: { PR_UNIQUE_ID: true, PR_GENDER: true, PR_FULL_NAME: true },
+//     });
+
+//     if (!person) {
+//       return res
+//         .status(404)
+//         .json({ success: false, message: "PR_UNIQUE_ID not present" });
+//     }
+
+//     // Gender validation based on type
+//     if (type === "father" && person.PR_GENDER !== "M") {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid gender for father. Expected Male.",
+//       });
+//     }
+
+//     if (type === "mother" && person.PR_GENDER !== "F") {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid gender for mother. Expected Female.",
+//       });
+//     }
+
+//     // For spouse, just check existence — no gender restriction needed
+
+//     return res.status(200).json({
+//       success: true,
+//       data: person,
+//       message: `PR_UNIQUE_ID is valid${type ? " for " + type : ""}`,
+//     });
+//   } catch (error) {
+//     console.error("Check Person Error:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Internal server error",
+//     });
+//   }
+// };
+
 export const checkPersonById = async (req, res) => {
   try {
     const { id } = req.params;
     const { type } = req.query; // type: 'father', 'mother', 'spouse'
 
-    // Make sure id is a non-empty string
     if (!id || typeof id !== "string") {
       return res
         .status(400)
@@ -397,7 +450,20 @@ export const checkPersonById = async (req, res) => {
         .json({ success: false, message: "PR_UNIQUE_ID not present" });
     }
 
-    // Gender validation based on type
+    // --- START: Added Gender Mapping for Frontend ---
+    const genderMap = {
+      M: "Male",
+      F: "Female",
+      O: "Other", // Include 'Other' if your system uses it
+    };
+    const formattedGender = person.PR_GENDER
+      ? genderMap[person.PR_GENDER.toUpperCase()]
+      : null;
+    // --- END: Added Gender Mapping for Frontend ---
+
+    // Gender validation based on type (this validation is for the backend's internal check)
+    // You can keep this or remove it if frontend validation is sufficient.
+    // If kept, ensure 'M'/'F' are used here as per database storage.
     if (type === "father" && person.PR_GENDER !== "M") {
       return res.status(400).json({
         success: false,
@@ -412,11 +478,13 @@ export const checkPersonById = async (req, res) => {
       });
     }
 
-    // For spouse, just check existence — no gender restriction needed
-
     return res.status(200).json({
       success: true,
-      data: person,
+      data: {
+        PR_UNIQUE_ID: person.PR_UNIQUE_ID,
+        PR_FULL_NAME: person.PR_FULL_NAME,
+        PR_GENDER: formattedGender, // Send the mapped gender value
+      },
       message: `PR_UNIQUE_ID is valid${type ? " for " + type : ""}`,
     });
   } catch (error) {

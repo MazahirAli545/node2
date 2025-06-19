@@ -312,33 +312,31 @@ async function EditProfile(req, res) {
           .json({ message: "Invalid city code", success: false });
     }
 
-    // Validate father and mother gender
+    // if (req.body.PR_FATHER_ID) {
+    //   const father = await prisma.peopleRegistry.findUnique({
+    //     where: { PR_ID: Number(req.body.PR_FATHER_ID) },
+    //     select: { PR_GENDER: true },
+    //   });
+    //   if (!father || father.PR_GENDER?.toUpperCase() !== 'M') {
+    //     return res.status(400).json({
+    //       message: "Father ID must refer to a Male (gender 'M')",
+    //       success: false,
+    //     });
+    //   }
+    // }
 
-    if (req.body.PR_FATHER_ID) {
-      const father = await prisma.peopleRegistry.findUnique({
-        where: { PR_ID: Number(req.body.PR_FATHER_ID) },
-        select: { PR_GENDER: true },
-      });
-      if (!father || father.PR_GENDER?.toUpperCase() !== "M") {
-        return res.status(400).json({
-          message: "Father ID must refer to a Male (gender 'M')",
-          success: false,
-        });
-      }
-    }
-
-    if (req.body.PR_MOTHER_ID) {
-      const mother = await prisma.peopleRegistry.findUnique({
-        where: { PR_ID: Number(req.body.PR_MOTHER_ID) },
-        select: { PR_GENDER: true },
-      });
-      if (!mother || mother.PR_GENDER?.toUpperCase() !== "F") {
-        return res.status(400).json({
-          message: "Mother ID must refer to a Female (gender 'F')",
-          success: false,
-        });
-      }
-    }
+    // if (req.body.PR_MOTHER_ID) {
+    //   const mother = await prisma.peopleRegistry.findUnique({
+    //     where: { PR_ID: Number(req.body.PR_MOTHER_ID) },
+    //     select: { PR_GENDER: true },
+    //   });
+    //   if (!mother || mother.PR_GENDER?.toUpperCase() !== 'F') {
+    //     return res.status(400).json({
+    //       message: "Mother ID must refer to a Female (gender 'F')",
+    //       success: false,
+    //     });
+    //   }
+    // }
 
     // Handle photo upload
     let PR_PHOTO_URL = existingProfile.PR_PHOTO_URL;
@@ -451,7 +449,6 @@ async function EditProfile(req, res) {
 
     const updateData = {
       PR_PR_ID: convertToNumberOrNull(req.body.PR_PR_ID),
-      PR_ROLE: req.body.PR_ROLE,
       PR_FULL_NAME: req.body.PR_FULL_NAME,
       PR_DOB: req.body.PR_DOB,
       PR_MOBILE_NO: req.body.PR_MOBILE_NO,
