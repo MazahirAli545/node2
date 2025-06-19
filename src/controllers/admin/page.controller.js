@@ -42,9 +42,9 @@ export const getPageByLinkUrl = async (req, res) => {
     // 1. Fetch the base page details
     const page = await prisma.pages.findUnique({
       where: {
-        // Normalize link_url: if it's just '/', keep it. Otherwise, ensure it starts with '/'
+        // Handle root path and undefined link_url cases
         link_url:
-          link_url === "" || link_url === "/"
+          !link_url || link_url === "/"
             ? "/"
             : `/${link_url.replace(/^\//, "")}`,
         active_yn: 1, // Only active pages
