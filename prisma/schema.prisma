@@ -42,7 +42,7 @@ model Profession {
 
 model PeopleRegistry {
   PR_ID              Int              @id @default(autoincrement())
-  PR_UNIQUE_ID       String            @db.VarChar(50)  
+  PR_UNIQUE_ID       String           @db.VarChar(50)
   PR_ROLE            PR_ROLE          @default(End_User)
   PR_FULL_NAME       String           @db.VarChar(100)
   PR_DOB             String
@@ -78,17 +78,20 @@ model PeopleRegistry {
   PR_MARRIED_YN      String?          @db.Char(1)
   PR_HOBBY           String?          @db.VarChar(200)
   PR_IS_COMPLETED    String?          @default("N") @db.Char(1)
-  PR_NOTIFICATION    String?          @default("Y") @db.Char(1)
   PR_PR_ID           Int?
+  PR_NOTIFICATION    String?          @default("Y") @db.Char(1)
   Contact            Contact[]
   Children           Child[]          @relation("UserChildren")
+  FcmToken           FcmToken[]
   BUSSINESS          BUSSINESS?       @relation(fields: [PR_BUSS_CODE], references: [BUSS_ID])
   City               City?            @relation(fields: [PR_CITY_CODE], references: [CITY_ID])
+  Father             PeopleRegistry?  @relation("FatherRelation", fields: [PR_FATHER_ID], references: [PR_ID])
+  FatherOf           PeopleRegistry[] @relation("FatherRelation")
+  Mother             PeopleRegistry?  @relation("MotherRelation", fields: [PR_MOTHER_ID], references: [PR_ID])
+  MotherOf           PeopleRegistry[] @relation("MotherRelation")
   Profession         Profession?      @relation(fields: [PR_PROFESSION_ID], references: [PROF_ID])
-    Father   PeopleRegistry? @relation("FatherRelation", fields: [PR_FATHER_ID], references: [PR_ID])
-  Mother   PeopleRegistry? @relation("MotherRelation", fields: [PR_MOTHER_ID], references: [PR_ID])
-  Spouse   PeopleRegistry? @relation("SpouseRelation", fields: [PR_SPOUSE_ID], references: [PR_ID])
-
+  Spouse             PeopleRegistry?  @relation("SpouseRelation", fields: [PR_SPOUSE_ID], references: [PR_ID])
+  PeopleRegistry     PeopleRegistry[] @relation("SpouseRelation")
 
   @@unique([PR_MOBILE_NO, PR_FULL_NAME])
   @@index([PR_STATE_CODE])
@@ -100,20 +103,16 @@ model PeopleRegistry {
   @@index([PR_PROFESSION_ID], map: "PEOPLE_REGISTRY_PR_PROFESSION_ID_fkey")
   @@index([PR_SPOUSE_ID], map: "PEOPLE_REGISTRY_PR_SPOUSE_ID_fkey")
   @@map("PEOPLE_REGISTRY")
-  FatherOf PeopleRegistry[] @relation("FatherRelation")
-  MotherOf PeopleRegistry[] @relation("MotherRelation")
-  PeopleRegistry PeopleRegistry[] @relation("SpouseRelation")
-  FcmToken FcmToken[]
 }
 
 model FcmToken {
-  id         Int       @id @default(autoincrement())
-  prId     PeopleRegistry @relation(fields: [PR_ID], references: [PR_ID], onDelete: Cascade)
-  PR_ID   Int
-  fcmToken   String
-  deviceId   String
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  id        Int            @id @default(autoincrement())
+  PR_ID     Int
+  fcmToken  String
+  deviceId  String
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  prId      PeopleRegistry @relation(fields: [PR_ID], references: [PR_ID], onDelete: Cascade)
 
   @@unique([PR_ID, deviceId])
 }
@@ -262,6 +261,7 @@ model Events {
   ENVT_ID             Int               @id @default(autoincrement())
   ENVT_CATE_ID        Int
   ENVT_CATE_CATE_ID   Int?
+  lang_code           String            @default("en") @db.VarChar(5)
   ENVT_DESC           String            @db.VarChar(50)
   ENVT_EXCERPT        String            @db.VarChar(250)
   ENVT_DETAIL         String            @db.VarChar(4000)
@@ -280,9 +280,37 @@ model Events {
   DonationPayment     DonationPayment[]
   SubCategory         Category?         @relation("SubCategory", fields: [ENVT_CATE_CATE_ID], references: [CATE_ID])
   Category            Category          @relation(fields: [ENVT_CATE_ID], references: [CATE_ID])
+  translations        events_lang[]
 
   @@index([ENVT_CATE_CATE_ID], map: "Events_ENVT_CATE_CATE_ID_fkey")
   @@index([ENVT_CATE_ID], map: "Events_ENVT_CATE_ID_fkey")
+}
+
+model events_lang {
+  id                  Int       @map("ENVT_ID")
+  ENVT_CATE_ID        Int
+  ENVT_CATE_CATE_ID   Int?
+  lang_code           String    @db.VarChar(5)
+  ENVT_DESC           String    @db.VarChar(50)
+  ENVT_EXCERPT        String    @db.VarChar(250)
+  ENVT_DETAIL         String    @db.VarChar(4000)
+  ENVT_BANNER_IMAGE   String    @db.VarChar(250)
+  ENVT_GALLERY_IMAGES String    @db.VarChar(500)
+  ENVT_CONTACT_NO     String    @db.VarChar(20)
+  ENVT_ADDRESS        String    @db.VarChar(500)
+  ENVT_CITY           String    @db.VarChar(50)
+  EVNT_FROM_DT        String    @db.VarChar(20)
+  EVNT_UPTO_DT        String    @db.VarChar(20)
+  EVET_ACTIVE_YN      String    @db.Char(1)
+  EVET_CREATED_BY     Int
+  EVET_CREATED_DT     DateTime  @db.DateTime(0)
+  EVET_UPDATED_BY     Int?
+  EVET_UPDATED_DT     DateTime? @db.DateTime(0)
+  event               Events    @relation(fields: [id], references: [ENVT_ID], onDelete: Cascade, onUpdate: Restrict)
+
+  @@id([id, lang_code])
+  @@index([ENVT_CATE_CATE_ID])
+  @@index([ENVT_CATE_ID])
 }
 
 model LanguageContent {
@@ -295,64 +323,58 @@ model LanguageContent {
 }
 
 model content_sections {
-  id                 Int       @id @default(autoincrement())
-  title              String    @db.VarChar(50)
-  id_id              Int? // Purpose of this field needs to be strictly defined if not for translations
-  description        String    @db.Text
-  image_path         String?   @db.VarChar(250)
-  icon_path          String?   @db.VarChar(250)
-  active_yn          Int
-  created_by         Int
-  created_date       DateTime  @db.Date @default(now()) // Ensure this is auto-generated
-  updated_by         Int?
-  updated_date       DateTime? @db.Date
-  page_id            Int
-  refrence_page_id   Int?
-  lang_code          String    @default("en") @db.VarChar(2) // This indicates the main content is "en"
-
-  // Add the relation field to link to translations
-  translations       content_sections_lang[]
+  id               Int                     @id @default(autoincrement())
+  title            String                  @db.VarChar(50)
+  id_id            Int?
+  description      String                  @db.Text
+  image_path       String?                 @db.VarChar(250)
+  icon_path        String?                 @db.VarChar(250)
+  active_yn        Int
+  created_by       Int
+  created_date     DateTime                @default(now()) @db.Date
+  updated_by       Int?
+  updated_date     DateTime?               @db.Date
+  page_id          Int
+  refrence_page_id Int?
+  button_one       String?                 @db.VarChar(50)
+  button_one_slug  String?                 @db.VarChar(100)
+  button_two       String?                 @db.VarChar(50)
+  button_two_slug  String?                 @db.VarChar(100)
+  flex_01          String?                 @db.VarChar(250)
+  lang_code        String                  @default("en") @db.VarChar(2)
+  translations     content_sections_lang[]
 }
 
 model content_sections_lang {
-  // 'id' field is now explicitly defined as the Foreign Key to content_sections.id.
-  // It is part of the composite primary key and is NOT auto-incrementing.
-  // It will be provided from the 'content_sections' entry it translates.
-  id                 Int
+  id               Int
+  id_id            Int?
+  title            String           @db.VarChar(50)
+  description      String           @db.Text
+  image_path       String?          @db.VarChar(250)
+  icon_path        String?          @db.VarChar(250)
+  active_yn        Int
+  created_by       Int
+  created_date     DateTime         @db.Date
+  updated_by       Int?
+  updated_date     DateTime?        @db.Date
+  page_id          Int
+  refrence_page_id Int?
+  button_one       String?          @db.VarChar(50)
+  button_one_slug  String?          @db.VarChar(100)
+  button_two       String?          @db.VarChar(50)
+  button_two_slug  String?          @db.VarChar(100)
+  flex_01          String?          @db.VarChar(250)
+  lang_code        String           @db.VarChar(5)
+  content_section  content_sections @relation(fields: [id], references: [id])
 
-  // 'lang_code' is the other part of the composite primary key.
-  // REMOVED @default("en") as 'en' translations will not be stored here.
-  lang_code          String    @db.VarChar(5) // Using VarChar(5) for broader language codes (e.g., 'zh-CN')
-
-  // These are the truly translatable fields (title, description, image_path, icon_path)
-  title              String    @db.VarChar(50)
-  description        String    @db.Text
-  image_path         String?   @db.VarChar(250)
-  icon_path          String?   @db.VarChar(250)
-
-  // Duplicated fields from content_sections - manage consistency carefully
-  active_yn          Int
-  created_by         Int
-  created_date       DateTime  @db.Date
-  updated_by         Int?
-  updated_date       DateTime? @db.Date
-  page_id            Int
-  refrence_page_id   Int?
-
-  // Defines the composite primary key using 'id' (from content_sections) and 'lang_code'.
-  // This ensures that for a given parent content section, there's only one entry per language.
   @@id([id, lang_code])
-
-  // Defines the explicit foreign key relationship to the content_sections table.
-  // The 'id' field in this table references the 'id' field in the content_sections table.
-  // This also enables Prisma's relation queries (e.g., contentSection.translations).
-  content_section    content_sections @relation(fields: [id], references: [id])
 }
 
 model pages {
   id           Int       @id @default(autoincrement())
   title        String    @db.VarChar(20)
-  link_url     String    @unique @default("/") @db.VarChar(50) // <<< ADDED @unique
+  link_url     String    @unique @default("/") @db.VarChar(50)
+  screen_type  String    @default("both") @db.VarChar(12)
   active_yn    Int
   created_by   Int
   created_date DateTime  @db.Date
@@ -360,8 +382,30 @@ model pages {
   updated_date DateTime? @db.Date
 }
 
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model businesses {
+  business_id     Int                       @id @default(autoincrement())
+  business_name   String                    @db.VarChar(100)
+  business_stream String                    @db.VarChar(50)
+  business_type   String                    @db.VarChar(50)
+  sub_category    String?                   @db.VarChar(50)
+  business_model  businesses_business_model
+  target_market   String?                   @db.VarChar(100)
+  created_at      DateTime?                 @default(now()) @db.DateTime(0)
+  is_active       Boolean?                  @default(true)
+  notes           String?                   @db.Text
+}
+
 enum PR_ROLE {
   Admin    @map("Admin")
   End_User @map("End User")
   Master   @map("Master")
+}
+
+enum businesses_business_model {
+  B2B
+  B2C
+  B2G
+  C2C
+  Hybrid
 }

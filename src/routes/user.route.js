@@ -30,6 +30,12 @@ import {
   updateEvent,
   deleteEvent,
   getEventById,
+  createEventTranslation,
+  getEventTranslations,
+  getEventTranslationByLang,
+  updateEventTranslation,
+  deleteEventTranslation,
+  getEventsWithAllTranslations,
 } from "../controllers/events.contoller.js";
 import DirectoryController from "../controllers/Directory.controller.js";
 import upload from "../middlewares/upload.js";
@@ -131,6 +137,23 @@ userRouter.post("/events", createEvent);
 userRouter.put("/events/:ENVT_ID", updateEvent);
 userRouter.delete("/events/:ENVT_ID", deleteEvent);
 userRouter.get("/events/:ENVT_ID", getEventById);
+
+// Event Translations
+userRouter.post("/events/:ENVT_ID/translations", createEventTranslation);
+userRouter.get("/events/:ENVT_ID/translations", getEventTranslations);
+userRouter.get(
+  "/events/:ENVT_ID/translations/:lang_code",
+  getEventTranslationByLang
+);
+userRouter.put(
+  "/events/:ENVT_ID/translations/:lang_code",
+  updateEventTranslation
+);
+userRouter.delete(
+  "/events/:ENVT_ID/translations/:lang_code",
+  deleteEventTranslation
+);
+userRouter.get("/events-with-translations", getEventsWithAllTranslations);
 
 // userRouter.get("/Hobbies", HobbiesController);
 userRouter.get("/hobbies", getHobbies);
