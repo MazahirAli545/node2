@@ -2,27 +2,40 @@ import prisma from "../../db/prismaClient.js";
 
 // Helper to parse Accept-Language header (keep this helper function)
 const getPreferredLanguage = (req) => {
-  // 1. Prioritize lang_code query parameter
-  if (typeof req.query.lang_code === 'string' && req.query.lang_code.length === 2) {
+  // 1. Get language from URL path if available
+  if (
+    req.params.lang_code &&
+    ["en", "hi"].includes(req.params.lang_code.toLowerCase())
+  ) {
+    return req.params.lang_code.toLowerCase();
+  }
+
+  // 2. Fallback to query parameter if URL path language not available
+  if (
+    typeof req.query.lang_code === "string" &&
+    ["en", "hi"].includes(req.query.lang_code.toLowerCase())
+  ) {
     return req.query.lang_code.toLowerCase();
   }
 
-  // 2. Parse Accept-Language header
-  const acceptLanguageHeader = req.headers['accept-language'];
-  if (typeof acceptLanguageHeader === 'string') {
-    const languages = acceptLanguageHeader.split(',').map(lang => lang.split(';')[0].trim().toLowerCase());
-    if (languages.length > 0) {
+  // 3. Parse Accept-Language header as last resort
+  const acceptLanguageHeader = req.headers["accept-language"];
+  if (typeof acceptLanguageHeader === "string") {
+    const languages = acceptLanguageHeader
+      .split(",")
+      .map((lang) => lang.split(";")[0].trim().toLowerCase());
+    if (languages.length > 0 && ["en", "hi"].includes(languages[0])) {
       return languages[0];
     }
   }
 
-  // 3. Default to English
-  return 'en';
+  // 4. Default to English
+  return "en";
 };
 
 // --- NEW API FUNCTION: getPageByLinkUrl ---
 export const getPageByLinkUrl = async (req, res) => {
-  const { link_url } = req.params;
+  const { lang_code, link_url } = req.params;
   const requestedLang = getPreferredLanguage(req);
 
   try {
@@ -30,95 +43,79 @@ export const getPageByLinkUrl = async (req, res) => {
     const page = await prisma.pages.findUnique({
       where: {
         // Normalize link_url: if it's just '/', keep it. Otherwise, ensure it starts with '/'
-        link_url: link_url === '' || link_url === '/' ? '/' : `/${link_url.replace(/^\//, '')}`,
-        active_yn: 1, // Only active pages (assuming 1 for active)
+        link_url:
+          link_url === "" || link_url === "/"
+            ? "/"
+            : `/${link_url.replace(/^\//, "")}`,
+        active_yn: 1, // Only active pages
       },
     });
 
     if (!page) {
-      return res.status(404).json({ success: false, message: 'Page not found or is inactive.' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Page not found or is inactive." });
     }
 
-    // 2. Fetch all default (English) content sections for this page
-    const defaultContentSections = await prisma.content_sections.findMany({
-      where: {
-        page_id: page.id,
-        active_yn: 1, // Only active content sections (assuming 1 for active)
-      },
-      orderBy: {
-        id: 'asc', // Or any other sorting preference
-      }
-    });
+    // 2. Fetch content sections based on requested language
+    let contentSections;
 
-    // If there are no default content sections, return the page with an empty array
-    if (defaultContentSections.length === 0) {
-      return res.status(200).json({
-        success: true,
-        message: "Page fetched successfully with no content sections.",
-        data: {
-          id: page.id,
-          title: page.title,
-          link_url: page.link_url,
-          active_yn: page.active_yn,
-          content_sections: [],
-        }
-      });
-    }
-
-    // 3. Get IDs of all default content sections to fetch their translations
-    const defaultSectionIds = defaultContentSections.map(section => section.id);
-
-    // 4. Fetch all relevant translations for these sections
-    const allTranslations = await prisma.content_sections_lang.findMany({
-      where: {
-        id_id: { // This is the foreign key to content_sections.id
-          in: defaultSectionIds,
+    if (requestedLang === "en") {
+      // For English, fetch from main content_sections table
+      contentSections = await prisma.content_sections.findMany({
+        where: {
+          page_id: page.id,
+          active_yn: 1,
         },
-        active_yn: 1, // Only active translations (assuming 1 for active)
-      },
-    });
+        orderBy: {
+          id: "asc",
+        },
+      });
+    } else {
+      // For other languages (e.g., Hindi), fetch from content_sections_lang table
+      contentSections = await prisma.content_sections_lang.findMany({
+        where: {
+          page_id: page.id,
+          lang_code: requestedLang,
+          active_yn: 1,
+        },
+        orderBy: {
+          id: "asc",
+        },
+      });
 
-    // 5. Assemble the final content sections with language fallback
-    const finalContentSections = defaultContentSections.map(defaultSection => {
-      // Find a translation that matches the requested language (or 'en' if requested)
-      const matchingTranslation = allTranslations.find(
-        translation =>
-          translation.id_id === defaultSection.id &&
-          translation.lang_code === requestedLang
-      );
-
-      if (matchingTranslation) {
-        // Use translation if found
-        return {
-          id: defaultSection.id, // Keep the original section ID
-          title: matchingTranslation.title,
-          description: matchingTranslation.description,
-          image_path: matchingTranslation.image_path,
-          icon_path: matchingTranslation.icon_path,
-          // Format date as YYYY-MM-DD. Dates from Prisma are Date objects.
-          from_date: matchingTranslation.from_date ? matchingTranslation.from_date.toISOString().split('T')[0] : null,
-          upto_date: matchingTranslation.upto_date ? matchingTranslation.upto_date.toISOString().split('T')[0] : null,
-          active_yn: matchingTranslation.active_yn,
-          lang_code: matchingTranslation.lang_code, // Indicate the language used for this section
-        };
-      } else {
-        // Fallback to default (English) content if no specific translation found
-        return {
-          id: defaultSection.id,
-          title: defaultSection.title,
-          description: defaultSection.description,
-          image_path: defaultSection.image_path,
-          icon_path: defaultSection.icon_path,
-          // Format date as YYYY-MM-DD.
-          from_date: defaultSection.from_date ? defaultSection.from_date.toISOString().split('T')[0] : null,
-          upto_date: defaultSection.upto_date ? defaultSection.upto_date.toISOString().split('T')[0] : null,
-          active_yn: defaultSection.active_yn,
-          lang_code: defaultSection.lang_code, // This will be 'en' from content_sections
-        };
+      // If no translations found, fallback to English content
+      if (contentSections.length === 0) {
+        contentSections = await prisma.content_sections.findMany({
+          where: {
+            page_id: page.id,
+            active_yn: 1,
+          },
+          orderBy: {
+            id: "asc",
+          },
+        });
       }
-    });
+    }
 
-    // 6. Return the combined page and content sections
+    // Format dates for consistency
+    const formattedSections = contentSections.map((section) => ({
+      id: section.id,
+      title: section.title,
+      description: section.description,
+      image_path: section.image_path,
+      icon_path: section.icon_path,
+      from_date: section.from_date
+        ? section.from_date.toISOString().split("T")[0]
+        : null,
+      upto_date: section.upto_date
+        ? section.upto_date.toISOString().split("T")[0]
+        : null,
+      active_yn: section.active_yn,
+      lang_code: section.lang_code || requestedLang,
+    }));
+
+    // Return the combined page and content sections
     return res.status(200).json({
       success: true,
       message: "Page with content fetched successfully.",
@@ -127,17 +124,18 @@ export const getPageByLinkUrl = async (req, res) => {
         title: page.title,
         link_url: page.link_url,
         active_yn: page.active_yn,
-        content_sections: finalContentSections,
-      }
+        lang_code: requestedLang,
+        content_sections: formattedSections,
+      },
     });
-
   } catch (error) {
-    console.error('Error fetching page by link_url:', error);
-    return res.status(500).json({ success: false, message: 'Failed to fetch page by link URL.' });
+    console.error("Error fetching page by link_url:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch page by link URL." });
   }
 };
 // --- END NEW API FUNCTION ---
-
 
 export const getAllPages = async (req, res) => {
   try {
