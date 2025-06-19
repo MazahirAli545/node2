@@ -428,8 +428,6 @@ export const LoginUser = async (req, res) => {
 //   }
 // };
 
-import prisma from "../db/prismaClient.js";
-
 export const checkPersonById = async (req, res) => {
   try {
     const { id } = req.params;
