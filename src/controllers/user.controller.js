@@ -430,8 +430,10 @@ export const LoginUser = async (req, res) => {
 
 export const checkPersonById = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { type } = req.query; // type: 'father', 'mother', 'spouse'
+    const { id } = req.params; // PR_UNIQUE_ID
+    const { type } = req.query; // type: 'father', 'mother', 'spouse' (optional)
+
+    console.log("Backend: Received ID:", id, "Type:", type); // Debugging log
 
     if (!id || typeof id !== "string") {
       return res
@@ -444,26 +446,16 @@ export const checkPersonById = async (req, res) => {
       select: { PR_UNIQUE_ID: true, PR_GENDER: true, PR_FULL_NAME: true },
     });
 
+    console.log("Backend: Fetched person:", person); // Debugging log
+
     if (!person) {
       return res
         .status(404)
         .json({ success: false, message: "PR_UNIQUE_ID not present" });
     }
 
-    // --- START: Added Gender Mapping for Frontend ---
-    const genderMap = {
-      M: "Male",
-      F: "Female",
-      O: "Other", // Include 'Other' if your system uses it
-    };
-    const formattedGender = person.PR_GENDER
-      ? genderMap[person.PR_GENDER.toUpperCase()]
-      : null;
-    // --- END: Added Gender Mapping for Frontend ---
-
-    // Gender validation based on type (this validation is for the backend's internal check)
-    // You can keep this or remove it if frontend validation is sufficient.
-    // If kept, ensure 'M'/'F' are used here as per database storage.
+    // Gender validation based on type (backend's internal check)
+    // This will return a 400 if gender doesn't match the expected type
     if (type === "father" && person.PR_GENDER !== "M") {
       return res.status(400).json({
         success: false,
@@ -478,12 +470,24 @@ export const checkPersonById = async (req, res) => {
       });
     }
 
+    // Map 'M' to 'Male' and 'F' to 'Female' for frontend consumption
+    const genderMap = {
+      M: "Male",
+      F: "Female",
+      O: "Other", // Add 'Other' if applicable in your data
+    };
+    const formattedGender = person.PR_GENDER
+      ? genderMap[person.PR_GENDER.toUpperCase()]
+      : null;
+
+    console.log("Backend: Formatted Gender:", formattedGender); // Debugging log
+
     return res.status(200).json({
       success: true,
       data: {
         PR_UNIQUE_ID: person.PR_UNIQUE_ID,
         PR_FULL_NAME: person.PR_FULL_NAME,
-        PR_GENDER: formattedGender, // Send the mapped gender value
+        PR_GENDER: formattedGender, // Send the mapped gender value to frontend
       },
       message: `PR_UNIQUE_ID is valid${type ? " for " + type : ""}`,
     });
