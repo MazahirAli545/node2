@@ -41,11 +41,50 @@ import prisma from "../db/prismaClient.js";
 
 export async function getHobbies(req, res) {
   try {
-    const hobbies = await prisma.hobbies.findMany();
+    const { lang_code = "en" } = req.query;
+
+    // First get all hobbies with their translations
+    const hobbies = await prisma.hobbies.findMany({
+      include: {
+        translations: {
+          where: {
+            lang_code: lang_code,
+          },
+        },
+      },
+    });
+
+    // Transform the response to use translation data when available
+    const transformedHobbies = hobbies
+      .map((hobby) => {
+        // If there's a translation, use its values
+        if (hobby.translations && hobby.translations.length > 0) {
+          const translation = hobby.translations[0];
+          return {
+            HOBBY_ID: hobby.HOBBY_ID,
+            HOBBY_NAME: translation.HOBBY_NAME,
+            HOBBY_IMAGE_URL:
+              translation.HOBBY_IMAGE_URL || hobby.HOBBY_IMAGE_URL,
+            lang_code: translation.lang_code,
+            HOBBY_CREATED_AT: translation.HOBBY_CREATED_AT,
+            HOBBY_CREATED_BY: translation.HOBBY_CREATED_BY,
+            HOBBY_UPDATED_AT: translation.HOBBY_UPDATED_AT,
+            HOOBY_UPDATED_BY: translation.HOOBY_UPDATED_BY,
+          };
+        }
+        // If no translation exists and we're requesting English, return the original
+        if (lang_code === "en") {
+          return hobby;
+        }
+        // If no translation exists and we're requesting another language, don't include this hobby
+        return null;
+      })
+      .filter((hobby) => hobby !== null); // Remove null entries
+
     return res.status(200).json({
       message: "Hobbies fetched successfully",
       success: true,
-      hobbies,
+      hobbies: transformedHobbies,
     });
   } catch (error) {
     console.error("Error fetching hobbies:", error);
@@ -59,21 +98,45 @@ export async function getHobbies(req, res) {
 
 export async function createHobby(req, res) {
   try {
-    const { HOBBY_NAME, HOBBY_IMAGE_URL, HOBBY_CREATED_BY } = req.body;
+    const {
+      HOBBY_NAME,
+      HOBBY_IMAGE_URL,
+      HOBBY_CREATED_BY,
+      lang_code = "en",
+    } = req.body;
 
-    const newHobby = await prisma.hobbies.create({
-      data: {
-        HOBBY_NAME,
-        HOBBY_IMAGE_URL,
-        // CITY_CREATED_BY,
-        HOBBY_CREATED_BY,
-      },
+    // Create the hobby and its translation in a transaction
+    const result = await prisma.$transaction(async (prisma) => {
+      // Create the main hobby entry
+      const newHobby = await prisma.hobbies.create({
+        data: {
+          HOBBY_NAME,
+          HOBBY_IMAGE_URL,
+          HOBBY_CREATED_BY,
+          lang_code,
+          // Create the translation at the same time
+          translations: {
+            create: {
+              HOBBY_NAME,
+              HOBBY_IMAGE_URL,
+              lang_code,
+              HOBBY_CREATED_AT: new Date(),
+              HOBBY_CREATED_BY,
+            },
+          },
+        },
+        include: {
+          translations: true,
+        },
+      });
+
+      return newHobby;
     });
 
     return res.status(201).json({
-      message: "Hobby created successfully",
+      message: "Hobby and its translation created successfully",
       success: true,
-      hobby: newHobby,
+      hobby: result,
     });
   } catch (error) {
     console.error("Error creating hobby:", error);
@@ -93,6 +156,9 @@ export async function updateHobby(req, res) {
     const updatedHobby = await prisma.hobbies.update({
       where: { HOBBY_ID: Number(HOBBY_ID) },
       data: updateData,
+      include: {
+        translations: true,
+      },
     });
 
     return res.status(200).json({
@@ -126,6 +192,155 @@ export async function deleteHobby(req, res) {
     console.error("Error deleting hobby:", error);
     return res.status(500).json({
       message: "Error deleting hobby",
+      success: false,
+      error: error.message,
+    });
+  }
+}
+
+// Translation-specific endpoints
+export async function createHobbyTranslation(req, res) {
+  try {
+    const { HOBBY_ID } = req.params;
+    const { HOBBY_NAME, HOBBY_IMAGE_URL, lang_code } = req.body;
+
+    const hobby = await prisma.hobbies.findUnique({
+      where: { HOBBY_ID: Number(HOBBY_ID) },
+    });
+
+    if (!hobby) {
+      return res.status(404).json({
+        message: "Hobby not found",
+        success: false,
+      });
+    }
+
+    const translation = await prisma.hobbies_lang.create({
+      data: {
+        id: Number(HOBBY_ID),
+        HOBBY_NAME,
+        HOBBY_IMAGE_URL,
+        lang_code,
+        HOBBY_CREATED_AT: new Date(),
+        HOBBY_CREATED_BY: hobby.HOBBY_CREATED_BY,
+      },
+    });
+
+    return res.status(201).json({
+      message: "Hobby translation created successfully",
+      success: true,
+      translation,
+    });
+  } catch (error) {
+    console.error("Error creating hobby translation:", error);
+    return res.status(500).json({
+      message: "Error creating hobby translation",
+      success: false,
+      error: error.message,
+    });
+  }
+}
+
+export async function updateHobbyTranslation(req, res) {
+  try {
+    const { HOBBY_ID, lang_code } = req.params;
+    const updateData = req.body;
+
+    const translation = await prisma.hobbies_lang.update({
+      where: {
+        id_lang_code: {
+          id: Number(HOBBY_ID),
+          lang_code,
+        },
+      },
+      data: {
+        ...updateData,
+        HOBBY_UPDATED_AT: new Date(),
+      },
+    });
+
+    return res.status(200).json({
+      message: "Hobby translation updated successfully",
+      success: true,
+      translation,
+    });
+  } catch (error) {
+    console.error("Error updating hobby translation:", error);
+    return res.status(500).json({
+      message: "Error updating hobby translation",
+      success: false,
+      error: error.message,
+    });
+  }
+}
+
+export async function deleteHobbyTranslation(req, res) {
+  try {
+    const { HOBBY_ID, lang_code } = req.params;
+
+    await prisma.hobbies_lang.delete({
+      where: {
+        id_lang_code: {
+          id: Number(HOBBY_ID),
+          lang_code,
+        },
+      },
+    });
+
+    return res.status(200).json({
+      message: "Hobby translation deleted successfully",
+      success: true,
+    });
+  } catch (error) {
+    console.error("Error deleting hobby translation:", error);
+    return res.status(500).json({
+      message: "Error deleting hobby translation",
+      success: false,
+      error: error.message,
+    });
+  }
+}
+
+export async function getHobbyTranslations(req, res) {
+  try {
+    const { HOBBY_ID } = req.params;
+
+    const translations = await prisma.hobbies_lang.findMany({
+      where: { id: Number(HOBBY_ID) },
+    });
+
+    return res.status(200).json({
+      message: "Hobby translations fetched successfully",
+      success: true,
+      translations,
+    });
+  } catch (error) {
+    console.error("Error fetching hobby translations:", error);
+    return res.status(500).json({
+      message: "Error fetching hobby translations",
+      success: false,
+      error: error.message,
+    });
+  }
+}
+
+export async function getHobbiesWithTranslations(req, res) {
+  try {
+    const hobbies = await prisma.hobbies.findMany({
+      include: {
+        translations: true,
+      },
+    });
+
+    return res.status(200).json({
+      message: "Hobbies with translations fetched successfully",
+      success: true,
+      hobbies,
+    });
+  } catch (error) {
+    console.error("Error fetching hobbies with translations:", error);
+    return res.status(500).json({
+      message: "Error fetching hobbies with translations",
       success: false,
       error: error.message,
     });

@@ -165,13 +165,29 @@ model DonationPayment {
 }
 
 model Hobbies {
-  HOBBY_ID         Int       @id @default(autoincrement())
-  HOBBY_NAME       String    @db.VarChar(100)
-  HOBBY_IMAGE_URL  String?   @db.VarChar(255)
-  HOBBY_CREATED_AT DateTime  @default(now())
+  HOBBY_ID         Int            @id @default(autoincrement())
+  HOBBY_NAME       String         @db.VarChar(100)
+  HOBBY_IMAGE_URL  String?        @db.VarChar(255)
+  lang_code        String         @default("en") @db.VarChar(5)
+  HOBBY_CREATED_AT DateTime       @default(now())
   HOBBY_CREATED_BY Int?
   HOBBY_UPDATED_AT DateTime?
   HOOBY_UPDATED_BY Int?
+  translations     hobbies_lang[]
+}
+
+model hobbies_lang {
+  id               Int       @map("HOBBY_ID")
+  HOBBY_NAME       String    @db.VarChar(100)
+  HOBBY_IMAGE_URL  String?   @db.VarChar(255)
+  lang_code        String    @db.VarChar(5)
+  HOBBY_CREATED_AT DateTime  @db.DateTime(0)
+  HOBBY_CREATED_BY Int?
+  HOBBY_UPDATED_AT DateTime? @db.DateTime(0)
+  HOOBY_UPDATED_BY Int?
+  hobby            Hobbies   @relation(fields: [id], references: [HOBBY_ID], onDelete: Cascade, onUpdate: Restrict)
+
+  @@id([id, lang_code])
 }
 
 model City {

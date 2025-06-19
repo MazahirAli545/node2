@@ -54,6 +54,11 @@ import {
   createHobby,
   updateHobby,
   deleteHobby,
+  createHobbyTranslation,
+  updateHobbyTranslation,
+  deleteHobbyTranslation,
+  getHobbyTranslations,
+  getHobbiesWithTranslations,
 } from "../controllers/Hobbies.controller.js";
 import EditProfile from "../controllers/EditProfile.controller.js";
 import { Router } from "express";
@@ -160,6 +165,20 @@ userRouter.get("/hobbies", getHobbies);
 userRouter.post("/hobbies", createHobby);
 userRouter.put("/hobbies/:HOBBY_ID", updateHobby);
 userRouter.delete("/hobbies/:HOBBY_ID", deleteHobby);
+
+// Hobby translation routes
+userRouter.post("/hobbies/:HOBBY_ID/translations", createHobbyTranslation);
+userRouter.get("/hobbies/:HOBBY_ID/translations", getHobbyTranslations);
+userRouter.put(
+  "/hobbies/:HOBBY_ID/translations/:lang_code",
+  updateHobbyTranslation
+);
+userRouter.delete(
+  "/hobbies/:HOBBY_ID/translations/:lang_code",
+  deleteHobbyTranslation
+);
+userRouter.get("/hobbies-with-translations", getHobbiesWithTranslations);
+
 userRouter.post("/edit-profile", upload.single("PR_PHOTO_URL"), EditProfile);
 
 userRouter.get("/education", getEducation);
