@@ -18,6 +18,8 @@ const serviceAccount = {
 
 console.log("Private key", serviceAccount?.private_key);
 
+console.log("Unescaped Firebase Private Key (for debugging):", serviceAccount);
+
 if (!serviceAccount.private_key) {
   console.error("Firebase private key is missing or invalid");
   throw new Error("Firebase private key is missing or invalid");
