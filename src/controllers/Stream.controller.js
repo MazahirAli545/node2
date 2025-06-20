@@ -332,3 +332,98 @@ export async function getStreamTranslations(req, res) {
     });
   }
 }
+
+export async function updateStreamTranslation(req, res) {
+  try {
+    const { STREAM_ID, lang_code } = req.params;
+    const { STREAM_NAME, STREAM_UPDATED_BY } = req.body;
+
+    // Check if translation exists
+    const existingTranslation = await prisma.stream_lang.findUnique({
+      where: {
+        id_lang_code: {
+          id: Number(STREAM_ID),
+          lang_code,
+        },
+      },
+    });
+
+    if (!existingTranslation) {
+      return res.status(404).json({
+        message: `Translation for language ${lang_code} not found`,
+        success: false,
+      });
+    }
+
+    const updatedTranslation = await prisma.stream_lang.update({
+      where: {
+        id_lang_code: {
+          id: Number(STREAM_ID),
+          lang_code,
+        },
+      },
+      data: {
+        STREAM_NAME,
+        STREAM_UPDATED_BY,
+        STREAM_UPDATED_DT: new Date(),
+      },
+    });
+
+    return res.status(200).json({
+      message: `Stream translation for language ${lang_code} updated successfully`,
+      success: true,
+      translation: updatedTranslation,
+    });
+  } catch (error) {
+    console.error("Error updating stream translation:", error);
+    return res.status(500).json({
+      message: "Error updating stream translation",
+      success: false,
+      error: error.message,
+    });
+  }
+}
+
+export async function deleteStreamTranslation(req, res) {
+  try {
+    const { STREAM_ID, lang_code } = req.params;
+
+    // Check if translation exists
+    const existingTranslation = await prisma.stream_lang.findUnique({
+      where: {
+        id_lang_code: {
+          id: Number(STREAM_ID),
+          lang_code,
+        },
+      },
+    });
+
+    if (!existingTranslation) {
+      return res.status(404).json({
+        message: `Translation for language ${lang_code} not found`,
+        success: false,
+      });
+    }
+
+    await prisma.stream_lang.delete({
+      where: {
+        id_lang_code: {
+          id: Number(STREAM_ID),
+          lang_code,
+        },
+      },
+    });
+
+    return res.status(200).json({
+      message: `Stream translation for language ${lang_code} deleted successfully`,
+      success: true,
+    });
+  } catch (error) {
+    console.error("Error deleting stream translation:", error);
+    return res.status(500).json({
+      message: "Error deleting stream translation",
+      success: false,
+      error: error.message,
+    });
+  }
+}

@@ -9,7 +9,11 @@ import {
   createProfession,
   updateProfession,
   deleteProfession,
-} from "../controllers/professionSeed.js";
+  createProfessionTranslation,
+  getProfessionTranslations,
+  updateProfessionTranslation,
+  deleteProfessionTranslation,
+} from "../controllers/Profession.controller.js";
 // import contact from '../controllers/contactUs.controller.js'
 import {
   getContactForms,
@@ -77,6 +81,10 @@ import {
   createEducation,
   updateEducation,
   deleteEducation,
+  createEducationTranslation,
+  getEducationTranslations,
+  updateEducationTranslation,
+  deleteEducationTranslation,
 } from "../controllers/Education.controller.js";
 
 import {
@@ -84,6 +92,10 @@ import {
   createStream,
   updateStream,
   deleteStream,
+  createStreamTranslation,
+  getStreamTranslations,
+  updateStreamTranslation,
+  deleteStreamTranslation,
 } from "../controllers/Stream.controller.js";
 
 import { getAllUsersBasicDetails } from "../controllers/RegisteredUser.controller.js";
@@ -127,6 +139,19 @@ userRouter.get("/professions", getProfessions);
 userRouter.post("/professions", createProfession);
 userRouter.put("/professions/:PROF_ID", updateProfession);
 userRouter.delete("/professions/:PROF_ID", deleteProfession);
+userRouter.post(
+  "/professions/:PROF_ID/translations",
+  createProfessionTranslation
+);
+userRouter.get("/professions/:PROF_ID/translations", getProfessionTranslations);
+userRouter.put(
+  "/professions/:PROF_ID/translations/:lang_code",
+  updateProfessionTranslation
+);
+userRouter.delete(
+  "/professions/:PROF_ID/translations/:lang_code",
+  deleteProfessionTranslation
+);
 
 // contact
 userRouter.get("/contactus", getContactForms);
@@ -213,11 +238,37 @@ userRouter.get("/education", getEducation);
 userRouter.post("/education", createEducation);
 userRouter.put("/education/:EDUCATION_ID", updateEducation);
 userRouter.delete("/education/:EDUCATION_ID", deleteEducation);
+userRouter.post(
+  "/education/:EDUCATION_ID/translations",
+  createEducationTranslation
+);
+userRouter.get(
+  "/education/:EDUCATION_ID/translations",
+  getEducationTranslations
+);
+userRouter.put(
+  "/education/:EDUCATION_ID/translations/:lang_code",
+  updateEducationTranslation
+);
+userRouter.delete(
+  "/education/:EDUCATION_ID/translations/:lang_code",
+  deleteEducationTranslation
+);
 
 userRouter.get("/streams", getStreams);
 userRouter.post("/streams", createStream);
 userRouter.put("/streams/:STREAM_ID", updateStream);
 userRouter.delete("/streams/:STREAM_ID", deleteStream);
+userRouter.post("/streams/:STREAM_ID/translations", createStreamTranslation);
+userRouter.get("/streams/:STREAM_ID/translations", getStreamTranslations);
+userRouter.put(
+  "/streams/:STREAM_ID/translations/:lang_code",
+  updateStreamTranslation
+);
+userRouter.delete(
+  "/streams/:STREAM_ID/translations/:lang_code",
+  deleteStreamTranslation
+);
 
 userRouter.get("/registerUser", getAllUsersBasicDetails);
 

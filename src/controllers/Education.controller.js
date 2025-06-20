@@ -411,3 +411,100 @@ export async function getEducationTranslations(req, res) {
     });
   }
 }
+
+export async function updateEducationTranslation(req, res) {
+  try {
+    const { EDUCATION_ID, lang_code } = req.params;
+    const { EDUCATION_NAME, EDUCATION_IMAGE_URL, EDUCATION_UPDATED_BY } =
+      req.body;
+
+    // Check if translation exists
+    const existingTranslation = await prisma.education_lang.findUnique({
+      where: {
+        id_lang_code: {
+          id: Number(EDUCATION_ID),
+          lang_code,
+        },
+      },
+    });
+
+    if (!existingTranslation) {
+      return res.status(404).json({
+        message: `Translation for language ${lang_code} not found`,
+        success: false,
+      });
+    }
+
+    const updatedTranslation = await prisma.education_lang.update({
+      where: {
+        id_lang_code: {
+          id: Number(EDUCATION_ID),
+          lang_code,
+        },
+      },
+      data: {
+        EDUCATION_NAME,
+        EDUCATION_IMAGE_URL,
+        EDUCATION_UPDATED_BY,
+        EDUCATION_UPDATED_DT: new Date(),
+      },
+    });
+
+    return res.status(200).json({
+      message: `Education translation for language ${lang_code} updated successfully`,
+      success: true,
+      translation: updatedTranslation,
+    });
+  } catch (error) {
+    console.error("Error updating education translation:", error);
+    return res.status(500).json({
+      message: "Error updating education translation",
+      success: false,
+      error: error.message,
+    });
+  }
+}
+
+export async function deleteEducationTranslation(req, res) {
+  try {
+    const { EDUCATION_ID, lang_code } = req.params;
+
+    // Check if translation exists
+    const existingTranslation = await prisma.education_lang.findUnique({
+      where: {
+        id_lang_code: {
+          id: Number(EDUCATION_ID),
+          lang_code,
+        },
+      },
+    });
+
+    if (!existingTranslation) {
+      return res.status(404).json({
+        message: `Translation for language ${lang_code} not found`,
+        success: false,
+      });
+    }
+
+    await prisma.education_lang.delete({
+      where: {
+        id_lang_code: {
+          id: Number(EDUCATION_ID),
+          lang_code,
+        },
+      },
+    });
+
+    return res.status(200).json({
+      message: `Education translation for language ${lang_code} deleted successfully`,
+      success: true,
+    });
+  } catch (error) {
+    console.error("Error deleting education translation:", error);
+    return res.status(500).json({
+      message: "Error deleting education translation",
+      success: false,
+      error: error.message,
+    });
+  }
+}

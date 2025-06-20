@@ -3,8 +3,9 @@ import prisma from "../db/prismaClient.js";
 
 export async function getProfessions(req, res) {
   try {
-    const { lang_code = "en" } = req.query;
-    if (lang_code === "en") {
+    const { lang_code } = req.query;
+    if (!lang_code || lang_code === "en") {
+      // Fetch only English professions if lang_code is not provided or is 'en'
       const professions = await prisma.profession.findMany();
       return res.status(200).json({
         message: "Professions fetched successfully",
@@ -12,7 +13,7 @@ export async function getProfessions(req, res) {
         professions,
       });
     } else {
-      // Fetch only requested language translations
+      // Fetch only requested language translations if lang_code is provided
       const professions = await prisma.profession_lang.findMany({
         where: { lang_code },
         include: {
@@ -42,7 +43,7 @@ export async function getProfessions(req, res) {
 export async function getProfessionById(req, res) {
   try {
     const { PROF_ID } = req.params;
-    const { lang_code = "en" } = req.query;
+    const { lang_code } = req.query;
 
     // Get the main profession record
     const profession = await prisma.profession.findUnique({
@@ -56,15 +57,15 @@ export async function getProfessionById(req, res) {
       });
     }
 
-    // If requesting English content, return the main record
-    if (lang_code === "en") {
+    // If lang_code is not provided or is 'en', return the main record
+    if (!lang_code || lang_code === "en") {
       return res.status(200).json({
         message: "Profession fetched successfully",
         success: true,
         profession,
       });
     } else {
-      // For non-English, get the translation
+      // For non-English, get the translation only if lang_code is provided
       const translation = await prisma.profession_lang.findUnique({
         where: {
           id_lang_code: {
@@ -74,20 +75,17 @@ export async function getProfessionById(req, res) {
         },
       });
 
-      // Merge translation with base data, falling back to English
-      const translatedProfession = {
-        ...profession,
-        ...(translation && {
-          PROF_NAME: translation.PROF_NAME || profession.PROF_NAME,
-          PROF_DESC: translation.PROF_DESC || profession.PROF_DESC,
-        }),
-      };
+      if (!translation) {
+        return res.status(404).json({
+          message: `Translation for language ${lang_code} not found`,
+          success: false,
+        });
+      }
 
       return res.status(200).json({
-        message: "Profession fetched successfully",
+        message: `Profession fetched successfully in ${lang_code}`,
         success: true,
-        profession: translatedProfession,
-        hasTranslation: !!translation,
+        profession: translation,
       });
     }
   } catch (error) {
@@ -409,6 +407,103 @@ export async function getProfessionTranslations(req, res) {
     console.error("Error fetching profession translations:", error);
     return res.status(500).json({
       message: "Error fetching profession translations",
+      success: false,
+      error: error.message,
+    });
+  }
+}
+
+export async function updateProfessionTranslation(req, res) {
+  try {
+    const { PROF_ID, lang_code } = req.params;
+    const { PROF_NAME, PROF_DESC, PROF_ACTIVE_YN, PROF_UPDATED_BY } = req.body;
+
+    // Check if translation exists
+    const existingTranslation = await prisma.profession_lang.findUnique({
+      where: {
+        id_lang_code: {
+          id: Number(PROF_ID),
+          lang_code,
+        },
+      },
+    });
+
+    if (!existingTranslation) {
+      return res.status(404).json({
+        message: `Translation for language ${lang_code} not found`,
+        success: false,
+      });
+    }
+
+    const updatedTranslation = await prisma.profession_lang.update({
+      where: {
+        id_lang_code: {
+          id: Number(PROF_ID),
+          lang_code,
+        },
+      },
+      data: {
+        PROF_NAME,
+        PROF_DESC,
+        PROF_ACTIVE_YN,
+        PROF_UPDATED_BY,
+        PROF_UPDATED_DT: new Date(),
+      },
+    });
+
+    return res.status(200).json({
+      message: `Profession translation for language ${lang_code} updated successfully`,
+      success: true,
+      translation: updatedTranslation,
+    });
+  } catch (error) {
+    console.error("Error updating profession translation:", error);
+    return res.status(500).json({
+      message: "Error updating profession translation",
+      success: false,
+      error: error.message,
+    });
+  }
+}
+
+export async function deleteProfessionTranslation(req, res) {
+  try {
+    const { PROF_ID, lang_code } = req.params;
+
+    // Check if translation exists
+    const existingTranslation = await prisma.profession_lang.findUnique({
+      where: {
+        id_lang_code: {
+          id: Number(PROF_ID),
+          lang_code,
+        },
+      },
+    });
+
+    if (!existingTranslation) {
+      return res.status(404).json({
+        message: `Translation for language ${lang_code} not found`,
+        success: false,
+      });
+    }
+
+    await prisma.profession_lang.delete({
+      where: {
+        id_lang_code: {
+          id: Number(PROF_ID),
+          lang_code,
+        },
+      },
+    });
+
+    return res.status(200).json({
+      message: `Profession translation for language ${lang_code} deleted successfully`,
+      success: true,
+    });
+  } catch (error) {
+    console.error("Error deleting profession translation:", error);
+    return res.status(500).json({
+      message: "Error deleting profession translation",
       success: false,
       error: error.message,
     });

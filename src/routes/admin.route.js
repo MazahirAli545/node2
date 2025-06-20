@@ -15,6 +15,10 @@ import {
   updateCategory,
   deleteCategory,
   getCategoryTranslations,
+  createCategoryTranslation,
+  getCategoryTranslation,
+  updateCategoryTranslation,
+  deleteCategoryTranslation,
 } from "../controllers/admin/category.controller.js";
 import {
   createBusiness,
@@ -159,5 +163,20 @@ router.post("/categories", createCategory); // Create a new category
 router.put("/categories/:CATE_ID", updateCategory); // Update a category by ID
 router.delete("/categories/:CATE_ID", deleteCategory); // Delete a category by ID (optionally with lang_code)
 router.get("/categories/:CATE_ID/translations", getCategoryTranslations); // Get all translations for a category
+
+// Category Translations (Admin)
+router.post("/categories/:CATE_ID/translation", createCategoryTranslation); // Create a translation for a category
+router.get(
+  "/categories/:CATE_ID/translation/:lang_code",
+  getCategoryTranslation
+); // Get a specific translation for a category
+router.put(
+  "/categories/:CATE_ID/translation/:lang_code",
+  updateCategoryTranslation
+); // Update a translation for a category
+router.delete(
+  "/categories/:CATE_ID/translation/:lang_code",
+  deleteCategoryTranslation
+); // Delete a translation for a category
 
 export default router;
