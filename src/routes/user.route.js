@@ -40,7 +40,13 @@ import {
 import DirectoryController from "../controllers/Directory.controller.js";
 import upload from "../middlewares/upload.js";
 import getUserProfile from "../controllers/profile.controller.js";
-import BusinessController from "../controllers/Bussiness.controller.js";
+import BusinessController, {
+  getBusinesses,
+  createBusiness,
+  updateBusiness,
+  deleteBusiness,
+  getBusinessTranslations,
+} from "../controllers/Bussiness.controller.js";
 import {
   createChild,
   getChildById,
@@ -134,7 +140,12 @@ userRouter.put("/cities/:CITY_ID", updateCity);
 userRouter.delete("/cities/:CITY_ID", deleteCity);
 userRouter.get("/directory", DirectoryController);
 userRouter.get("/profile", verifyToken, getUserProfile);
-userRouter.get("/business", BusinessController);
+// Business routes
+userRouter.get("/business", getBusinesses);
+userRouter.post("/business", createBusiness);
+userRouter.put("/business/:BUSS_ID", updateBusiness);
+userRouter.delete("/business/:BUSS_ID", deleteBusiness);
+userRouter.get("/business/:BUSS_ID/translations", getBusinessTranslations);
 
 // Events
 userRouter.get("/events", getEvents);
