@@ -7,51 +7,31 @@ import prisma from "../db/prismaClient.js";
 export async function getCities(req, res) {
   try {
     const { lang_code = "en" } = req.query;
-
-    // Get main cities (English)
-    const mainCities = await prisma.city.findMany({
-      select: {
-        CITY_ID: true,
-        CITY_PIN_CODE: true,
-        CITY_NAME: true,
-        CITY_DS_CODE: true,
-        CITY_DS_NAME: true,
-        CITY_ST_CODE: true,
-        CITY_ST_NAME: true,
-        CITY_CREATED_BY: true,
-        CITY_CREATED_AT: true,
-        CITY_UPDATED_BY: true,
-        CITY_UPDATED_AT: true,
-      },
-    });
-
-    // If English is requested, return main cities
     if (lang_code === "en") {
+      const cities = await prisma.city.findMany();
       return res.status(200).json({
         message: "Cities fetched successfully",
         success: true,
-        cities: mainCities,
+        cities,
+      });
+    } else {
+      // Fetch only requested language translations
+      const cities = await prisma.city_lang.findMany({
+        where: { lang_code },
+        include: {
+          city: true,
+        },
+      });
+      const mapped = cities.map((e) => ({
+        ...e,
+        CITY_ID: e.id,
+      }));
+      return res.status(200).json({
+        message: `Cities fetched successfully in ${lang_code}`,
+        success: true,
+        cities: mapped,
       });
     }
-
-    // For non-English, get translations
-    const translations = await prisma.city_lang.findMany({
-      where: {
-        lang_code,
-      },
-    });
-
-    // Merge translations with main cities, falling back to English
-    const mergedCities = mainCities.map((city) => {
-      const translation = translations.find((t) => t.id === city.CITY_ID);
-      return translation || city;
-    });
-
-    return res.status(200).json({
-      message: "Cities fetched successfully",
-      success: true,
-      cities: mergedCities,
-    });
   } catch (error) {
     console.error("Error fetching cities:", error);
     return res.status(500).json({

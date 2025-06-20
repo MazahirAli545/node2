@@ -6,8 +6,6 @@ import prisma from "../db/prismaClient.js";
 export async function getEducations(req, res) {
   try {
     const { lang_code = "en" } = req.query;
-
-    // If requesting English content, get from main table
     if (lang_code === "en") {
       const educations = await prisma.education.findMany();
       return res.status(200).json({
@@ -16,36 +14,21 @@ export async function getEducations(req, res) {
         educations,
       });
     } else {
-      // For non-English, join with translations table
-      const educations = await prisma.education.findMany({
+      // Fetch only requested language translations
+      const educations = await prisma.education_lang.findMany({
+        where: { lang_code },
         include: {
-          translations: {
-            where: {
-              lang_code,
-            },
-          },
+          education: true,
         },
       });
-
-      // Map the results to include translated content when available
-      const translatedEducations = educations.map((education) => {
-        const translation = education.translations[0];
-        if (translation) {
-          return {
-            ...education,
-            EDUCATION_NAME:
-              translation.EDUCATION_NAME || education.EDUCATION_NAME,
-            EDUCATION_IMAGE_URL:
-              translation.EDUCATION_IMAGE_URL || education.EDUCATION_IMAGE_URL,
-          };
-        }
-        return education;
-      });
-
+      const mapped = educations.map((e) => ({
+        ...e,
+        EDUCATION_ID: e.id,
+      }));
       return res.status(200).json({
-        message: "Educations fetched successfully",
+        message: `Educations fetched successfully in ${lang_code}`,
         success: true,
-        educations: translatedEducations,
+        educations: mapped,
       });
     }
   } catch (error) {

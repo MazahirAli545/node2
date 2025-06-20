@@ -42,50 +42,31 @@ import prisma from "../db/prismaClient.js";
 export async function getHobbies(req, res) {
   try {
     const { lang_code = "en" } = req.query;
-
-    // First get all hobbies with their translations
-    const hobbies = await prisma.hobbies.findMany({
-      include: {
-        translations: {
-          where: {
-            lang_code: lang_code,
-          },
+    if (lang_code === "en") {
+      const hobbies = await prisma.hobbies.findMany();
+      return res.status(200).json({
+        message: "Hobbies fetched successfully",
+        success: true,
+        hobbies,
+      });
+    } else {
+      // Fetch only requested language translations
+      const hobbies = await prisma.hobbies_lang.findMany({
+        where: { lang_code },
+        include: {
+          hobby: true,
         },
-      },
-    });
-
-    // Transform the response to use translation data when available
-    const transformedHobbies = hobbies
-      .map((hobby) => {
-        // If there's a translation, use its values
-        if (hobby.translations && hobby.translations.length > 0) {
-          const translation = hobby.translations[0];
-          return {
-            HOBBY_ID: hobby.HOBBY_ID,
-            HOBBY_NAME: translation.HOBBY_NAME,
-            HOBBY_IMAGE_URL:
-              translation.HOBBY_IMAGE_URL || hobby.HOBBY_IMAGE_URL,
-            lang_code: translation.lang_code,
-            HOBBY_CREATED_AT: translation.HOBBY_CREATED_AT,
-            HOBBY_CREATED_BY: translation.HOBBY_CREATED_BY,
-            HOBBY_UPDATED_AT: translation.HOBBY_UPDATED_AT,
-            HOOBY_UPDATED_BY: translation.HOOBY_UPDATED_BY,
-          };
-        }
-        // If no translation exists and we're requesting English, return the original
-        if (lang_code === "en") {
-          return hobby;
-        }
-        // If no translation exists and we're requesting another language, don't include this hobby
-        return null;
-      })
-      .filter((hobby) => hobby !== null); // Remove null entries
-
-    return res.status(200).json({
-      message: "Hobbies fetched successfully",
-      success: true,
-      hobbies: transformedHobbies,
-    });
+      });
+      const mapped = hobbies.map((e) => ({
+        ...e,
+        HOBBY_ID: e.id,
+      }));
+      return res.status(200).json({
+        message: `Hobbies fetched successfully in ${lang_code}`,
+        success: true,
+        hobbies: mapped,
+      });
+    }
   } catch (error) {
     console.error("Error fetching hobbies:", error);
     return res.status(500).json({
