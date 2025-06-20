@@ -252,3 +252,11 @@ export async function getBusinessTranslations(req, res) {
     });
   }
 }
+
+export default {
+  getBusinesses,
+  createBusiness,
+  updateBusiness,
+  deleteBusiness,
+  getBusinessTranslations,
+};

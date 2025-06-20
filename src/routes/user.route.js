@@ -36,7 +36,7 @@ import {
   updateEventTranslation,
   deleteEventTranslation,
   getEventsWithAllTranslations,
-} from "../controllers/events.contoller.js";
+} from "../controllers/events.controller.js";
 import DirectoryController from "../controllers/Directory.controller.js";
 import upload from "../middlewares/upload.js";
 import getUserProfile from "../controllers/profile.controller.js";
