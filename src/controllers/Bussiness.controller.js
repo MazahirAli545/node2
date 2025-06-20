@@ -256,21 +256,31 @@ export async function createBusinessTranslation(req, res) {
         success: false,
       });
     }
-    const translation = await prisma.business_lang.create({
-      data: {
-        id: Number(BUSS_ID),
-        BUSS_STREM,
-        BUSS_TYPE,
-        BUSS_CREATED_BY,
-        BUSS_CREATED_AT: new Date(),
-        lang_code,
-      },
-    });
-    return res.status(201).json({
-      message: "Business translation created successfully",
-      success: true,
-      translation,
-    });
+    try {
+      const translation = await prisma.business_lang.create({
+        data: {
+          id: Number(BUSS_ID),
+          BUSS_STREM,
+          BUSS_TYPE,
+          BUSS_CREATED_BY,
+          BUSS_CREATED_AT: new Date(),
+          lang_code,
+        },
+      });
+      return res.status(201).json({
+        message: "Business translation created successfully",
+        success: true,
+        translation,
+      });
+    } catch (error) {
+      if (error.code === "P2002") {
+        return res.status(409).json({
+          message: "This translation already exists in the database.",
+          success: false,
+        });
+      }
+      throw error;
+    }
   } catch (error) {
     console.error("Error creating business translation:", error);
     return res.status(500).json({
