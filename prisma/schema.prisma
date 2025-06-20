@@ -8,22 +8,53 @@ datasource db {
 }
 
 model Stream {
-  STREAM_ID         Int       @id @default(autoincrement())
-  STREAM_NAME       String?   @db.Char(50)
+  STREAM_ID         Int            @id @default(autoincrement())
+  STREAM_NAME       String?        @db.Char(50)
   STREAM_CREATED_BY Int
-  STREAM_CREATED_DT DateTime  @default(now())
+  STREAM_CREATED_DT DateTime       @default(now())
   STREAM_UPDATED_BY Int?
   STREAM_UPDATED_DT DateTime?
+  lang_code         String         @default("en") @db.VarChar(5)
+  translations      stream_lang[]
+}
+
+model stream_lang {
+  id                Int       @map("STREAM_ID")
+  STREAM_NAME       String?   @db.Char(50)
+  STREAM_CREATED_BY Int
+  STREAM_CREATED_DT DateTime  @db.DateTime(0)
+  STREAM_UPDATED_BY Int?
+  STREAM_UPDATED_DT DateTime? @db.DateTime(0)
+  lang_code         String    @db.VarChar(5)
+  stream            Stream    @relation(fields: [id], references: [STREAM_ID], onDelete: Cascade, onUpdate: Restrict)
+
+  @@id([id, lang_code])
 }
 
 model Education {
-  EDUCATION_ID         Int       @id @default(autoincrement())
+  EDUCATION_ID         Int             @id @default(autoincrement())
+  EDUCATION_NAME       String?         @db.Char(50)
+  EDUCATION_IMAGE_URL  String?         @db.VarChar(255)
+  EDUCATION_CREATED_BY Int
+  EDUCATION_CREATED_DT DateTime        @default(now())
+  EDUCATION_UPDATED_BY Int?
+  EDUCATION_UPDATED_DT DateTime?
+  lang_code            String          @default("en") @db.VarChar(5)
+  translations         education_lang[]
+}
+
+model education_lang {
+  id                   Int       @map("EDUCATION_ID")
   EDUCATION_NAME       String?   @db.Char(50)
   EDUCATION_IMAGE_URL  String?   @db.VarChar(255)
   EDUCATION_CREATED_BY Int
-  EDUCATION_CREATED_DT DateTime  @default(now())
+  EDUCATION_CREATED_DT DateTime  @db.DateTime(0)
   EDUCATION_UPDATED_BY Int?
-  EDUCATION_UPDATED_DT DateTime?
+  EDUCATION_UPDATED_DT DateTime? @db.DateTime(0)
+  lang_code            String    @db.VarChar(5)
+  education            Education @relation(fields: [id], references: [EDUCATION_ID], onDelete: Cascade, onUpdate: Restrict)
+
+  @@id([id, lang_code])
 }
 
 model Profession {
@@ -36,8 +67,25 @@ model Profession {
   PROF_UPDATED_DT DateTime?
   PROF_NAME       String?          @db.Char(50)
   PeopleRegistry  PeopleRegistry[]
+  lang_code       String           @default("en") @db.VarChar(5)
+  translations    profession_lang[]
 
   @@map("PROFESSION")
+}
+
+model profession_lang {
+  id             Int        @map("PROF_ID")
+  PROF_DESC      String?    @db.Char(50)
+  PROF_NAME      String?    @db.Char(50)
+  PROF_ACTIVE_YN String     @db.Char(1)
+  PROF_CREATED_BY Int
+  PROF_CREATED_DT DateTime  @db.DateTime(0)
+  PROF_UPDATED_BY Int?
+  PROF_UPDATED_DT DateTime? @db.DateTime(0)
+  lang_code      String     @db.VarChar(5)
+  profession     Profession @relation(fields: [id], references: [PROF_ID], onDelete: Cascade, onUpdate: Restrict)
+
+  @@id([id, lang_code])
 }
 
 model PeopleRegistry {
@@ -202,9 +250,29 @@ model City {
   CITY_CREATED_AT DateTime         @default(now())
   CITY_UPDATED_BY Int?
   CITY_UPDATED_AT DateTime?
+  lang_code       String           @default("en") @db.VarChar(5)
   PeopleRegistry  PeopleRegistry[]
+  translations    city_lang[]
 
   @@map("CITY")
+}
+
+model city_lang {
+  id              Int       @map("CITY_ID")
+  CITY_PIN_CODE   String?   @db.VarChar(20)
+  CITY_NAME       String?   @db.VarChar(150)
+  CITY_DS_CODE    String?   @db.VarChar(20)
+  CITY_DS_NAME    String?   @db.VarChar(100)
+  CITY_ST_CODE    String?   @db.VarChar(20)
+  CITY_ST_NAME    String?   @db.VarChar(100)
+  CITY_CREATED_BY Int?
+  CITY_CREATED_AT DateTime  @db.DateTime(0)
+  CITY_UPDATED_BY Int?
+  CITY_UPDATED_AT DateTime? @db.DateTime(0)
+  lang_code       String    @db.VarChar(5)
+  city            City      @relation(fields: [id], references: [CITY_ID], onDelete: Cascade, onUpdate: Restrict)
+
+  @@id([id, lang_code])
 }
 
 model BUSSINESS {
@@ -215,9 +283,25 @@ model BUSSINESS {
   BUSS_CREATED_BY Int?
   BUSS_UPDATED_AT DateTime?
   BUSS_UPDATED_BY Int?
+  lang_code       String           @default("en") @db.VarChar(5)
   PeopleRegistry  PeopleRegistry[]
+  translations    business_lang[]
 
   @@map("BUSSINESS")
+}
+
+model business_lang {
+  id              Int       @map("BUSS_ID")
+  BUSS_STREM      String?   @db.VarChar(20)
+  BUSS_TYPE       String?   @db.VarChar(20)
+  BUSS_CREATED_AT DateTime  @db.DateTime(0)
+  BUSS_CREATED_BY Int?
+  BUSS_UPDATED_AT DateTime? @db.DateTime(0)
+  BUSS_UPDATED_BY Int?
+  lang_code       String    @db.VarChar(5)
+  business        BUSSINESS @relation(fields: [id], references: [BUSS_ID], onDelete: Cascade, onUpdate: Restrict)
+
+  @@id([id, lang_code])
 }
 
 model Child {
@@ -250,27 +334,63 @@ model Contact {
   CON_CREATED_DT  DateTime       @default(now())
   CON_UPDATED_BY  Int?
   CON_UPDATED_DT  DateTime?
+  lang_code       String         @default("en") @db.VarChar(5)
   PeopleRegistry  PeopleRegistry @relation(fields: [CON_CREATED_BY], references: [PR_ID])
+  translations    contact_lang[]
 
   @@index([CON_CREATED_BY], map: "CONTACT_CON_CREATED_BY_fkey")
   @@map("CONTACT")
 }
 
+model contact_lang {
+  id              Int       @map("CON_ID")
+  CON_TYPE        String    @db.Char(10)
+  CON_NAME        String    @db.Char(50)
+  CON_MORE_DETAIL String    @db.VarChar(500)
+  CON_ACTIVE_YN   String    @db.Char(1)
+  CON_CREATED_BY  Int
+  CON_CREATED_DT  DateTime  @db.DateTime(0)
+  CON_UPDATED_BY  Int?
+  CON_UPDATED_DT  DateTime? @db.DateTime(0)
+  lang_code       String    @db.VarChar(5)
+  contact         Contact   @relation(fields: [id], references: [CON_ID], onDelete: Cascade, onUpdate: Restrict)
+
+  @@id([id, lang_code])
+}
+
 model Category {
-  CATE_ID           Int        @id @default(autoincrement())
+  CATE_ID           Int             @id @default(autoincrement())
   CATE_CATE_ID      Int?
-  CATE_DESC         String     @db.VarChar(50)
-  CATE_ACTIVE_YN    String     @db.Char(1)
+  CATE_DESC         String          @db.VarChar(50)
+  CATE_ACTIVE_YN    String          @db.Char(1)
   CATE_CREATED_BY   Int
-  CATE_CREATED_DT   DateTime   @default(now())
+  CATE_CREATED_DT   DateTime        @default(now())
   CATE_UPDATED_BY   Int?
   CATE_UPDATED_DT   DateTime?
-  ParentCategory    Category?  @relation("ParentChild", fields: [CATE_CATE_ID], references: [CATE_ID])
-  SubCategories     Category[] @relation("ParentChild")
-  SubCategoryEvents Events[]   @relation("SubCategory")
+  lang_code         String          @default("en") @db.VarChar(5)
+  ParentCategory    Category?       @relation("ParentChild", fields: [CATE_CATE_ID], references: [CATE_ID])
+  SubCategories     Category[]      @relation("ParentChild")
+  SubCategoryEvents Events[]        @relation("SubCategory")
   Events            Events[]
+  translations      category_lang[]
 
   @@index([CATE_CATE_ID], map: "Category_CATE_CATE_ID_fkey")
+}
+
+model category_lang {
+  id              Int       @map("CATE_ID")
+  CATE_CATE_ID    Int?
+  CATE_DESC       String    @db.VarChar(50)
+  CATE_ACTIVE_YN  String    @db.Char(1)
+  CATE_CREATED_BY Int
+  CATE_CREATED_DT DateTime  @db.DateTime(0)
+  CATE_UPDATED_BY Int?
+  CATE_UPDATED_DT DateTime? @db.DateTime(0)
+  lang_code       String    @db.VarChar(5)
+  category        Category  @relation(fields: [id], references: [CATE_ID], onDelete: Cascade, onUpdate: Restrict)
+
+  @@id([id, lang_code])
+  @@index([CATE_CATE_ID])
 }
 
 model Events {
@@ -387,15 +507,32 @@ model content_sections_lang {
 }
 
 model pages {
-  id           Int       @id @default(autoincrement())
+  id           Int          @id @default(autoincrement())
+  title        String       @db.VarChar(20)
+  link_url     String       @unique @default("/") @db.VarChar(50)
+  screen_type  String       @default("both") @db.VarChar(12)
+  active_yn    Int
+  created_by   Int
+  created_date DateTime     @db.Date
+  updated_by   Int?
+  updated_date DateTime?    @db.Date
+  lang_code    String       @default("en") @db.VarChar(5)
+  translations pages_lang[]
+}
+
+model pages_lang {
+  id           Int       @map("id")
   title        String    @db.VarChar(20)
-  link_url     String    @unique @default("/") @db.VarChar(50)
-  screen_type  String    @default("both") @db.VarChar(12)
+  screen_type  String    @db.VarChar(12)
   active_yn    Int
   created_by   Int
   created_date DateTime  @db.Date
   updated_by   Int?
   updated_date DateTime? @db.Date
+  lang_code    String    @db.VarChar(5)
+  page         pages     @relation(fields: [id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+
+  @@id([id, lang_code])
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -410,6 +547,23 @@ model businesses {
   created_at      DateTime?                 @default(now()) @db.DateTime(0)
   is_active       Boolean?                  @default(true)
   notes           String?                   @db.Text
+  lang_code       String                    @default("en") @db.VarChar(5)
+  translations    businesses_lang[]
+}
+
+model businesses_lang {
+  id              Int                       @map("business_id")
+  business_name   String                    @db.VarChar(100)
+  business_stream String                    @db.VarChar(50)
+  business_type   String                    @db.VarChar(50)
+  sub_category    String?                   @db.VarChar(50)
+  business_model  businesses_business_model
+  target_market   String?                   @db.VarChar(100)
+  notes           String?                   @db.Text
+  lang_code       String                    @db.VarChar(5)
+  business        businesses                @relation(fields: [id], references: [business_id], onDelete: Cascade, onUpdate: Restrict)
+
+  @@id([id, lang_code])
 }
 
 enum PR_ROLE {

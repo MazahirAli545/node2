@@ -133,16 +133,41 @@ export const getPageByLinkUrl = async (req, res) => {
 
 export const getAllPages = async (req, res) => {
   try {
-    const pages = await prisma.pages.findMany({
+    const { lang_code = "en" } = req.query;
+
+    // Get main pages (English)
+    const mainPages = await prisma.pages.findMany({
       orderBy: {
         id: "asc",
       },
     });
 
+    // If English is requested, return main pages
+    if (lang_code === "en") {
+      return res.status(200).json({
+        success: true,
+        message: "All pages fetched successfully",
+        data: mainPages,
+      });
+    }
+
+    // For non-English, get translations
+    const translations = await prisma.pages_lang.findMany({
+      where: {
+        lang_code,
+      },
+    });
+
+    // Merge translations with main pages, falling back to English
+    const mergedPages = mainPages.map((page) => {
+      const translation = translations.find((t) => t.id === page.id);
+      return translation || page;
+    });
+
     return res.status(200).json({
       success: true,
       message: "All pages fetched successfully",
-      data: pages,
+      data: mergedPages,
     });
   } catch (error) {
     console.error("Error fetching pages:", error);
@@ -156,23 +181,43 @@ export const getAllPages = async (req, res) => {
 export const getPageById = async (req, res) => {
   try {
     const { id } = req.params;
+    const { lang_code = "en" } = req.query;
 
-    // Convert to number if ID is expected as Int
-    const page = await prisma.pages.findUnique({
+    // Get main page (English)
+    const mainPage = await prisma.pages.findUnique({
       where: { id: Number(id) },
     });
 
-    if (!page) {
+    if (!mainPage) {
       return res.status(404).json({
         success: false,
         message: `Page with ID ${id} not found`,
       });
     }
 
+    // If English is requested, return main page
+    if (lang_code === "en") {
+      return res.status(200).json({
+        success: true,
+        message: "Page fetched successfully",
+        data: mainPage,
+      });
+    }
+
+    // For non-English, get translation
+    const translation = await prisma.pages_lang.findUnique({
+      where: {
+        id_lang_code: {
+          id: Number(id),
+          lang_code,
+        },
+      },
+    });
+
     return res.status(200).json({
       success: true,
       message: "Page fetched successfully",
-      data: page,
+      data: translation || mainPage, // Fallback to English if translation not found
     });
   } catch (error) {
     console.error("Error fetching page by ID:", error);
@@ -307,6 +352,206 @@ export const addPage = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to add page",
+    });
+  }
+};
+
+export const createPage = async (req, res) => {
+  try {
+    const { title, content, active_yn = true, lang_code = "en" } = req.body;
+
+    // Validate required fields
+    if (!title || !content) {
+      return res.status(400).json({
+        success: false,
+        message: "Title and content are required",
+      });
+    }
+
+    // Create page in a transaction
+    const result = await prisma.$transaction(async (prisma) => {
+      // Create main page (English)
+      const newPage = await prisma.pages.create({
+        data: {
+          title,
+          content,
+          active_yn,
+        },
+      });
+
+      // If non-English, create translation
+      if (lang_code !== "en") {
+        await prisma.pages_lang.create({
+          data: {
+            id: newPage.id,
+            title,
+            content,
+            active_yn,
+            lang_code,
+            created_date: new Date(),
+          },
+        });
+      }
+
+      return newPage;
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Page created successfully",
+      data: result,
+    });
+  } catch (error) {
+    console.error("Error creating page:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create page",
+    });
+  }
+};
+
+export const updatePage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { lang_code = "en", ...updateData } = req.body;
+
+    // Check if page exists
+    const existingPage = await prisma.pages.findUnique({
+      where: { id: Number(id) },
+    });
+
+    if (!existingPage) {
+      return res.status(404).json({
+        success: false,
+        message: `Page with ID ${id} not found`,
+      });
+    }
+
+    if (lang_code === "en") {
+      // Update main page (English)
+      const updatedPage = await prisma.pages.update({
+        where: { id: Number(id) },
+        data: {
+          ...updateData,
+          updated_date: new Date(),
+        },
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Page updated successfully",
+        data: updatedPage,
+      });
+    } else {
+      // Handle non-English update/create
+      const translation = await prisma.pages_lang.upsert({
+        where: {
+          id_lang_code: {
+            id: Number(id),
+            lang_code,
+          },
+        },
+        update: {
+          ...updateData,
+          updated_date: new Date(),
+        },
+        create: {
+          id: Number(id),
+          ...updateData,
+          lang_code,
+          created_date: new Date(),
+        },
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Page translation updated successfully",
+        data: translation,
+      });
+    }
+  } catch (error) {
+    console.error("Error updating page:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update page",
+    });
+  }
+};
+
+export const deletePage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { lang_code } = req.query;
+
+    if (lang_code && lang_code !== "en") {
+      // Delete specific translation
+      await prisma.pages_lang.delete({
+        where: {
+          id_lang_code: {
+            id: Number(id),
+            lang_code,
+          },
+        },
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Page translation deleted successfully",
+      });
+    }
+
+    // Delete main page (will cascade delete translations)
+    await prisma.pages.delete({
+      where: { id: Number(id) },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Page deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting page:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to delete page",
+    });
+  }
+};
+
+export const getPageTranslations = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Get main page (English)
+    const mainPage = await prisma.pages.findUnique({
+      where: { id: Number(id) },
+    });
+
+    if (!mainPage) {
+      return res.status(404).json({
+        success: false,
+        message: `Page with ID ${id} not found`,
+      });
+    }
+
+    // Get all translations
+    const translations = await prisma.pages_lang.findMany({
+      where: { id: Number(id) },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Page translations fetched successfully",
+      data: {
+        main: mainPage,
+        translations,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching page translations:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch page translations",
     });
   }
 };
