@@ -69,11 +69,11 @@ import {
 import EditProfile from "../controllers/EditProfile.controller.js";
 import { Router } from "express";
 import {
-  getEducation,
+  getEducations as getEducation,
   createEducation,
   updateEducation,
   deleteEducation,
-} from "../controllers/Education.contoller.js";
+} from "../controllers/Education.controller.js";
 
 import {
   getStreams,
