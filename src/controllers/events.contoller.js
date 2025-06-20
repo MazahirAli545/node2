@@ -126,30 +126,62 @@ export async function createEvent(req, res) {
       lang_code = "en",
     } = req.body;
 
-    const newEvent = await prisma.events.create({
-      data: {
-        ENVT_DESC,
-        ENVT_EXCERPT,
-        ENVT_DETAIL,
-        ENVT_BANNER_IMAGE,
-        ENVT_GALLERY_IMAGES,
-        ENVT_CONTACT_NO,
-        ENVT_ADDRESS,
-        ENVT_CITY,
-        EVNT_FROM_DT,
-        EVNT_UPTO_DT,
-        ENVT_CATE_ID,
-        ENVT_CATE_CATE_ID,
-        EVET_ACTIVE_YN,
-        EVET_CREATED_BY,
-        lang_code,
-      },
-      include: {
-        Category: true,
-        SubCategory: true,
-      },
+    // Create the event in a transaction
+    const result = await prisma.$transaction(async (prisma) => {
+      // Create the main event entry (English only)
+      const newEvent = await prisma.events.create({
+        data: {
+          ENVT_DESC,
+          ENVT_EXCERPT,
+          ENVT_DETAIL,
+          ENVT_BANNER_IMAGE,
+          ENVT_GALLERY_IMAGES,
+          ENVT_CONTACT_NO,
+          ENVT_ADDRESS,
+          ENVT_CITY,
+          EVNT_FROM_DT,
+          EVNT_UPTO_DT,
+          ENVT_CATE_ID,
+          ENVT_CATE_CATE_ID,
+          EVET_ACTIVE_YN,
+          EVET_CREATED_BY,
+          lang_code: "en", // Always store English in main table
+        },
+        include: {
+          Category: true,
+          SubCategory: true,
+        },
+      });
+
+      // Only create translation entry if the language is not English
+      if (lang_code !== "en") {
+        await prisma.events_lang.create({
+          data: {
+            id: newEvent.ENVT_ID,
+            ENVT_DESC,
+            ENVT_EXCERPT,
+            ENVT_DETAIL,
+            ENVT_BANNER_IMAGE,
+            ENVT_GALLERY_IMAGES,
+            ENVT_CONTACT_NO,
+            ENVT_ADDRESS,
+            ENVT_CITY,
+            EVNT_FROM_DT,
+            EVNT_UPTO_DT,
+            ENVT_CATE_ID,
+            ENVT_CATE_CATE_ID,
+            EVET_ACTIVE_YN,
+            EVET_CREATED_BY,
+            EVET_CREATED_DT: new Date(),
+            lang_code,
+          },
+        });
+      }
+
+      return newEvent;
     });
 
+    // Send notifications after successful creation
     const allFcmTokens = await prisma.fcmToken.findMany({
       select: {
         fcmToken: true,
@@ -157,15 +189,10 @@ export async function createEvent(req, res) {
     });
 
     console.log("Event fcm: ", allFcmTokens);
-
-    // Extract just the token strings
     const tokens = allFcmTokens.map((tokenData) => tokenData.fcmToken);
-    // console.log("Tokens being sent to FCM controller:", tokens);
-    // console.log("Type of tokens:", typeof tokens);
-    // console.log("Is tokens an array?", Array.isArray(tokens));
 
     const notificationTitle = "New Event Added!";
-    const notificationBody = `Check out the new event: ${newEvent.ENVT_DESC}`;
+    const notificationBody = `Check out the new event: ${result.ENVT_DESC}`;
 
     const notificationResult = await sendNotificationToTokens(
       tokens,
@@ -183,16 +210,14 @@ export async function createEvent(req, res) {
     }
 
     return res.status(201).json({
-      message: "Event created successfully",
+      message: "Event and its translation created successfully",
       success: true,
-      event: newEvent,
+      event: result,
       notificationStatus: {
         success: notificationResult.success,
         message: notificationResult.message,
         successfulCount: notificationResult.successfulCount,
         failedCount: notificationResult.failedCount,
-        // Optionally, include simplified error details if needed by the client
-        // failedReasons: notificationResult.simplifiedFailedReasons
       },
     });
   } catch (error) {
@@ -240,7 +265,8 @@ export async function deleteEvent(req, res) {
     const { lang_code } = req.query;
 
     if (lang_code && lang_code !== "en") {
-      // If lang_code is provided and not 'en', delete only that translation
+      // If lang_code is provided and not 'en', delete only that specific translation
+      // This is handled by the deleteEventTranslation function, but included here for API consistency
       await prisma.events_lang.delete({
         where: {
           id_lang_code: {
@@ -254,14 +280,34 @@ export async function deleteEvent(req, res) {
         message: `Event translation for language ${lang_code} deleted successfully`,
         success: true,
       });
+    } else if (lang_code === "en") {
+      // If lang_code is 'en', explain that deleting English means deleting the entire event
+      return res.status(400).json({
+        message:
+          "To delete English content, you must delete the entire event by not specifying a language code",
+        success: false,
+      });
     } else {
-      // If no lang_code or lang_code is 'en', delete the main event (cascades to translations)
-      await prisma.events.delete({
-        where: { ENVT_ID: Number(ENVT_ID) },
+      // If no lang_code is provided, delete the entire event and all its related data
+      await prisma.$transaction(async (prisma) => {
+        // First delete any donation payments associated with this event
+        await prisma.donationPayment.deleteMany({
+          where: { ENVIT_ID: Number(ENVT_ID) },
+        });
+
+        // Then delete all translations (non-English versions)
+        await prisma.events_lang.deleteMany({
+          where: { id: Number(ENVT_ID) },
+        });
+
+        // Finally delete the main event (which contains the English version)
+        await prisma.events.delete({
+          where: { ENVT_ID: Number(ENVT_ID) },
+        });
       });
 
       return res.status(200).json({
-        message: "Event and all translations deleted successfully",
+        message: "Event and all related data deleted successfully",
         success: true,
       });
     }
@@ -295,6 +341,15 @@ export async function createEventTranslation(req, res) {
       lang_code,
     } = req.body;
 
+    // Prevent creating English translations in the _lang table
+    if (lang_code === "en") {
+      return res.status(400).json({
+        message:
+          "English content should be stored in the main events table, not in events_lang",
+        success: false,
+      });
+    }
+
     // First, check if the main event exists
     const mainEvent = await prisma.events.findUnique({
       where: { ENVT_ID: Number(ENVT_ID) },
@@ -324,7 +379,7 @@ export async function createEventTranslation(req, res) {
       });
     }
 
-    // Create the translation
+    // Create the translation (non-English only)
     const translation = await prisma.events_lang.create({
       data: {
         id: Number(ENVT_ID),
@@ -491,11 +546,11 @@ export async function deleteEventTranslation(req, res) {
   try {
     const { ENVT_ID, lang_code } = req.params;
 
-    // Check if trying to delete the default English version
+    // English content is in the main table, not in events_lang
     if (lang_code === "en") {
       return res.status(400).json({
         message:
-          "Cannot delete the default English version. Delete the entire event instead.",
+          "English content is stored in the main events table, not in events_lang. To delete English content, delete the entire event.",
         success: false,
       });
     }
