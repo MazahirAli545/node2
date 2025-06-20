@@ -8,47 +8,31 @@ const app = express();
 export async function getBusinesses(req, res) {
   try {
     const { lang_code = "en" } = req.query;
-
-    // Get main businesses (English)
-    const mainBusinesses = await prisma.bUSSINESS.findMany({
-      select: {
-        BUSS_ID: true,
-        BUSS_STREM: true,
-        BUSS_TYPE: true,
-        BUSS_CREATED_BY: true,
-        BUSS_CREATED_AT: true,
-        BUSS_UPDATED_BY: true,
-        BUSS_UPDATED_AT: true,
-      },
-    });
-
-    // If English is requested, return main businesses
     if (lang_code === "en") {
+      const businesses = await prisma.bUSSINESS.findMany();
       return res.status(200).json({
         message: "Business fetched successfully",
         success: true,
-        businesses: mainBusinesses,
+        businesses,
+      });
+    } else {
+      // Fetch only requested language translations
+      const businesses = await prisma.business_lang.findMany({
+        where: { lang_code },
+        include: {
+          business: true,
+        },
+      });
+      const mapped = businesses.map((e) => ({
+        ...e,
+        BUSS_ID: e.id,
+      }));
+      return res.status(200).json({
+        message: `Business fetched successfully in ${lang_code}`,
+        success: true,
+        businesses: mapped,
       });
     }
-
-    // For non-English, get translations
-    const translations = await prisma.business_lang.findMany({
-      where: {
-        lang_code,
-      },
-    });
-
-    // Merge translations with main businesses, falling back to English
-    const mergedBusinesses = mainBusinesses.map((business) => {
-      const translation = translations.find((t) => t.id === business.BUSS_ID);
-      return translation || business;
-    });
-
-    return res.status(200).json({
-      message: "Business fetched successfully",
-      success: true,
-      businesses: mergedBusinesses,
-    });
   } catch (error) {
     console.error("Error fetching Business:", error);
     return res.status(500).json({
@@ -253,10 +237,181 @@ export async function getBusinessTranslations(req, res) {
   }
 }
 
+export async function createBusinessTranslation(req, res) {
+  try {
+    const { BUSS_ID } = req.params;
+    const { BUSS_STREM, BUSS_TYPE, BUSS_CREATED_BY, lang_code } = req.body;
+    if (!lang_code || lang_code === "en") {
+      return res.status(400).json({
+        message: "Use this endpoint only for non-English translations.",
+        success: false,
+      });
+    }
+    const mainBusiness = await prisma.bUSSINESS.findUnique({
+      where: { BUSS_ID: Number(BUSS_ID) },
+    });
+    if (!mainBusiness) {
+      return res.status(404).json({
+        message: "Business not found",
+        success: false,
+      });
+    }
+    const translation = await prisma.business_lang.create({
+      data: {
+        id: Number(BUSS_ID),
+        BUSS_STREM,
+        BUSS_TYPE,
+        BUSS_CREATED_BY,
+        BUSS_CREATED_AT: new Date(),
+        lang_code,
+      },
+    });
+    return res.status(201).json({
+      message: "Business translation created successfully",
+      success: true,
+      translation,
+    });
+  } catch (error) {
+    console.error("Error creating business translation:", error);
+    return res.status(500).json({
+      message: "Error creating business translation",
+      success: false,
+      error: error.message,
+    });
+  }
+}
+
+export async function getBusinessTranslationByLang(req, res) {
+  try {
+    const { BUSS_ID, lang_code } = req.params;
+    const translation = await prisma.business_lang.findUnique({
+      where: {
+        id_lang_code: {
+          id: Number(BUSS_ID),
+          lang_code,
+        },
+      },
+    });
+    if (!translation) {
+      return res.status(404).json({
+        message: `Translation for language ${lang_code} not found`,
+        success: false,
+      });
+    }
+    return res.status(200).json({
+      message: "Business translation fetched successfully",
+      success: true,
+      translation,
+    });
+  } catch (error) {
+    console.error("Error fetching business translation:", error);
+    return res.status(500).json({
+      message: "Error fetching business translation",
+      success: false,
+      error: error.message,
+    });
+  }
+}
+
+export async function updateBusinessTranslation(req, res) {
+  try {
+    const { BUSS_ID, lang_code } = req.params;
+    const updateData = req.body;
+    const existingTranslation = await prisma.business_lang.findUnique({
+      where: {
+        id_lang_code: {
+          id: Number(BUSS_ID),
+          lang_code,
+        },
+      },
+    });
+    if (!existingTranslation) {
+      return res.status(404).json({
+        message: `Translation for language ${lang_code} not found`,
+        success: false,
+      });
+    }
+    const updatedTranslation = await prisma.business_lang.update({
+      where: {
+        id_lang_code: {
+          id: Number(BUSS_ID),
+          lang_code,
+        },
+      },
+      data: {
+        ...updateData,
+        BUSS_UPDATED_AT: new Date(),
+      },
+    });
+    return res.status(200).json({
+      message: `Business translation for language ${lang_code} updated successfully`,
+      success: true,
+      translation: updatedTranslation,
+    });
+  } catch (error) {
+    console.error("Error updating business translation:", error);
+    return res.status(500).json({
+      message: "Error updating business translation",
+      success: false,
+      error: error.message,
+    });
+  }
+}
+
+export async function deleteBusinessTranslation(req, res) {
+  try {
+    const { BUSS_ID, lang_code } = req.params;
+    if (lang_code === "en") {
+      return res.status(400).json({
+        message:
+          "English content is stored in the main business table. To delete English, delete the business itself.",
+        success: false,
+      });
+    }
+    const existingTranslation = await prisma.business_lang.findUnique({
+      where: {
+        id_lang_code: {
+          id: Number(BUSS_ID),
+          lang_code,
+        },
+      },
+    });
+    if (!existingTranslation) {
+      return res.status(404).json({
+        message: `Translation for language ${lang_code} not found`,
+        success: false,
+      });
+    }
+    await prisma.business_lang.delete({
+      where: {
+        id_lang_code: {
+          id: Number(BUSS_ID),
+          lang_code,
+        },
+      },
+    });
+    return res.status(200).json({
+      message: `Business translation for language ${lang_code} deleted successfully`,
+      success: true,
+    });
+  } catch (error) {
+    console.error("Error deleting business translation:", error);
+    return res.status(500).json({
+      message: "Error deleting business translation",
+      success: false,
+      error: error.message,
+    });
+  }
+}
+
 export default {
   getBusinesses,
   createBusiness,
   updateBusiness,
   deleteBusiness,
   getBusinessTranslations,
+  createBusinessTranslation,
+  getBusinessTranslationByLang,
+  updateBusinessTranslation,
+  deleteBusinessTranslation,
 };

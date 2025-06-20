@@ -46,6 +46,10 @@ import BusinessController, {
   updateBusiness,
   deleteBusiness,
   getBusinessTranslations,
+  createBusinessTranslation,
+  getBusinessTranslationByLang,
+  updateBusinessTranslation,
+  deleteBusinessTranslation,
 } from "../controllers/Bussiness.controller.js";
 import {
   createChild,
@@ -146,6 +150,19 @@ userRouter.post("/business", createBusiness);
 userRouter.put("/business/:BUSS_ID", updateBusiness);
 userRouter.delete("/business/:BUSS_ID", deleteBusiness);
 userRouter.get("/business/:BUSS_ID/translations", getBusinessTranslations);
+userRouter.post("/business/:BUSS_ID/translations", createBusinessTranslation);
+userRouter.get(
+  "/business/:BUSS_ID/translations/:lang_code",
+  getBusinessTranslationByLang
+);
+userRouter.put(
+  "/business/:BUSS_ID/translations/:lang_code",
+  updateBusinessTranslation
+);
+userRouter.delete(
+  "/business/:BUSS_ID/translations/:lang_code",
+  deleteBusinessTranslation
+);
 
 // Events
 userRouter.get("/events", getEvents);
