@@ -38,6 +38,19 @@ import {
   updateContentSectionLang,
   deleteContentSectionLang,
 } from "../controllers/admin/contentLang.controller.js";
+import {
+  getEvents,
+  getEventById,
+  createEvent,
+  updateEvent,
+  deleteEvent,
+  createEventTranslation,
+  getEventTranslations,
+  getEventTranslationByLang,
+  updateEventTranslation,
+  deleteEventTranslation,
+  getEventsWithAllTranslations,
+} from "../controllers/events.controller.js";
 
 const router = Router();
 
@@ -114,5 +127,25 @@ router.delete(
   "/v1/content-sections-lang/:id/:lang_code",
   deleteContentSectionLang
 );
+
+// Events (Admin)
+router.get("/events", getEvents);
+router.post("/events", createEvent);
+router.put("/events/:ENVT_ID", updateEvent);
+router.delete("/events/:ENVT_ID", deleteEvent);
+router.get("/events/:ENVT_ID", getEventById);
+// Event Translations
+router.post("/events/:ENVT_ID/translations", createEventTranslation);
+router.get("/events/:ENVT_ID/translations", getEventTranslations);
+router.get(
+  "/events/:ENVT_ID/translations/:lang_code",
+  getEventTranslationByLang
+);
+router.put("/events/:ENVT_ID/translations/:lang_code", updateEventTranslation);
+router.delete(
+  "/events/:ENVT_ID/translations/:lang_code",
+  deleteEventTranslation
+);
+router.get("/events-with-translations", getEventsWithAllTranslations);
 
 export default router;
