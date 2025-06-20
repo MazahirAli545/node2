@@ -9,7 +9,13 @@ import {
   getUserByPrId,
   getUserProfile,
 } from "../controllers/admin/getAllUsers.controller.js";
-import { getCategories } from "../controllers/admin/category.controller.js";
+import {
+  getCategories,
+  createCategory,
+  updateCategory,
+  deleteCategory,
+  getCategoryTranslations,
+} from "../controllers/admin/category.controller.js";
 import {
   createBusiness,
   deleteBusiness,
@@ -147,5 +153,11 @@ router.delete(
   deleteEventTranslation
 );
 router.get("/events-with-translations", getEventsWithAllTranslations);
+
+// Categories (Admin)
+router.post("/categories", createCategory); // Create a new category
+router.put("/categories/:CATE_ID", updateCategory); // Update a category by ID
+router.delete("/categories/:CATE_ID", deleteCategory); // Delete a category by ID (optionally with lang_code)
+router.get("/categories/:CATE_ID/translations", getCategoryTranslations); // Get all translations for a category
 
 export default router;

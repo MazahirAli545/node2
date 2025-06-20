@@ -6,74 +6,51 @@ import prisma from "../../db/prismaClient.js";
  */
 export const getAllEvents = async (req, res) => {
   try {
-    // Get all main events (English)
-    const events = await prisma.events.findMany({
-      include: {
-        Category: true,
-        SubCategory: true,
-        translations: {
-          where: {
-            lang_code: "hi", // Only get Hindi translations
+    const { lang_code = "en" } = req.query;
+    if (lang_code === "en") {
+      // English events from main table
+      const events = await prisma.events.findMany({
+        include: {
+          Category: true,
+          SubCategory: true,
+        },
+        orderBy: {
+          EVET_CREATED_DT: "desc",
+        },
+      });
+      return res.status(200).json({
+        success: true,
+        message: "Events fetched successfully",
+        data: events,
+      });
+    } else {
+      // Translated events from events_lang
+      const events = await prisma.events_lang.findMany({
+        where: { lang_code },
+        include: {
+          event: {
+            include: {
+              Category: true,
+              SubCategory: true,
+            },
           },
         },
-      },
-      orderBy: {
-        EVET_CREATED_DT: "desc",
-      },
-    });
-
-    // Format the response to combine English and Hindi translations
-    const formattedEvents = events.map((event) => {
-      const hindiTranslation = event.translations[0] || null;
-
-      return {
-        id: event.ENVT_ID,
-        category: {
-          id: event.ENVT_CATE_ID,
-          name: event.Category?.CATE_DESC,
+        orderBy: {
+          EVET_CREATED_DT: "desc",
         },
-        subCategory: event.SubCategory
-          ? {
-              id: event.ENVT_CATE_CATE_ID,
-              name: event.SubCategory?.CATE_DESC,
-            }
-          : null,
-        translations: {
-          en: {
-            description: event.ENVT_DESC,
-            excerpt: event.ENVT_EXCERPT,
-            detail: event.ENVT_DETAIL,
-            address: event.ENVT_ADDRESS,
-            city: event.ENVT_CITY,
-          },
-          hi: hindiTranslation
-            ? {
-                description: hindiTranslation.ENVT_DESC,
-                excerpt: hindiTranslation.ENVT_EXCERPT,
-                detail: hindiTranslation.ENVT_DETAIL,
-                address: hindiTranslation.ENVT_ADDRESS,
-                city: hindiTranslation.ENVT_CITY,
-              }
-            : null,
-        },
-        bannerImage: event.ENVT_BANNER_IMAGE,
-        galleryImages: event.ENVT_GALLERY_IMAGES,
-        contactNo: event.ENVT_CONTACT_NO,
-        fromDate: event.EVNT_FROM_DT,
-        uptoDate: event.EVNT_UPTO_DT,
-        isActive: event.EVET_ACTIVE_YN === "Y",
-        createdBy: event.EVET_CREATED_BY,
-        createdAt: event.EVET_CREATED_DT,
-        updatedBy: event.EVET_UPDATED_BY,
-        updatedAt: event.EVET_UPDATED_DT,
-      };
-    });
-
-    return res.status(200).json({
-      success: true,
-      message: "Events fetched successfully",
-      data: formattedEvents,
-    });
+      });
+      const mapped = events.map((e) => ({
+        ...e,
+        Category: e.event?.Category,
+        SubCategory: e.event?.SubCategory,
+        ENVT_ID: e.id,
+      }));
+      return res.status(200).json({
+        success: true,
+        message: `Events fetched successfully in ${lang_code}`,
+        data: mapped,
+      });
+    }
   } catch (error) {
     console.error("Error fetching events:", error);
     return res.status(500).json({

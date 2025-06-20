@@ -10,21 +10,45 @@ export async function getEvents(req, res) {
   try {
     const { lang_code = "en" } = req.query;
 
-    const events = await prisma.events.findMany({
-      where: {
-        lang_code,
-      },
-      include: {
-        Category: true, // ✅ Fetch related Category details
-        SubCategory: true,
-      },
-    });
-
-    return res.status(200).json({
-      message: "Events fetched successfully",
-      success: true,
-      events,
-    });
+    if (lang_code === "en") {
+      // Fetch English events from main table
+      const events = await prisma.events.findMany({
+        include: {
+          Category: true,
+          SubCategory: true,
+        },
+      });
+      return res.status(200).json({
+        message: "Events fetched successfully",
+        success: true,
+        events,
+      });
+    } else {
+      // Fetch translated events from events_lang
+      const events = await prisma.events_lang.findMany({
+        where: { lang_code },
+        include: {
+          event: {
+            include: {
+              Category: true,
+              SubCategory: true,
+            },
+          },
+        },
+      });
+      // Map to a consistent structure
+      const mapped = events.map((e) => ({
+        ...e,
+        Category: e.event?.Category,
+        SubCategory: e.event?.SubCategory,
+        ENVT_ID: e.id,
+      }));
+      return res.status(200).json({
+        message: `Events fetched successfully in ${lang_code}`,
+        success: true,
+        events: mapped,
+      });
+    }
   } catch (error) {
     console.error("Error fetching events:", error);
     return res.status(500).json({
