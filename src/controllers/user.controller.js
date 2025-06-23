@@ -1979,7 +1979,7 @@ export const registerUser = async (req, res) => {
   }
 };
 
-const checkMobileVerified = async (mobile, otp) => {
+export const checkMobileVerified = async (mobile, otp) => {
   const otpRecord = await prisma.otp.findFirst({
     where: { PR_MOBILE_NO: mobile, otp },
   });
@@ -1993,6 +1993,136 @@ const checkMobileVerified = async (mobile, otp) => {
   }
 
   return true;
+};
+
+export const LoginUser = async (req, res) => {
+  try {
+    const { PR_MOBILE_NO, otp, selectedUserId } = req.body;
+
+    // Validate mobile number format
+    if (!/^[6-9]\d{9}$/.test(PR_MOBILE_NO)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid mobile number format",
+      });
+    }
+
+    if (!otp) {
+      const userExists = await prisma.peopleRegistry.count({
+        where: { PR_MOBILE_NO },
+      });
+
+      if (!userExists) {
+        return res.status(404).json({
+          success: false,
+          message: "Mobile number not registered",
+        });
+      }
+
+      // Generate and send OTP
+      const mockReq = { body: { PR_MOBILE_NO } };
+      const mockRes = {
+        json: (data) => data,
+        status: () => ({ json: (data) => data }),
+      };
+
+      const otpResponse = await generateotp(mockReq, mockRes);
+      if (!otpResponse?.success) {
+        return res.status(otpResponse?.statusCode || 500).json({
+          success: false,
+          message: otpResponse?.message || "Failed to send OTP",
+        });
+      }
+
+      return res.json({
+        success: true,
+        message: "OTP sent successfully",
+        otpRequired: true,
+      });
+    }
+
+    if (!(await checkMobileVerified(PR_MOBILE_NO, otp))) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid or expired OTP",
+      });
+    }
+
+    const users = await prisma.peopleRegistry.findMany({
+      where: { PR_MOBILE_NO },
+      orderBy: { PR_ID: "desc" },
+      include: {
+        Profession: true,
+        City: true,
+        Children: true,
+      },
+    });
+
+    if (!users.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No users found with this mobile number",
+      });
+    }
+
+    if (users.length > 1 && !selectedUserId) {
+      return res.json({
+        success: true,
+        message: "Multiple accounts found",
+        multipleUsers: true,
+        users: users.map((user) => ({
+          PR_ID: user.PR_ID,
+          PR_FULL_NAME: user.PR_FULL_NAME,
+          PR_UNIQUE_ID: user.PR_UNIQUE_ID,
+          PR_PROFESSION: user.Profession?.PROF_NAME,
+          PR_PHOTO_URL: user.PR_PHOTO_URL,
+        })),
+      });
+    }
+
+    const user = selectedUserId
+      ? users.find((u) => u.PR_ID === selectedUserId)
+      : users[0];
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user selection",
+      });
+    }
+
+    await prisma.otp.deleteMany({ where: { PR_MOBILE_NO } });
+
+    const token = generateToken(user);
+    return res.json({
+      success: true,
+      message: "Login successful",
+      token,
+      user: {
+        ...user,
+        Children: user.Children || [],
+        Profession: user.Profession
+          ? {
+              PROF_ID: user.Profession.PROF_ID,
+              PROF_NAME: user.Profession.PROF_NAME,
+            }
+          : null,
+        City: user.City
+          ? {
+              CITY_ST_NAME: user.City.CITY_ST_NAME,
+              CITY_DS_NAME: user.City.CITY_DS_NAME,
+            }
+          : null,
+      },
+    });
+  } catch (error) {
+    console.error("Login Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      ...(process.env.NODE_ENV === "development" && { error: error.message }),
+    });
+  }
 };
 
 export const checkPersonById = async (req, res) => {
