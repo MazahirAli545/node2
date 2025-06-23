@@ -1066,91 +1066,70 @@ export const checkPersonById = async (req, res) => {
   try {
     const { id, type } = req.params;
 
-    // 1. Strict input validation
-    if (!id || !id.trim()) {
-      return res.status(400).json({
+    // 1. First, verify the person exists
+    const personExists = await prisma.peopleRegistry.count({
+      where: { PR_UNIQUE_ID: id },
+    });
+
+    if (!personExists) {
+      return res.status(404).json({
         success: false,
-        message: "ID parameter is required and cannot be empty",
+        message: "Person with this ID does not exist",
       });
     }
 
-    if (!type || !["father", "mother"].includes(type.toLowerCase())) {
-      return res.status(400).json({
-        success: false,
-        message: "Type must be either 'father' or 'mother'",
-      });
-    }
+    // 2. Run a STRICT gender verification query
+    const requiredGender = type.toLowerCase() === "father" ? "M" : "F";
 
-    // 2. Fetch person with STRICT gender check
-    const person = await prisma.peopleRegistry.findFirst({
+    const isValid = await prisma.peopleRegistry.count({
       where: {
-        PR_UNIQUE_ID: id.trim(),
-        // Enforce gender requirement at query level
-        PR_GENDER: type.toLowerCase() === "father" ? "M" : "F",
-      },
-      select: {
-        PR_ID: true,
-        PR_FULL_NAME: true,
-        PR_GENDER: true,
+        PR_UNIQUE_ID: id,
+        PR_GENDER: requiredGender,
       },
     });
 
-    // 3. Handle not found cases
-    if (!person) {
-      // Determine why it failed
-      const exists = await prisma.peopleRegistry.count({
-        where: { PR_UNIQUE_ID: id.trim() },
-      });
-
-      if (!exists) {
-        return res.status(404).json({
-          success: false,
-          message: "Person with this ID not found",
-        });
-      }
-
-      // If exists but gender doesn't match
+    // 3. If count is 0, it means the gender doesn't match
+    if (!isValid) {
+      // Get the actual gender for error reporting
       const actualPerson = await prisma.peopleRegistry.findFirst({
-        where: { PR_UNIQUE_ID: id.trim() },
+        where: { PR_UNIQUE_ID: id },
         select: { PR_GENDER: true },
       });
 
       return res.status(400).json({
         success: false,
-        message: `Invalid gender for ${type}. Expected: ${
-          type === "father" ? "Male (M)" : "Female (F)"
-        }, Found: ${actualPerson?.PR_GENDER || "unknown"}`,
+        message: `Invalid gender for ${type}. Required: ${requiredGender}, Found: ${
+          actualPerson?.PR_GENDER || "unknown"
+        }`,
         details: {
-          requiredGender: type === "father" ? "M" : "F",
+          id,
+          requiredGender,
           actualGender: actualPerson?.PR_GENDER,
         },
       });
     }
 
-    // 4. Success response
+    // 4. If we get here, validation passed
+    const person = await prisma.peopleRegistry.findFirst({
+      where: { PR_UNIQUE_ID: id },
+      select: { PR_ID: true, PR_FULL_NAME: true, PR_GENDER: true },
+    });
+
     return res.status(200).json({
       success: true,
-      message: "ID validation successful",
-      data: {
-        id: person.PR_ID,
-        name: person.PR_FULL_NAME,
-        gender: person.PR_GENDER,
-        relationship: type,
-        isValid: true,
-      },
+      message: "Validation successful",
+      data: person,
     });
   } catch (error) {
-    console.error("Person validation error:", error);
+    console.error("Validation error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error during validation",
-      ...(process.env.NODE_ENV === "development" && {
-        error: error.message,
-        stack: error.stack,
-      }),
+      ...(process.env.NODE_ENV === "development" && { error: error.message }),
     });
   }
 };
+
 export const convertUniqueIdToId = async (req, res) => {
   try {
     const { uniqueId } = req.params;
