@@ -20,12 +20,173 @@ const twilioClient = twilio(
   process.env.Twillo_Auth_Token
 );
 
+// export const registerUser = async (req, res) => {
+//   try {
+//     const { PR_MOBILE_NO, otp, Children, PR_FCM_TOKEN, ...profileData } =
+//       req.body;
+
+//     // Validation Schema
+//     const schema = Joi.object({
+//       PR_MOBILE_NO: Joi.string()
+//         .pattern(/^[6-9]\d{9}$/)
+//         .required()
+//         .messages({ "string.pattern.base": "Invalid mobile number" }),
+//       PR_FULL_NAME: Joi.string().min(3).max(100).required(),
+//       PR_DOB: Joi.date().required(),
+//       PR_GENDER: Joi.string().valid("M", "F", "O").required(),
+//       PR_PIN_CODE: Joi.string().length(6).required(),
+//       PR_STATE_CODE: Joi.string().required(),
+//       PR_DISTRICT_CODE: Joi.string().required(),
+//       PR_CITY_NAME: Joi.string().required(),
+//       PR_BUSS_STREAM: Joi.string().optional(),
+//       PR_BUSS_TYPE: Joi.string().optional(),
+//       Children: Joi.array()
+//         .items(
+//           Joi.object({
+//             name: Joi.string().required(),
+//             dob: Joi.date().required(),
+//           })
+//         )
+//         .optional(),
+//     });
+
+//     const { error } = schema.validate(req.body);
+//     if (error) {
+//       return res.status(400).json({
+//         success: false,
+//         message: error.details[0].message,
+//       });
+//     }
+
+//     // OTP Verification
+//     if (!(await checkMobileVerified(PR_MOBILE_NO, otp))) {
+//       return res.status(401).json({
+//         success: false,
+//         message: "Mobile verification failed",
+//       });
+//     }
+
+//     return await prisma.$transaction(async (tx) => {
+//       // City Handling
+//       const city = await tx.city.upsert({
+//         where: {
+//           CITY_NAME_DS_ST: {
+//             CITY_NAME: profileData.PR_CITY_NAME,
+//             CITY_DS_CODE: profileData.PR_DISTRICT_CODE,
+//             CITY_ST_CODE: profileData.PR_STATE_CODE,
+//           },
+//         },
+//         update: {},
+//         create: {
+//           CITY_NAME: profileData.PR_CITY_NAME,
+//           CITY_DS_CODE: profileData.PR_DISTRICT_CODE,
+//           CITY_ST_CODE: profileData.PR_STATE_CODE,
+//           CITY_PIN_CODE: profileData.PR_PIN_CODE,
+//           CITY_DS_NAME: "",
+//           CITY_ST_NAME: "",
+//         },
+//       });
+
+//       // Business Handling
+//       const business =
+//         profileData.PR_BUSS_STREAM && profileData.PR_BUSS_TYPE
+//           ? await tx.bUSSINESS.upsert({
+//               where: {
+//                 BUSS_STREM_TYPE: {
+//                   BUSS_STREM: profileData.PR_BUSS_STREAM,
+//                   BUSS_TYPE: profileData.PR_BUSS_TYPE,
+//                 },
+//               },
+//               update: {},
+//               create: {
+//                 BUSS_STREM: profileData.PR_BUSS_STREAM,
+//                 BUSS_TYPE: profileData.PR_BUSS_TYPE,
+//                 CITY_CREATED_BY: 1,
+//               },
+//             })
+//           : null;
+
+//       // Family Number Generation
+//       const existingUsers = await tx.peopleRegistry.findMany({
+//         where: { PR_MOBILE_NO },
+//         orderBy: { PR_ID: "desc" },
+//       });
+
+//       const familyNumber =
+//         existingUsers.length > 0
+//           ? existingUsers[0].PR_FAMILY_NO
+//           : await getNextFamilyNumber(
+//               profileData.PR_STATE_CODE,
+//               profileData.PR_DISTRICT_CODE,
+//               city.CITY_ID
+//             );
+
+//       const memberNumber = (existingUsers.length + 1)
+//         .toString()
+//         .padStart(4, "0");
+
+//       // User Creation
+//       const newUser = await tx.peopleRegistry.create({
+//         data: {
+//           PR_UNIQUE_ID: `${profileData.PR_STATE_CODE}${profileData.PR_DISTRICT_CODE}-${city.CITY_ID}-${familyNumber}-${memberNumber}`,
+//           PR_FAMILY_NO: familyNumber,
+//           PR_MEMBER_NO: memberNumber,
+//           PR_MOBILE_NO,
+//           PR_DOB: new Date(profileData.PR_DOB).toISOString(),
+//           PR_CITY_CODE: city.CITY_ID,
+//           PR_BUSS_CODE: business?.BUSS_ID || null,
+//           PR_FCM_TOKEN: PR_FCM_TOKEN || null,
+//           ...profileData,
+//           PR_IS_COMPLETED: "Y", // Assuming full registration
+//         },
+//       });
+
+//       // Children Handling
+//       if (Children && Children.length > 0) {
+//         await tx.child.createMany({
+//           data: Children.map((child) => ({
+//             name: child.name,
+//             dob: new Date(child.dob).toISOString(),
+//             userId: newUser.PR_ID,
+//           })),
+//         });
+//       }
+
+//       // Final Response
+//       const completeUser = await tx.peopleRegistry.findUnique({
+//         where: { PR_ID: newUser.PR_ID },
+//         include: { Children: true, City: true, BUSSINESS: true },
+//       });
+
+//       return res.status(201).json({
+//         success: true,
+//         message: "User registered successfully",
+//         data: completeUser,
+//       });
+//     });
+//   } catch (error) {
+//     console.error("Registration Error:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Internal server error",
+//       error: process.env.NODE_ENV === "development" ? error.message : undefined,
+//     });
+//   }
+// };
+
 export const registerUser = async (req, res) => {
   try {
-    const { PR_MOBILE_NO, otp, Children, PR_FCM_TOKEN, ...profileData } =
-      req.body;
+    const {
+      PR_MOBILE_NO,
+      otp,
+      Children,
+      PR_FCM_TOKEN,
+      PR_FATHER_ID, // Destructure Father ID
+      PR_MOTHER_ID, // Destructure Mother ID
+      ...profileData
+    } = req.body;
 
-    // Validation Schema
+    // Joi Validation Schema
     const schema = Joi.object({
       PR_MOBILE_NO: Joi.string()
         .pattern(/^[6-9]\d{9}$/)
@@ -38,10 +199,30 @@ export const registerUser = async (req, res) => {
       PR_STATE_CODE: Joi.string().required(),
       PR_DISTRICT_CODE: Joi.string().required(),
       PR_CITY_NAME: Joi.string().required(),
-      PR_BUSS_STREAM: Joi.string().optional(),
-      PR_BUSS_TYPE: Joi.string().optional(),
-      PR_FATHER_ID: Joi.string().optional().allow(null, ""), // Add PR_FATHER_ID to schema
-      PR_MOTHER_ID: Joi.string().optional().allow(null, ""),
+      PR_BUSS_STREAM: Joi.string().optional().allow(null, ""),
+      PR_BUSS_TYPE: Joi.string().optional().allow(null, ""),
+      PR_FATHER_ID: Joi.string().optional().allow(null, ""), // Allow empty string for optional fields
+      PR_MOTHER_ID: Joi.string().optional().allow(null, ""), // Allow empty string for optional fields
+      PR_SPOUSE_ID: Joi.string().optional().allow(null, ""), // Added this as per your schema from DB
+      PR_SPOUSE_NAME: Joi.string().optional().allow(null, ""), // Added this as per your schema from DB
+      PR_EDUCATION: Joi.string().optional().allow(null, ""),
+      PR_ADDRESS: Joi.string().optional().allow(null, ""),
+      PR_PHOTO_URL: Joi.string().optional().allow(null, ""),
+      PR_CREATED_BY: Joi.string().optional().allow(null, ""),
+      PR_UPDATED_BY: Joi.string().optional().allow(null, ""),
+      PR_AREA_NAME: Joi.string().optional().allow(null, ""),
+      PR_EDUCATION_DESC: Joi.string().optional().allow(null, ""),
+      PR_PROFESSION_DETA: Joi.string().optional().allow(null, ""),
+      PR_PROFESSION_ID: Joi.number().optional().allow(null),
+      PR_BUSS_INTER: Joi.string().optional().allow(null, ""),
+      PR_BUSS_CODE: Joi.string().optional().allow(null, ""),
+      PR_MARRIED_YN: Joi.string().valid("Y", "N").optional().allow(null, ""),
+      PR_HOBBY: Joi.string().optional().allow(null, ""),
+      PR_IS_COMPLETED: Joi.string().valid("Y", "N").optional().allow(null, ""),
+      PR_PR_ID: Joi.number().optional().allow(null),
+      PR_NOTIFICATION: Joi.string().optional().allow(null, ""),
+      PR_FCM_TOKEN: Joi.string().optional().allow(null, ""),
+      otp: Joi.string().required(), // Assuming OTP is always required for registration
       Children: Joi.array()
         .items(
           Joi.object({
@@ -50,10 +231,11 @@ export const registerUser = async (req, res) => {
           })
         )
         .optional(),
-    });
+    }).unknown(true); // Allow unknown keys if other fields might be present
 
     const { error } = schema.validate(req.body);
     if (error) {
+      console.error("Joi Validation Error:", error.details[0].message);
       return res.status(400).json({
         success: false,
         message: error.details[0].message,
@@ -61,14 +243,16 @@ export const registerUser = async (req, res) => {
     }
 
     // OTP Verification
-    if (!(await checkMobileVerified(PR_MOBILE_NO, otp))) {
+    const isMobileVerified = await checkMobileVerified(PR_MOBILE_NO, otp);
+    if (!isMobileVerified) {
+      console.error("Mobile verification failed for:", PR_MOBILE_NO);
       return res.status(401).json({
         success: false,
-        message: "Mobile verification failed",
+        message: "Mobile verification failed. Invalid OTP.",
       });
     }
 
-    // New: Validate Father ID for gender and existence before transaction
+    // **IMPORTANT: New Gender and Existence Validation for Father/Mother IDs**
     if (PR_FATHER_ID) {
       const fatherPerson = await prisma.peopleRegistry.findFirst({
         where: { PR_UNIQUE_ID: PR_FATHER_ID },
@@ -76,23 +260,28 @@ export const registerUser = async (req, res) => {
       });
 
       if (!fatherPerson) {
+        console.error("Father ID not found:", PR_FATHER_ID);
         return res.status(400).json({
           success: false,
           message: "Father ID not found in registry.",
         });
       }
       if (fatherPerson.PR_GENDER !== "M") {
+        console.error(
+          "Invalid gender for Father ID:",
+          PR_FATHER_ID,
+          "Gender:",
+          fatherPerson.PR_GENDER
+        );
         return res.status(400).json({
           success: false,
-          message: "Invalid gender for Father ID. Expected Male.",
+          message: `Invalid gender for Father ID '${PR_FATHER_ID}'. Expected Male, but found ${fatherPerson.PR_GENDER}.`,
         });
       }
-      // Optionally, set father's name here if not already set by frontend or for direct API calls
-      profileData.PR_FATHER_NAME =
-        profileData.PR_FATHER_NAME || fatherPerson.PR_FULL_NAME;
+      // If validation passes, ensure father's name is set
+      profileData.PR_FATHER_NAME = fatherPerson.PR_FULL_NAME;
     }
 
-    // New: Validate Mother ID for gender and existence before transaction
     if (PR_MOTHER_ID) {
       const motherPerson = await prisma.peopleRegistry.findFirst({
         where: { PR_UNIQUE_ID: PR_MOTHER_ID },
@@ -100,80 +289,58 @@ export const registerUser = async (req, res) => {
       });
 
       if (!motherPerson) {
+        console.error("Mother ID not found:", PR_MOTHER_ID);
         return res.status(400).json({
           success: false,
           message: "Mother ID not found in registry.",
         });
       }
       if (motherPerson.PR_GENDER !== "F") {
+        console.error(
+          "Invalid gender for Mother ID:",
+          PR_MOTHER_ID,
+          "Gender:",
+          motherPerson.PR_GENDER
+        );
         return res.status(400).json({
           success: false,
-          message: "Invalid gender for Mother ID. Expected Female.",
+          message: `Invalid gender for Mother ID '${PR_MOTHER_ID}'. Expected Female, but found ${motherPerson.PR_GENDER}.`,
         });
       }
-      // Optionally, set mother's name here
-      profileData.PR_MOTHER_NAME =
-        profileData.PR_MOTHER_NAME || motherPerson.PR_FULL_NAME;
+      // If validation passes, ensure mother's name is set
+      profileData.PR_MOTHER_NAME = motherPerson.PR_FULL_NAME;
     }
 
+    // Begin transaction
     return await prisma.$transaction(async (tx) => {
-      // City Handling
-      const city = await tx.city.upsert({
-        where: {
-          CITY_NAME_DS_ST: {
-            CITY_NAME: profileData.PR_CITY_NAME,
-            CITY_DS_CODE: profileData.PR_DISTRICT_CODE,
-            CITY_ST_CODE: profileData.PR_STATE_CODE,
-          },
-        },
-        update: {},
-        create: {
-          CITY_NAME: profileData.PR_CITY_NAME,
-          CITY_DS_CODE: profileData.PR_DISTRICT_CODE,
-          CITY_ST_CODE: profileData.PR_STATE_CODE,
-          CITY_PIN_CODE: profileData.PR_PIN_CODE,
-          CITY_DS_NAME: "",
-          CITY_ST_NAME: "",
-        },
+      // Get city details
+      const city = await tx.city.findFirst({
+        where: { CITY_NAME: profileData.PR_CITY_NAME },
       });
 
-      // Business Handling
-      const business =
-        profileData.PR_BUSS_STREAM && profileData.PR_BUSS_TYPE
-          ? await tx.bUSSINESS.upsert({
-              where: {
-                BUSS_STREM_TYPE: {
-                  BUSS_STREM: profileData.PR_BUSS_STREAM,
-                  BUSS_TYPE: profileData.PR_BUSS_TYPE,
-                },
-              },
-              update: {},
-              create: {
-                BUSS_STREM: profileData.PR_BUSS_STREAM,
-                BUSS_TYPE: profileData.PR_BUSS_TYPE,
-                CITY_CREATED_BY: 1,
-              },
-            })
-          : null;
+      if (!city) {
+        console.error("City not found:", profileData.PR_CITY_NAME);
+        return res.status(400).json({
+          success: false,
+          message: "City not found.",
+        });
+      }
 
-      // Family Number Generation
-      const existingUsers = await tx.peopleRegistry.findMany({
-        where: { PR_MOBILE_NO },
-        orderBy: { PR_ID: "desc" },
-      });
+      // Get business details if PR_BUSS_CODE is provided
+      let business = null;
+      if (profileData.PR_BUSS_CODE) {
+        business = await tx.bUSSINESS.findFirst({
+          where: { BUSS_NAME: profileData.PR_BUSS_CODE },
+        });
+      }
 
-      const familyNumber =
-        existingUsers.length > 0
-          ? existingUsers[0].PR_FAMILY_NO
-          : await getNextFamilyNumber(
-              profileData.PR_STATE_CODE,
-              profileData.PR_DISTRICT_CODE,
-              city.CITY_ID
-            );
-
-      const memberNumber = (existingUsers.length + 1)
-        .toString()
-        .padStart(4, "0");
+      // Generate unique family and member numbers
+      const { familyNumber, memberNumber } = await getNextFamilyNumber(
+        tx, // Pass the transaction client
+        profileData.PR_STATE_CODE,
+        profileData.PR_DISTRICT_CODE,
+        city.CITY_ID
+      );
 
       // User Creation
       const newUser = await tx.peopleRegistry.create({
@@ -186,41 +353,77 @@ export const registerUser = async (req, res) => {
           PR_CITY_CODE: city.CITY_ID,
           PR_BUSS_CODE: business?.BUSS_ID || null,
           PR_FCM_TOKEN: PR_FCM_TOKEN || null,
-          PR_FATHER_ID: PR_FATHER_ID || null, // Pass Father ID
-          PR_MOTHER_ID: PR_MOTHER_ID || null,
-          ...profileData,
+          PR_FATHER_ID: PR_FATHER_ID || null, // Ensure these are passed
+          PR_MOTHER_ID: PR_MOTHER_ID || null, // Ensure these are passed
+          ...profileData, // This will include PR_FATHER_NAME and PR_MOTHER_NAME if set above
           PR_IS_COMPLETED: "Y", // Assuming full registration
+          PR_CREATED_AT: new Date(),
+          PR_UPDATED_AT: new Date(),
+          PR_ROLE: "End User", // Default role
         },
       });
 
-      // Children Handling
+      // Handle children registration if provided
       if (Children && Children.length > 0) {
-        await tx.child.createMany({
-          data: Children.map((child) => ({
-            name: child.name,
-            dob: new Date(child.dob).toISOString(),
-            userId: newUser.PR_ID,
-          })),
-        });
+        for (const child of Children) {
+          // Generate unique ID for child
+          const { familyNumber: childFamilyNo, memberNumber: childMemberNo } =
+            await getNextFamilyNumber(
+              tx,
+              profileData.PR_STATE_CODE,
+              profileData.PR_DISTRICT_CODE,
+              city.CITY_ID
+            );
+
+          await tx.peopleRegistry.create({
+            data: {
+              PR_UNIQUE_ID: `${profileData.PR_STATE_CODE}${profileData.PR_DISTRICT_CODE}-${city.CITY_ID}-${childFamilyNo}-${childMemberNo}`,
+              PR_FULL_NAME: child.name,
+              PR_DOB: new Date(child.dob).toISOString(),
+              PR_GENDER: child.gender || "O", // Assuming gender might be optional or inferred for children
+              PR_FAMILY_NO: childFamilyNo,
+              PR_MEMBER_NO: childMemberNo,
+              PR_CITY_CODE: city.CITY_ID,
+              PR_FATHER_ID:
+                profileData.PR_GENDER === "M"
+                  ? newUser.PR_UNIQUE_ID
+                  : PR_FATHER_ID || null, // If new user is father
+              PR_MOTHER_ID:
+                profileData.PR_GENDER === "F"
+                  ? newUser.PR_UNIQUE_ID
+                  : PR_MOTHER_ID || null, // If new user is mother
+              PR_CREATED_AT: new Date(),
+              PR_UPDATED_AT: new Date(),
+              PR_ROLE: "End User",
+              PR_IS_COMPLETED: "Y",
+            },
+          });
+        }
       }
 
-      // Final Response
-      const completeUser = await tx.peopleRegistry.findUnique({
-        where: { PR_ID: newUser.PR_ID },
-        include: { Children: true, City: true, BUSSINESS: true },
-      });
+      // Generate JWT token for the new user
+      const token = generateToken(newUser.PR_ID);
 
       return res.status(201).json({
         success: true,
         message: "User registered successfully",
-        data: completeUser,
+        token,
+        data: newUser,
       });
     });
   } catch (error) {
     console.error("Registration Error:", error);
+    if (error.code === "P2002") {
+      // Prisma unique constraint violation
+      return res.status(409).json({
+        success: false,
+        message: "A user with this unique ID already exists.",
+        error: error.message,
+      });
+    }
     return res.status(500).json({
       success: false,
-      message: "Internal server error",
+      message: "Internal server error during registration.",
       error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
@@ -426,27 +629,85 @@ export const LoginUser = async (req, res) => {
   }
 };
 
+// export const checkPersonById = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { type } = req.query; // type: 'father', 'mother', 'spouse'
+
+//     // Make sure id is a non-empty string
+//     if (!id || typeof id !== "string") {
+//       return res
+//         .status(400)
+//         .json({ success: false, message: "Invalid PR_UNIQUE_ID format" });
+//     }
+
+//     const person = await prisma.peopleRegistry.findFirst({
+//       where: { PR_UNIQUE_ID: id },
+//       select: { PR_UNIQUE_ID: true, PR_GENDER: true, PR_FULL_NAME: true },
+//     });
+
+//     if (!person) {
+//       return res
+//         .status(404)
+//         .json({ success: false, message: "PR_UNIQUE_ID not present" });
+//     }
+
+//     // Gender validation based on type
+//     if (type === "father" && person.PR_GENDER !== "M") {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid gender for father. Expected Male.",
+//       });
+//     }
+
+//     if (type === "mother" && person.PR_GENDER !== "F") {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid gender for mother. Expected Female.",
+//       });
+//     }
+
+//     // For spouse, just check existence — no gender restriction needed
+
+//     return res.status(200).json({
+//       success: true,
+//       data: person,
+//       message: `PR_UNIQUE_ID is valid${type ? " for " + type : ""}`,
+//     });
+//   } catch (error) {
+//     console.error("Check Person Error:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Internal server error",
+//     });
+//   }
+// };
+
 export const checkPersonById = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { type } = req.query; // type: 'father', 'mother', 'spouse'
+    const { id, type } = req.params; // 'type' can be 'father' or 'mother'
 
-    // Make sure id is a non-empty string
-    if (!id || typeof id !== "string") {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid PR_UNIQUE_ID format" });
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "ID is required.",
+      });
     }
 
     const person = await prisma.peopleRegistry.findFirst({
       where: { PR_UNIQUE_ID: id },
-      select: { PR_UNIQUE_ID: true, PR_GENDER: true, PR_FULL_NAME: true },
+      select: {
+        PR_ID: true,
+        PR_FULL_NAME: true,
+        PR_GENDER: true,
+      },
     });
 
     if (!person) {
-      return res
-        .status(404)
-        .json({ success: false, message: "PR_UNIQUE_ID not present" });
+      return res.status(404).json({
+        success: false,
+        message: "ID not found.",
+      });
     }
 
     // Gender validation based on type
@@ -456,7 +717,6 @@ export const checkPersonById = async (req, res) => {
         message: "Invalid gender for father. Expected Male.",
       });
     }
-
     if (type === "mother" && person.PR_GENDER !== "F") {
       return res.status(400).json({
         success: false,
@@ -464,18 +724,17 @@ export const checkPersonById = async (req, res) => {
       });
     }
 
-    // For spouse, just check existence — no gender restriction needed
-
     return res.status(200).json({
       success: true,
+      message: "ID found and valid.",
       data: person,
-      message: `PR_UNIQUE_ID is valid${type ? " for " + type : ""}`,
     });
   } catch (error) {
-    console.error("Check Person Error:", error);
+    console.error("Check Person By ID Error:", error);
     return res.status(500).json({
       success: false,
-      message: "Internal server error",
+      message: "Internal server error.",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };
