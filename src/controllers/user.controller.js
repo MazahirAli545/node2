@@ -737,12 +737,29 @@ export const registerUser = async (req, res) => {
         select: { PR_GENDER: true, PR_FULL_NAME: true },
       });
 
-      if (!fatherPerson || !validateGender(fatherPerson, "M", "Father")) {
+      if (!fatherPerson) {
         return res.status(400).json({
           success: false,
-          message: "Father ID must be Male.",
+          message: "Father ID not found in registry.",
         });
       }
+
+      // Strict gender validation for father
+      const fatherGender = fatherPerson.PR_GENDER?.toString()
+        .trim()
+        .toUpperCase();
+      if (fatherGender !== "M") {
+        return res.status(400).json({
+          success: false,
+          message: "Father ID must belong to a Male person.",
+          debug: {
+            receivedGender: fatherPerson.PR_GENDER,
+            normalizedGender: fatherGender,
+            expectedGender: "M",
+          },
+        });
+      }
+
       profileData.PR_FATHER_NAME = fatherPerson.PR_FULL_NAME;
     }
 
@@ -991,6 +1008,60 @@ export const LoginUser = async (req, res) => {
   }
 };
 
+// export const checkPersonById = async (req, res) => {
+//   try {
+//     const { id, type } = req.params;
+
+//     if (!id) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "ID is required.",
+//       });
+//     }
+
+//     const person = await prisma.peopleRegistry.findFirst({
+//       where: { PR_UNIQUE_ID: id },
+//       select: {
+//         PR_ID: true,
+//         PR_FULL_NAME: true,
+//         PR_GENDER: true,
+//       },
+//     });
+
+//     if (!person) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "ID not found.",
+//       });
+//     }
+
+//     if (type === "father" && person.PR_GENDER !== "M") {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Father ID must be Male.",
+//       });
+//     }
+//     if (type === "mother" && person.PR_GENDER !== "F") {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Mother ID must be Female.",
+//       });
+//     }
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "ID found and valid.",
+//       data: person,
+//     });
+//   } catch (error) {
+//     console.error("Check Person By ID Error:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Internal server error.",
+//     });
+//   }
+// };
+
 export const checkPersonById = async (req, res) => {
   try {
     const { id, type } = req.params;
@@ -1018,17 +1089,33 @@ export const checkPersonById = async (req, res) => {
       });
     }
 
-    if (type === "father" && person.PR_GENDER !== "M") {
-      return res.status(400).json({
-        success: false,
-        message: "Father ID must be Male.",
-      });
+    // Enhanced gender validation with strict checks
+    if (type === "father") {
+      if (person.PR_GENDER?.toString().trim().toUpperCase() !== "M") {
+        return res.status(400).json({
+          success: false,
+          message: "Father ID must belong to a Male person.",
+          details: {
+            providedId: id,
+            actualGender: person.PR_GENDER,
+            expectedGender: "M",
+          },
+        });
+      }
     }
-    if (type === "mother" && person.PR_GENDER !== "F") {
-      return res.status(400).json({
-        success: false,
-        message: "Mother ID must be Female.",
-      });
+
+    if (type === "mother") {
+      if (person.PR_GENDER?.toString().trim().toUpperCase() !== "F") {
+        return res.status(400).json({
+          success: false,
+          message: "Mother ID must belong to a Female person.",
+          details: {
+            providedId: id,
+            actualGender: person.PR_GENDER,
+            expectedGender: "F",
+          },
+        });
+      }
     }
 
     return res.status(200).json({
@@ -1044,7 +1131,6 @@ export const checkPersonById = async (req, res) => {
     });
   }
 };
-
 export const convertUniqueIdToId = async (req, res) => {
   try {
     const { uniqueId } = req.params;
