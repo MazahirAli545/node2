@@ -60,12 +60,13 @@ export const createCategory = async (req, res) => {
       CATE_CATE_ID,
       CATE_ACTIVE_YN = "Y",
       lang_code = "en",
+      CATE_CREATED_BY,
     } = req.body;
 
     // Validate required fields
-    if (!CATE_DESC) {
+    if (!CATE_DESC || !CATE_CREATED_BY) {
       return res.status(400).json({
-        message: "Category description is required",
+        message: "Category description and CATE_CREATED_BY are required",
         success: false,
       });
     }
@@ -78,6 +79,8 @@ export const createCategory = async (req, res) => {
           CATE_DESC,
           CATE_CATE_ID,
           CATE_ACTIVE_YN,
+          CATE_CREATED_BY: Number(CATE_CREATED_BY),
+          CATE_CREATED_DT: new Date(),
         },
       });
 
@@ -90,6 +93,8 @@ export const createCategory = async (req, res) => {
             CATE_CATE_ID,
             CATE_ACTIVE_YN,
             lang_code,
+            CATE_CREATED_BY: Number(CATE_CREATED_BY),
+            CATE_CREATED_DT: new Date(),
           },
         });
       }
