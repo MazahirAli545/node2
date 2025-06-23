@@ -1066,13 +1066,23 @@ export const checkPersonById = async (req, res) => {
   try {
     const { id, type } = req.params;
 
-    if (!id) {
+    // Validate input parameters
+    if (!id || !type) {
       return res.status(400).json({
         success: false,
-        message: "ID is required.",
+        message: "Both ID and type (father/mother) are required.",
       });
     }
 
+    // Validate type parameter
+    if (!["father", "mother"].includes(type.toLowerCase())) {
+      return res.status(400).json({
+        success: false,
+        message: "Type must be either 'father' or 'mother'.",
+      });
+    }
+
+    // Fetch person from database
     const person = await prisma.peopleRegistry.findFirst({
       where: { PR_UNIQUE_ID: id },
       select: {
@@ -1085,34 +1095,40 @@ export const checkPersonById = async (req, res) => {
     if (!person) {
       return res.status(404).json({
         success: false,
-        message: "ID not found.",
+        message: "Person with this ID not found.",
       });
     }
 
-    // Enhanced gender validation with strict checks
-    if (type === "father") {
-      if (person.PR_GENDER?.toString().trim().toUpperCase() !== "M") {
+    // Normalize and validate gender
+    const normalizedGender = person.PR_GENDER?.toString().trim().toUpperCase();
+
+    // Strict validation for father
+    if (type.toLowerCase() === "father") {
+      if (normalizedGender !== "M") {
         return res.status(400).json({
           success: false,
-          message: "Father ID must belong to a Male person.",
+          message: "Invalid gender for father. Must be Male (M).",
           details: {
             providedId: id,
             actualGender: person.PR_GENDER,
-            expectedGender: "M",
+            normalizedGender,
+            requiredGender: "M",
           },
         });
       }
     }
 
-    if (type === "mother") {
-      if (person.PR_GENDER?.toString().trim().toUpperCase() !== "F") {
+    // Strict validation for mother
+    if (type.toLowerCase() === "mother") {
+      if (normalizedGender !== "F") {
         return res.status(400).json({
           success: false,
-          message: "Mother ID must belong to a Female person.",
+          message: "Invalid gender for mother. Must be Female (F).",
           details: {
             providedId: id,
             actualGender: person.PR_GENDER,
-            expectedGender: "F",
+            normalizedGender,
+            requiredGender: "F",
           },
         });
       }
@@ -1120,14 +1136,20 @@ export const checkPersonById = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: "ID found and valid.",
-      data: person,
+      message: "ID validation successful.",
+      data: {
+        id: person.PR_ID,
+        name: person.PR_FULL_NAME,
+        gender: person.PR_GENDER,
+        isValid: true,
+      },
     });
   } catch (error) {
-    console.error("Check Person By ID Error:", error);
+    console.error("Person validation error:", error);
     return res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: "Internal server error during person validation.",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };
