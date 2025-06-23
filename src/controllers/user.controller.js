@@ -634,19 +634,14 @@ import { parse } from "path";
 dotenv.config();
 
 const twillo_Phone_Number = +16203019559; // Consider making this a string if it's a direct phone number
-// const twillo_Phone_Number = process.env.TWILIO_PHONE_NUMBER; // It's better to get this from env
 
 const twilioClient = twilio(
   process.env.Twillo_Account_SID,
   process.env.Twillo_Auth_Token
 );
 
-// Helper function to check mobile verification
-// const checkMobileVerified = async (PR_MOBILE_NO, otp) => {
-//   // Assuming verifyotp is your actual OTP verification function from otp.controller.js
-//   const verificationResult = await verifyotp(PR_MOBILE_NO, otp);
-//   return verificationResult.success; // Adjust based on the actual structure of verifyotp's return
-// };
+// This is the CORRECT and complete checkMobileVerified function.
+// It verifies the OTP against the database.
 const checkMobileVerified = async (mobile, otp) => {
   const otpRecord = await prisma.otp.findFirst({
     where: { PR_MOBILE_NO: mobile, otp },
@@ -919,22 +914,6 @@ export const registerUser = async (req, res) => {
     });
   }
 };
-
-// const checkMobileVerified = async (mobile, otp) => {
-//   const otpRecord = await prisma.otp.findFirst({
-//     where: { PR_MOBILE_NO: mobile, otp },
-//   });
-
-//   if (!otpRecord || otpRecord.otp !== otp) {
-//     return false;
-//   }
-
-//   if (new Date() > otpRecord.expiresAt) {
-//     return false;
-//   }
-
-//   return true;
-// };
 
 export const LoginUser = async (req, res) => {
   try {
