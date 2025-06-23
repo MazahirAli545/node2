@@ -1066,25 +1066,28 @@ export const checkPersonById = async (req, res) => {
   try {
     const { id, type } = req.params;
 
-    // Validate input parameters
-    if (!id || !type) {
+    // 1. Strict input validation
+    if (!id || !id.trim()) {
       return res.status(400).json({
         success: false,
-        message: "Both ID and type (father/mother) are required.",
+        message: "ID parameter is required and cannot be empty",
       });
     }
 
-    // Validate type parameter
-    if (!["father", "mother"].includes(type.toLowerCase())) {
+    if (!type || !["father", "mother"].includes(type.toLowerCase())) {
       return res.status(400).json({
         success: false,
-        message: "Type must be either 'father' or 'mother'.",
+        message: "Type must be either 'father' or 'mother'",
       });
     }
 
-    // Fetch person from database
+    // 2. Fetch person with STRICT gender check
     const person = await prisma.peopleRegistry.findFirst({
-      where: { PR_UNIQUE_ID: id },
+      where: {
+        PR_UNIQUE_ID: id.trim(),
+        // Enforce gender requirement at query level
+        PR_GENDER: type.toLowerCase() === "father" ? "M" : "F",
+      },
       select: {
         PR_ID: true,
         PR_FULL_NAME: true,
@@ -1092,55 +1095,47 @@ export const checkPersonById = async (req, res) => {
       },
     });
 
+    // 3. Handle not found cases
     if (!person) {
-      return res.status(404).json({
+      // Determine why it failed
+      const exists = await prisma.peopleRegistry.count({
+        where: { PR_UNIQUE_ID: id.trim() },
+      });
+
+      if (!exists) {
+        return res.status(404).json({
+          success: false,
+          message: "Person with this ID not found",
+        });
+      }
+
+      // If exists but gender doesn't match
+      const actualPerson = await prisma.peopleRegistry.findFirst({
+        where: { PR_UNIQUE_ID: id.trim() },
+        select: { PR_GENDER: true },
+      });
+
+      return res.status(400).json({
         success: false,
-        message: "Person with this ID not found.",
+        message: `Invalid gender for ${type}. Expected: ${
+          type === "father" ? "Male (M)" : "Female (F)"
+        }, Found: ${actualPerson?.PR_GENDER || "unknown"}`,
+        details: {
+          requiredGender: type === "father" ? "M" : "F",
+          actualGender: actualPerson?.PR_GENDER,
+        },
       });
     }
 
-    // Normalize and validate gender
-    const normalizedGender = person.PR_GENDER?.toString().trim().toUpperCase();
-
-    // Strict validation for father
-    if (type.toLowerCase() === "father") {
-      if (normalizedGender !== "M") {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid gender for father. Must be Male (M).",
-          details: {
-            providedId: id,
-            actualGender: person.PR_GENDER,
-            normalizedGender,
-            requiredGender: "M",
-          },
-        });
-      }
-    }
-
-    // Strict validation for mother
-    if (type.toLowerCase() === "mother") {
-      if (normalizedGender !== "F") {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid gender for mother. Must be Female (F).",
-          details: {
-            providedId: id,
-            actualGender: person.PR_GENDER,
-            normalizedGender,
-            requiredGender: "F",
-          },
-        });
-      }
-    }
-
+    // 4. Success response
     return res.status(200).json({
       success: true,
-      message: "ID validation successful.",
+      message: "ID validation successful",
       data: {
         id: person.PR_ID,
         name: person.PR_FULL_NAME,
         gender: person.PR_GENDER,
+        relationship: type,
         isValid: true,
       },
     });
@@ -1148,8 +1143,11 @@ export const checkPersonById = async (req, res) => {
     console.error("Person validation error:", error);
     return res.status(500).json({
       success: false,
-      message: "Internal server error during person validation.",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      message: "Internal server error during validation",
+      ...(process.env.NODE_ENV === "development" && {
+        error: error.message,
+        stack: error.stack,
+      }),
     });
   }
 };
