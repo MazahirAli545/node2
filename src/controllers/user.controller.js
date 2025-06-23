@@ -1,24 +1,24 @@
-import { PrismaClient } from "@prisma/client/extension";
-import { verifyFunc, verifyotp, generateotp } from "./otp.controller.js";
-import prisma from "../db/prismaClient.js";
-// import { z } from "zod";
-// import { z } from require("zod");
-import Joi from "joi";
-import twilio from "twilio";
-import dotenv from "dotenv";
-import otpGenerator from "otp-generator";
-import { generateToken } from "../middlewares/jwt.js";
-import { getNextFamilyNumber } from "../controllers/utils/familyUtils.js";
-import { parse } from "path";
+// import { PrismaClient } from "@prisma/client/extension";
+// import { verifyFunc, verifyotp, generateotp } from "./otp.controller.js";
+// import prisma from "../db/prismaClient.js";
+// // import { z } from "zod";
+// // import { z } from require("zod");
+// import Joi from "joi";
+// import twilio from "twilio";
+// import dotenv from "dotenv";
+// import otpGenerator from "otp-generator";
+// import { generateToken } from "../middlewares/jwt.js";
+// import { getNextFamilyNumber } from "../controllers/utils/familyUtils.js";
+// import { parse } from "path";
 
-dotenv.config();
+// dotenv.config();
 
-const twillo_Phone_Number = +16203019559;
+// const twillo_Phone_Number = +16203019559;
 
-const twilioClient = twilio(
-  process.env.Twillo_Account_SID,
-  process.env.Twillo_Auth_Token
-);
+// const twilioClient = twilio(
+//   process.env.Twillo_Account_SID,
+//   process.env.Twillo_Auth_Token
+// );
 
 // export const registerUser = async (req, res) => {
 //   try {
@@ -174,6 +174,495 @@ const twilioClient = twilio(
 //   }
 // };
 
+// const checkMobileVerified = async (mobile, otp) => {
+//   const otpRecord = await prisma.otp.findFirst({
+//     where: { PR_MOBILE_NO: mobile, otp },
+//   });
+
+//   if (!otpRecord || otpRecord.otp !== otp) {
+//     return false;
+//   }
+
+//   if (new Date() > otpRecord.expiresAt) {
+//     return false;
+//   }
+
+//   return true;
+// };
+
+// export const LoginUser = async (req, res) => {
+//   try {
+//     const { PR_MOBILE_NO, otp, selectedUserId } = req.body;
+
+//     // Validate mobile number format
+//     const mobileNumberSchema = Joi.string()
+//       .pattern(/^[6-9]\d{9}$/)
+//       .required()
+//       .messages({ "string.pattern.base": "Invalid mobile number" });
+
+//     const { error } = mobileNumberSchema.validate(PR_MOBILE_NO);
+//     if (error) {
+//       return res
+//         .status(400)
+//         .json({ message: error.details[0].message, success: false });
+//     }
+
+//     // Step 1: First check if OTP is provided
+//     if (!otp) {
+//       // Check if mobile number exists in database
+//       const userCount = await prisma.peopleRegistry.count({
+//         where: { PR_MOBILE_NO },
+//       });
+
+//       if (userCount === 0) {
+//         return res.status(400).json({
+//           message: "This mobile number is not registered",
+//           success: false,
+//         });
+//       }
+
+//       // Create a mock request object for generateotp
+//       const mockReq = {
+//         body: { PR_MOBILE_NO },
+//       };
+
+//       // Create a mock response object to capture generateotp's response
+//       let otpResponse;
+//       const mockRes = {
+//         json: (data) => {
+//           otpResponse = data;
+//           return data;
+//         },
+//         status: (code) => ({
+//           json: (data) => {
+//             otpResponse = { ...data, statusCode: code };
+//             return data;
+//           },
+//         }),
+//       };
+
+//       // Call generateotp with mock request/response
+//       await generateotp(mockReq, mockRes);
+
+//       if (!otpResponse?.success) {
+//         return res.status(otpResponse?.statusCode || 500).json({
+//           message: otpResponse?.message || "Failed to send OTP",
+//           success: false,
+//         });
+//       }
+
+//       return res.status(200).json({
+//         message: "OTP sent successfully",
+//         success: true,
+//         otpRequired: true,
+//       });
+//     }
+
+//     // Step 2: Verify OTP
+//     const isVerified = await checkMobileVerified(PR_MOBILE_NO, otp);
+//     if (!isVerified) {
+//       return res.status(400).json({
+//         message: "Invalid or expired OTP",
+//         success: false,
+//       });
+//     }
+
+//     // Step 3: Now that OTP is verified, check for users
+//     const existingUsers = await prisma.peopleRegistry.findMany({
+//       where: { PR_MOBILE_NO },
+//       orderBy: { PR_ID: "desc" },
+//       include: {
+//         Profession: true,
+//         City: true,
+//         Children: true,
+//       },
+//     });
+
+//     if (!existingUsers || existingUsers.length === 0) {
+//       return res.status(400).json({
+//         message: "This mobile number is not registered",
+//         success: false,
+//       });
+//     }
+
+//     // Step 4: Handle user selection if multiple accounts exist
+//     let user;
+//     if (existingUsers.length === 1) {
+//       user = existingUsers[0];
+//     } else {
+//       if (!selectedUserId) {
+//         return res.status(200).json({
+//           message: "Multiple accounts found",
+//           success: true,
+//           multipleUsers: true,
+//           users: existingUsers.map((user) => ({
+//             PR_ID: user.PR_ID,
+//             PR_FULL_NAME: user.PR_FULL_NAME,
+//             PR_UNIQUE_ID: user.PR_UNIQUE_ID,
+//             PR_PROFESSION: user.Profession?.PROF_NAME,
+//             PR_PHOTO_URL: user.PR_PHOTO_URL,
+//           })),
+//         });
+//       }
+
+//       user = existingUsers.find((u) => u.PR_ID === selectedUserId);
+//       if (!user) {
+//         return res.status(400).json({
+//           message: "Invalid user selection",
+//           success: false,
+//         });
+//       }
+//     }
+
+//     // Step 5: Generate token for the selected user
+//     const token = generateToken(user);
+
+//     // Prepare complete user data for response
+//     const responseUser = {
+//       PR_ID: user.PR_ID,
+//       PR_FULL_NAME: user.PR_FULL_NAME,
+//       PR_UNIQUE_ID: user.PR_UNIQUE_ID,
+//       PR_MOBILE_NO: user.PR_MOBILE_NO,
+//       PR_GENDER: user.PR_GENDER,
+//       PR_ADDRESS: user.PR_ADDRESS,
+//       PR_PHOTO_URL: user.PR_PHOTO_URL,
+//       PR_DOB: user.PR_DOB,
+//       PR_PIN_CODE: user.PR_PIN_CODE,
+//       PR_STATE_CODE: user.PR_STATE_CODE,
+//       PR_DISTRICT_CODE: user.PR_DISTRICT_CODE,
+//       PR_AREA_NAME: user.PR_AREA_NAME,
+//       PR_EDUCATION: user.PR_EDUCATION,
+//       PR_EDUCATION_DESC: user.PR_EDUCATION_DESC,
+//       PR_PROFESSION_DETA: user.PR_PROFESSION_DETA,
+//       PR_FATHER_NAME: user.PR_FATHER_NAME,
+//       PR_MOTHER_NAME: user.PR_MOTHER_NAME,
+//       PR_SPOUSE_NAME: user.PR_SPOUSE_NAME,
+//       PR_MARRIED_YN: user.PR_MARRIED_YN,
+//       PR_BUSS_INTER: user.PR_BUSS_INTER || "N",
+//       PR_BUSS_STREAM: user.PR_BUSS_STREAM || "",
+//       PR_BUSS_TYPE: user.PR_BUSS_TYPE || "",
+//       PR_HOBBY: user.PR_HOBBY || [],
+//       Profession: {
+//         PROF_ID: user.Profession?.PROF_ID,
+//         PROF_NAME: user.Profession?.PROF_NAME,
+//       },
+//       City: {
+//         CITY_ST_NAME: user.City?.CITY_ST_NAME,
+//         CITY_DS_NAME: user.City?.CITY_DS_NAME,
+//       },
+//       Children: user.Children || [],
+//     };
+
+//     // Step 6: Delete the used OTP record
+//     await prisma.otp.deleteMany({
+//       where: { PR_MOBILE_NO },
+//     });
+
+//     return res.status(200).json({
+//       message: "Login successful",
+//       success: true,
+//       token,
+//       user: responseUser,
+//     });
+//   } catch (error) {
+//     console.error("Error logging in:", error);
+//     return res.status(500).json({
+//       message: "Something went wrong",
+//       success: false,
+//       error: process.env.NODE_ENV === "development" ? error.message : undefined,
+//     });
+//   }
+// };
+
+// export const checkPersonById = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { type } = req.query; // type: 'father', 'mother', 'spouse'
+
+//     // Make sure id is a non-empty string
+//     if (!id || typeof id !== "string") {
+//       return res
+//         .status(400)
+//         .json({ success: false, message: "Invalid PR_UNIQUE_ID format" });
+//     }
+
+//     const person = await prisma.peopleRegistry.findFirst({
+//       where: { PR_UNIQUE_ID: id },
+//       select: { PR_UNIQUE_ID: true, PR_GENDER: true, PR_FULL_NAME: true },
+//     });
+
+//     if (!person) {
+//       return res
+//         .status(404)
+//         .json({ success: false, message: "PR_UNIQUE_ID not present" });
+//     }
+
+//     // Gender validation based on type
+//     if (type === "father" && person.PR_GENDER !== "M") {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid gender for father. Expected Male.",
+//       });
+//     }
+
+//     if (type === "mother" && person.PR_GENDER !== "F") {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid gender for mother. Expected Female.",
+//       });
+//     }
+
+//     // For spouse, just check existence — no gender restriction needed
+
+//     return res.status(200).json({
+//       success: true,
+//       data: person,
+//       message: `PR_UNIQUE_ID is valid${type ? " for " + type : ""}`,
+//     });
+//   } catch (error) {
+//     console.error("Check Person Error:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Internal server error",
+//     });
+//   }
+// };
+
+// export const convertUniqueIdToId = async (req, res) => {
+//   try {
+//     const { uniqueId } = req.params;
+
+//     if (!uniqueId?.trim()) {
+//       // More thorough validation
+//       return res.status(400).json({
+//         success: false,
+//         message: "PR_UNIQUE_ID is required",
+//       });
+//     }
+
+//     const person = await prisma.peopleRegistry.findFirst({
+//       where: {
+//         PR_UNIQUE_ID: uniqueId.trim(),
+//       },
+//       select: {
+//         PR_ID: true,
+//         PR_UNIQUE_ID: true,
+//       },
+//     });
+
+//     if (!person) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Person not found",
+//       });
+//     }
+
+//     return res.status(200).json({
+//       success: true,
+//       data: person,
+//     });
+//   } catch (error) {
+//     console.error("Error in convertUniqueIdToId:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Internal server error",
+//     });
+//   }
+// };
+
+// export const getUserByUniqueId = async (req, res) => {
+//   try {
+//     const { uniqueId } = req.params;
+
+//     if (!uniqueId || typeof uniqueId !== "string") {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid PR_UNIQUE_ID format",
+//       });
+//     }
+
+//     const user = await prisma.peopleRegistry.findFirst({
+//       where: { PR_UNIQUE_ID: uniqueId },
+//       select: {
+//         PR_UNIQUE_ID: true,
+//         PR_FULL_NAME: true,
+//       },
+//     });
+
+//     if (!user) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "User with this PR_UNIQUE_ID not found",
+//       });
+//     }
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "User found",
+//       data: user,
+//     });
+//   } catch (error) {
+//     console.error("Error fetching user by PR_UNIQUE_ID:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Internal server error",
+//     });
+//   }
+// };
+
+// // 1. Get all families with same district and city code (with type conversion)
+// export const getFamiliesByLocation = async (req, res) => {
+//   try {
+//     const districtCode = req.params.districtCode;
+//     const cityCode = parseInt(req.params.cityCode, 10);
+
+//     if (!districtCode || isNaN(cityCode)) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid district or city code format",
+//       });
+//     }
+
+//     const families = await prisma.peopleRegistry.findMany({
+//       where: {
+//         PR_DISTRICT_CODE: districtCode,
+//         PR_CITY_CODE: cityCode,
+//       },
+//       include: {
+//         Children: true,
+//         Profession: true,
+//         City: true,
+//         BUSSINESS: true,
+//         Contact: true,
+//         Father: true,
+//         Mother: true,
+//         Spouse: true,
+//       },
+//       orderBy: {
+//         PR_FAMILY_NO: "asc",
+//       },
+//     });
+
+//     if (!families || families.length === 0) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "No families found in this location",
+//       });
+//     }
+
+//     return res.status(200).json({
+//       success: true,
+//       count: families.length,
+//       data: families,
+//     });
+//   } catch (error) {
+//     console.error("Error fetching families by location:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Server Error",
+//     });
+//   }
+// };
+
+// // 2. Get family members (with type conversion)
+// export const getFamilyMembers = async (req, res) => {
+//   try {
+//     const districtCode = req.params.districtCode; // string
+//     const cityCode = parseInt(req.params.cityCode, 10); // int
+//     const familyNo = req.params.familyNo; // string
+
+//     if (!districtCode || isNaN(cityCode) || !familyNo) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid district, city, or family code format",
+//       });
+//     }
+
+//     const familyMembers = await prisma.peopleRegistry.findMany({
+//       where: {
+//         PR_DISTRICT_CODE: districtCode,
+//         PR_CITY_CODE: cityCode,
+//         PR_FAMILY_NO: familyNo,
+//       },
+//       include: {
+//         Children: true,
+//         Profession: true,
+//         City: true,
+//         BUSSINESS: true,
+//         Contact: true,
+//         Father: true,
+//         Mother: true,
+//         Spouse: true,
+//       },
+//       orderBy: {
+//         PR_ID: "asc",
+//       },
+//     });
+
+//     if (!familyMembers || familyMembers.length === 0) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "No family members found with these details",
+//       });
+//     }
+
+//     return res.status(200).json({
+//       success: true,
+//       count: familyMembers.length,
+//       data: familyMembers,
+//     });
+//   } catch (error) {
+//     console.error("Error fetching family members:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Server Error",
+//     });
+//   }
+// };
+
+import { PrismaClient } from "@prisma/client/extension";
+import { verifyFunc, verifyotp, generateotp } from "./otp.controller.js";
+import prisma from "../db/prismaClient.js";
+import Joi from "joi";
+import twilio from "twilio";
+import dotenv from "dotenv";
+import otpGenerator from "otp-generator";
+import { generateToken } from "../middlewares/jwt.js";
+import { getNextFamilyNumber } from "../controllers/utils/familyUtils.js";
+import { parse } from "path";
+
+dotenv.config();
+
+const twillo_Phone_Number = +16203019559; // Consider making this a string if it's a direct phone number
+// const twillo_Phone_Number = process.env.TWILIO_PHONE_NUMBER; // It's better to get this from env
+
+const twilioClient = twilio(
+  process.env.Twillo_Account_SID,
+  process.env.Twillo_Auth_Token
+);
+
+// Helper function to check mobile verification
+// const checkMobileVerified = async (PR_MOBILE_NO, otp) => {
+//   // Assuming verifyotp is your actual OTP verification function from otp.controller.js
+//   const verificationResult = await verifyotp(PR_MOBILE_NO, otp);
+//   return verificationResult.success; // Adjust based on the actual structure of verifyotp's return
+// };
+const checkMobileVerified = async (mobile, otp) => {
+  const otpRecord = await prisma.otp.findFirst({
+    where: { PR_MOBILE_NO: mobile, otp },
+  });
+
+  if (!otpRecord || otpRecord.otp !== otp) {
+    return false;
+  }
+
+  if (new Date() > otpRecord.expiresAt) {
+    return false;
+  }
+
+  return true;
+};
+
 export const registerUser = async (req, res) => {
   try {
     const {
@@ -273,9 +762,10 @@ export const registerUser = async (req, res) => {
           "Gender:",
           fatherPerson.PR_GENDER
         );
+        // Changed error message as per user request
         return res.status(400).json({
           success: false,
-          message: `Invalid gender for Father ID '${PR_FATHER_ID}'. Expected Male, but found ${fatherPerson.PR_GENDER}.`,
+          message: `Father ID must be Male.`,
         });
       }
       // If validation passes, ensure father's name is set
@@ -302,9 +792,10 @@ export const registerUser = async (req, res) => {
           "Gender:",
           motherPerson.PR_GENDER
         );
+        // Changed error message as per user request
         return res.status(400).json({
           success: false,
-          message: `Invalid gender for Mother ID '${PR_MOTHER_ID}'. Expected Female, but found ${motherPerson.PR_GENDER}.`,
+          message: `Mother ID must be Female.`,
         });
       }
       // If validation passes, ensure mother's name is set
@@ -429,21 +920,21 @@ export const registerUser = async (req, res) => {
   }
 };
 
-const checkMobileVerified = async (mobile, otp) => {
-  const otpRecord = await prisma.otp.findFirst({
-    where: { PR_MOBILE_NO: mobile, otp },
-  });
+// const checkMobileVerified = async (mobile, otp) => {
+//   const otpRecord = await prisma.otp.findFirst({
+//     where: { PR_MOBILE_NO: mobile, otp },
+//   });
 
-  if (!otpRecord || otpRecord.otp !== otp) {
-    return false;
-  }
+//   if (!otpRecord || otpRecord.otp !== otp) {
+//     return false;
+//   }
 
-  if (new Date() > otpRecord.expiresAt) {
-    return false;
-  }
+//   if (new Date() > otpRecord.expiresAt) {
+//     return false;
+//   }
 
-  return true;
-};
+//   return true;
+// };
 
 export const LoginUser = async (req, res) => {
   try {
@@ -629,60 +1120,6 @@ export const LoginUser = async (req, res) => {
   }
 };
 
-// export const checkPersonById = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { type } = req.query; // type: 'father', 'mother', 'spouse'
-
-//     // Make sure id is a non-empty string
-//     if (!id || typeof id !== "string") {
-//       return res
-//         .status(400)
-//         .json({ success: false, message: "Invalid PR_UNIQUE_ID format" });
-//     }
-
-//     const person = await prisma.peopleRegistry.findFirst({
-//       where: { PR_UNIQUE_ID: id },
-//       select: { PR_UNIQUE_ID: true, PR_GENDER: true, PR_FULL_NAME: true },
-//     });
-
-//     if (!person) {
-//       return res
-//         .status(404)
-//         .json({ success: false, message: "PR_UNIQUE_ID not present" });
-//     }
-
-//     // Gender validation based on type
-//     if (type === "father" && person.PR_GENDER !== "M") {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Invalid gender for father. Expected Male.",
-//       });
-//     }
-
-//     if (type === "mother" && person.PR_GENDER !== "F") {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Invalid gender for mother. Expected Female.",
-//       });
-//     }
-
-//     // For spouse, just check existence — no gender restriction needed
-
-//     return res.status(200).json({
-//       success: true,
-//       data: person,
-//       message: `PR_UNIQUE_ID is valid${type ? " for " + type : ""}`,
-//     });
-//   } catch (error) {
-//     console.error("Check Person Error:", error);
-//     return res.status(500).json({
-//       success: false,
-//       message: "Internal server error",
-//     });
-//   }
-// };
-
 export const checkPersonById = async (req, res) => {
   try {
     const { id, type } = req.params; // 'type' can be 'father' or 'mother'
@@ -712,15 +1149,17 @@ export const checkPersonById = async (req, res) => {
 
     // Gender validation based on type
     if (type === "father" && person.PR_GENDER !== "M") {
+      // Changed error message as per user request
       return res.status(400).json({
         success: false,
-        message: "Invalid gender for father. Expected Male.",
+        message: "Father ID must be Male.",
       });
     }
     if (type === "mother" && person.PR_GENDER !== "F") {
+      // Changed error message as per user request
       return res.status(400).json({
         success: false,
-        message: "Invalid gender for mother. Expected Female.",
+        message: "Mother ID must be Female.",
       });
     }
 
