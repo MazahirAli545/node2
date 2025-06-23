@@ -750,17 +750,33 @@ export const registerUser = async (req, res) => {
           message: "Father ID not found in registry.",
         });
       }
-      if (!fatherPerson.PR_GENDER === "M") {
+      // if (fatherPerson.PR_GENDER !== "M") {
+      //   console.error(
+      //     "Invalid gender for Father ID:",
+      //     PR_FATHER_ID,
+      //     "Gender:",
+      //     fatherPerson.PR_GENDER
+      //   );
+      //   // Changed error message as per user request
+      //   return res.status(400).json({
+      //     success: false,
+      //     message: `Father ID must be Male.`,
+      //   });
+      // }
+      if (
+        !fatherPerson ||
+        !fatherPerson.PR_GENDER ||
+        fatherPerson.PR_GENDER.trim().toUpperCase() !== "M"
+      ) {
         console.error(
           "Invalid gender for Father ID:",
           PR_FATHER_ID,
-          "Gender:",
-          fatherPerson.PR_GENDER
+          "Actual Gender:",
+          fatherPerson?.PR_GENDER
         );
-        // Changed error message as per user request
         return res.status(400).json({
           success: false,
-          message: `Father ID must be Male.`,
+          message: "Father ID must be Male.",
         });
       }
       // If validation passes, ensure father's name is set
@@ -780,17 +796,33 @@ export const registerUser = async (req, res) => {
           message: "Mother ID not found in registry.",
         });
       }
-      if (!motherPerson.PR_GENDER === "F") {
+      // if (motherPerson.PR_GENDER !== "F") {
+      //   console.error(
+      //     "Invalid gender for Mother ID:",
+      //     PR_MOTHER_ID,
+      //     "Gender:",
+      //     motherPerson.PR_GENDER
+      //   );
+      //   // Changed error message as per user request
+      //   return res.status(400).json({
+      //     success: false,
+      //     message: `Mother ID must be Female.`,
+      //   });
+      // }
+      if (
+        !motherPerson ||
+        !motherPerson.PR_GENDER ||
+        motherPerson.PR_GENDER.trim().toUpperCase() !== "F"
+      ) {
         console.error(
           "Invalid gender for Mother ID:",
           PR_MOTHER_ID,
-          "Gender:",
-          motherPerson.PR_GENDER
+          "Actual Gender:",
+          motherPerson?.PR_GENDER
         );
-        // Changed error message as per user request
         return res.status(400).json({
           success: false,
-          message: `Mother ID must be Female.`,
+          message: "Mother ID must be Female.",
         });
       }
       // If validation passes, ensure mother's name is set
