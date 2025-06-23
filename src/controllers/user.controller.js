@@ -633,16 +633,15 @@ import { parse } from "path";
 
 dotenv.config();
 
-// Constants should be in uppercase and moved to top
+// Constants
 const TWILIO_PHONE_NUMBER = process.env.TWILIO_PHONE_NUMBER || "+16203019559";
-
 const twilioClient = twilio(
   process.env.TWILLO_ACCOUNT_SID,
   process.env.TWILLO_AUTH_TOKEN
 );
 
-// Improved OTP verification with better error handling
-const checkMobileVerified = async (mobile, otp) => {
+// Utility functions
+export const checkMobileVerified = async (mobile, otp) => {
   try {
     const otpRecord = await prisma.otp.findFirst({
       where: { PR_MOBILE_NO: mobile, otp },
@@ -670,7 +669,6 @@ const checkMobileVerified = async (mobile, otp) => {
   }
 };
 
-// Utility function for gender validation
 const validateGender = (person, expectedGender, role) => {
   if (!person || !person.PR_GENDER) {
     console.error(`${role} validation failed - person or gender missing`);
@@ -691,6 +689,7 @@ const validateGender = (person, expectedGender, role) => {
   return isValid;
 };
 
+// Main controller functions
 export const registerUser = async (req, res) => {
   try {
     const {
@@ -703,12 +702,10 @@ export const registerUser = async (req, res) => {
       ...profileData
     } = req.body;
 
-    // Improved Joi validation schema
     const schema = Joi.object({
       PR_MOBILE_NO: Joi.string()
         .pattern(/^[6-9]\d{9}$/)
-        .required()
-        .messages({ "string.pattern.base": "Invalid mobile number" }),
+        .required(),
       PR_FULL_NAME: Joi.string().min(3).max(100).required(),
       PR_DOB: Joi.date().required(),
       PR_GENDER: Joi.string().valid("M", "F", "O").required(),
@@ -716,19 +713,16 @@ export const registerUser = async (req, res) => {
       PR_STATE_CODE: Joi.string().required(),
       PR_DISTRICT_CODE: Joi.string().required(),
       PR_CITY_NAME: Joi.string().required(),
-      // ... rest of your schema
     }).unknown(true);
 
     const { error } = schema.validate(req.body);
     if (error) {
-      console.error("Validation Error:", error.details);
       return res.status(400).json({
         success: false,
         message: error.details.map((d) => d.message).join(", "),
       });
     }
 
-    // Enhanced OTP verification
     if (!(await checkMobileVerified(PR_MOBILE_NO, otp))) {
       return res.status(401).json({
         success: false,
@@ -736,31 +730,19 @@ export const registerUser = async (req, res) => {
       });
     }
 
-    // Improved parent validation
+    // Parent validation
     if (PR_FATHER_ID) {
       const fatherPerson = await prisma.peopleRegistry.findFirst({
         where: { PR_UNIQUE_ID: PR_FATHER_ID },
         select: { PR_GENDER: true, PR_FULL_NAME: true },
       });
 
-      if (!fatherPerson) {
-        return res.status(400).json({
-          success: false,
-          message: "Father ID not found in registry.",
-        });
-      }
-
-      if (!validateGender(fatherPerson, "M", "Father")) {
+      if (!fatherPerson || !validateGender(fatherPerson, "M", "Father")) {
         return res.status(400).json({
           success: false,
           message: "Father ID must be Male.",
-          debug: {
-            receivedGender: fatherPerson.PR_GENDER,
-            normalized: fatherPerson.PR_GENDER?.toString().trim().toUpperCase(),
-          },
         });
       }
-
       profileData.PR_FATHER_NAME = fatherPerson.PR_FULL_NAME;
     }
 
@@ -770,28 +752,15 @@ export const registerUser = async (req, res) => {
         select: { PR_GENDER: true, PR_FULL_NAME: true },
       });
 
-      if (!motherPerson) {
-        return res.status(400).json({
-          success: false,
-          message: "Mother ID not found in registry.",
-        });
-      }
-
-      if (!validateGender(motherPerson, "F", "Mother")) {
+      if (!motherPerson || !validateGender(motherPerson, "F", "Mother")) {
         return res.status(400).json({
           success: false,
           message: "Mother ID must be Female.",
-          debug: {
-            receivedGender: motherPerson.PR_GENDER,
-            normalized: motherPerson.PR_GENDER?.toString().trim().toUpperCase(),
-          },
         });
       }
-
       profileData.PR_MOTHER_NAME = motherPerson.PR_FULL_NAME;
     }
 
-    // Transaction with improved error handling
     return await prisma.$transaction(async (tx) => {
       const city = await tx.city.findFirst({
         where: { CITY_NAME: profileData.PR_CITY_NAME },
@@ -804,14 +773,6 @@ export const registerUser = async (req, res) => {
         });
       }
 
-      // Business lookup if provided
-      let business = null;
-      if (profileData.PR_BUSS_CODE) {
-        business = await tx.bUSSINESS.findFirst({
-          where: { BUSS_NAME: profileData.PR_BUSS_CODE },
-        });
-      }
-
       const { familyNumber, memberNumber } = await getNextFamilyNumber(
         tx,
         profileData.PR_STATE_CODE,
@@ -819,7 +780,6 @@ export const registerUser = async (req, res) => {
         city.CITY_ID
       );
 
-      // Create main user
       const newUser = await tx.peopleRegistry.create({
         data: {
           PR_UNIQUE_ID: `${profileData.PR_STATE_CODE}${profileData.PR_DISTRICT_CODE}-${city.CITY_ID}-${familyNumber}-${memberNumber}`,
@@ -828,7 +788,6 @@ export const registerUser = async (req, res) => {
           PR_MOBILE_NO,
           PR_DOB: new Date(profileData.PR_DOB).toISOString(),
           PR_CITY_CODE: city.CITY_ID,
-          PR_BUSS_CODE: business?.BUSS_ID || null,
           PR_FCM_TOKEN: PR_FCM_TOKEN || null,
           PR_FATHER_ID: PR_FATHER_ID || null,
           PR_MOTHER_ID: PR_MOTHER_ID || null,
@@ -840,7 +799,6 @@ export const registerUser = async (req, res) => {
         },
       });
 
-      // Handle children creation
       if (Children?.length > 0) {
         await Promise.all(
           Children.map(async (child) => {
@@ -885,50 +843,38 @@ export const registerUser = async (req, res) => {
         success: true,
         message: "User registered successfully",
         token,
-        data: {
-          ...newUser,
-          // Exclude sensitive fields if needed
-        },
+        data: newUser,
       });
     });
   } catch (error) {
     console.error("Registration Error:", error);
-
     const errorResponse = {
       success: false,
-      message: "Internal server error during registration.",
+      message:
+        error.code === "P2002"
+          ? "A user with this unique ID already exists."
+          : "Internal server error during registration.",
     };
-
-    if (error.code === "P2002") {
-      errorResponse.message = "A user with this unique ID already exists.";
-      errorResponse.code = "DUPLICATE_ENTRY";
-      return res.status(409).json(errorResponse);
-    }
 
     if (process.env.NODE_ENV === "development") {
       errorResponse.error = error.message;
-      errorResponse.stack = error.stack;
     }
 
-    return res.status(500).json(errorResponse);
+    return res.status(error.code === "P2002" ? 409 : 500).json(errorResponse);
   }
 };
 
-// Improved login function
 export const LoginUser = async (req, res) => {
   try {
     const { PR_MOBILE_NO, otp, selectedUserId } = req.body;
 
-    // Validate mobile number
-    const mobileRegex = /^[6-9]\d{9}$/;
-    if (!mobileRegex.test(PR_MOBILE_NO)) {
+    if (!/^[6-9]\d{9}$/.test(PR_MOBILE_NO)) {
       return res.status(400).json({
         success: false,
         message: "Invalid mobile number format",
       });
     }
 
-    // OTP generation if not provided
     if (!otp) {
       const userExists = await prisma.peopleRegistry.count({
         where: { PR_MOBILE_NO },
@@ -940,7 +886,6 @@ export const LoginUser = async (req, res) => {
         });
       }
 
-      // Generate OTP
       const mockReq = { body: { PR_MOBILE_NO } };
       const mockRes = {
         json: (data) => data,
@@ -962,7 +907,6 @@ export const LoginUser = async (req, res) => {
       });
     }
 
-    // Verify OTP
     if (!(await checkMobileVerified(PR_MOBILE_NO, otp))) {
       return res.status(401).json({
         success: false,
@@ -970,7 +914,6 @@ export const LoginUser = async (req, res) => {
       });
     }
 
-    // Find users
     const users = await prisma.peopleRegistry.findMany({
       where: { PR_MOBILE_NO },
       orderBy: { PR_ID: "desc" },
@@ -988,7 +931,6 @@ export const LoginUser = async (req, res) => {
       });
     }
 
-    // Handle multiple users
     if (users.length > 1 && !selectedUserId) {
       return res.json({
         success: true,
@@ -1004,7 +946,6 @@ export const LoginUser = async (req, res) => {
       });
     }
 
-    // Get selected user
     const user = selectedUserId
       ? users.find((u) => u.PR_ID === selectedUserId)
       : users[0];
@@ -1016,50 +957,166 @@ export const LoginUser = async (req, res) => {
       });
     }
 
-    // Clean up OTP
     await prisma.otp.deleteMany({ where: { PR_MOBILE_NO } });
 
-    // Generate response
     const token = generateToken(user);
-    const userData = {
-      ...user,
-      Children: user.Children || [],
-      Profession: user.Profession
-        ? {
-            PROF_ID: user.Profession.PROF_ID,
-            PROF_NAME: user.Profession.PROF_NAME,
-          }
-        : null,
-      City: user.City
-        ? {
-            CITY_ST_NAME: user.City.CITY_ST_NAME,
-            CITY_DS_NAME: user.City.CITY_DS_NAME,
-          }
-        : null,
-    };
-
     return res.json({
       success: true,
       message: "Login successful",
       token,
-      user: userData,
+      user: {
+        ...user,
+        Children: user.Children || [],
+        Profession: user.Profession
+          ? {
+              PROF_ID: user.Profession.PROF_ID,
+              PROF_NAME: user.Profession.PROF_NAME,
+            }
+          : null,
+        City: user.City
+          ? {
+              CITY_ST_NAME: user.City.CITY_ST_NAME,
+              CITY_DS_NAME: user.City.CITY_DS_NAME,
+            }
+          : null,
+      },
     });
   } catch (error) {
     console.error("Login Error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
-      ...(process.env.NODE_ENV === "development" && {
-        error: error.message,
-        stack: error.stack,
-      }),
+      ...(process.env.NODE_ENV === "development" && { error: error.message }),
     });
   }
 };
 
-// ... (other functions like checkPersonById, convertUniqueIdToId, etc. can be similarly improved)
+export const checkPersonById = async (req, res) => {
+  try {
+    const { id, type } = req.params;
 
-// Improved family lookup functions
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "ID is required.",
+      });
+    }
+
+    const person = await prisma.peopleRegistry.findFirst({
+      where: { PR_UNIQUE_ID: id },
+      select: {
+        PR_ID: true,
+        PR_FULL_NAME: true,
+        PR_GENDER: true,
+      },
+    });
+
+    if (!person) {
+      return res.status(404).json({
+        success: false,
+        message: "ID not found.",
+      });
+    }
+
+    if (type === "father" && person.PR_GENDER !== "M") {
+      return res.status(400).json({
+        success: false,
+        message: "Father ID must be Male.",
+      });
+    }
+    if (type === "mother" && person.PR_GENDER !== "F") {
+      return res.status(400).json({
+        success: false,
+        message: "Mother ID must be Female.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "ID found and valid.",
+      data: person,
+    });
+  } catch (error) {
+    console.error("Check Person By ID Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
+  }
+};
+
+export const convertUniqueIdToId = async (req, res) => {
+  try {
+    const { uniqueId } = req.params;
+
+    if (!uniqueId?.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "PR_UNIQUE_ID is required",
+      });
+    }
+
+    const person = await prisma.peopleRegistry.findFirst({
+      where: { PR_UNIQUE_ID: uniqueId.trim() },
+      select: { PR_ID: true, PR_UNIQUE_ID: true },
+    });
+
+    if (!person) {
+      return res.status(404).json({
+        success: false,
+        message: "Person not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: person,
+    });
+  } catch (error) {
+    console.error("Error in convertUniqueIdToId:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const getUserByUniqueId = async (req, res) => {
+  try {
+    const { uniqueId } = req.params;
+
+    if (!uniqueId) {
+      return res.status(400).json({
+        success: false,
+        message: "PR_UNIQUE_ID is required",
+      });
+    }
+
+    const user = await prisma.peopleRegistry.findFirst({
+      where: { PR_UNIQUE_ID: uniqueId },
+      select: { PR_UNIQUE_ID: true, PR_FULL_NAME: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: user,
+    });
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 export const getFamiliesByLocation = async (req, res) => {
   try {
     const { districtCode, cityCode } = req.params;
@@ -1088,7 +1145,7 @@ export const getFamiliesByLocation = async (req, res) => {
     if (!families.length) {
       return res.status(404).json({
         success: false,
-        message: "No families found in this location",
+        message: "No families found",
       });
     }
 
@@ -1105,3 +1162,61 @@ export const getFamiliesByLocation = async (req, res) => {
     });
   }
 };
+
+export const getFamilyMembers = async (req, res) => {
+  try {
+    const { districtCode, cityCode, familyNo } = req.params;
+    const cityCodeNum = parseInt(cityCode, 10);
+
+    if (!districtCode || isNaN(cityCodeNum) || !familyNo) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid parameters",
+      });
+    }
+
+    const familyMembers = await prisma.peopleRegistry.findMany({
+      where: {
+        PR_DISTRICT_CODE: districtCode,
+        PR_CITY_CODE: cityCodeNum,
+        PR_FAMILY_NO: familyNo,
+      },
+      include: {
+        Children: true,
+        Profession: true,
+        City: true,
+      },
+      orderBy: { PR_ID: "asc" },
+    });
+
+    if (!familyMembers.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No family members found",
+      });
+    }
+
+    return res.json({
+      success: true,
+      count: familyMembers.length,
+      data: familyMembers,
+    });
+  } catch (error) {
+    console.error("Family members lookup error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error fetching family members",
+    });
+  }
+};
+
+// Export all controller functions
+// export {
+//   registerUser,
+//   LoginUser,
+//   checkPersonById,
+//   convertUniqueIdToId,
+//   getUserByUniqueId,
+//   getFamiliesByLocation,
+//   getFamilyMembers
+// };
