@@ -656,21 +656,34 @@ export const checkPersonById = async (req, res) => {
     }
 
     // Gender validation based on type
-    if (type === "father" && person.PR_GENDER !== "M") {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid gender for father. Expected Male.",
-      });
+    // Strict gender validation based on type
+    if (type === "father") {
+      if (person.PR_GENDER !== "M") {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid gender for father. Expected Male.",
+          details: {
+            providedId: id,
+            foundGender: person.PR_GENDER,
+            requiredGender: "M",
+          },
+        });
+      }
     }
 
-    if (type === "mother" && person.PR_GENDER !== "F") {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid gender for mother. Expected Female.",
-      });
+    if (type === "mother") {
+      if (person.PR_GENDER !== "F") {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid gender for mother. Expected Female.",
+          details: {
+            providedId: id,
+            foundGender: person.PR_GENDER,
+            requiredGender: "F",
+          },
+        });
+      }
     }
-
-    // For spouse, just check existence — no gender restriction needed
 
     return res.status(200).json({
       success: true,
