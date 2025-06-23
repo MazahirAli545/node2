@@ -40,6 +40,8 @@ export const registerUser = async (req, res) => {
       PR_CITY_NAME: Joi.string().required(),
       PR_BUSS_STREAM: Joi.string().optional(),
       PR_BUSS_TYPE: Joi.string().optional(),
+      PR_FATHER_ID: Joi.string().optional().allow(null, ""), // Add PR_FATHER_ID to schema
+      PR_MOTHER_ID: Joi.string().optional().allow(null, ""),
       Children: Joi.array()
         .items(
           Joi.object({
@@ -64,6 +66,54 @@ export const registerUser = async (req, res) => {
         success: false,
         message: "Mobile verification failed",
       });
+    }
+
+    // New: Validate Father ID for gender and existence before transaction
+    if (PR_FATHER_ID) {
+      const fatherPerson = await prisma.peopleRegistry.findFirst({
+        where: { PR_UNIQUE_ID: PR_FATHER_ID },
+        select: { PR_GENDER: true, PR_FULL_NAME: true },
+      });
+
+      if (!fatherPerson) {
+        return res.status(400).json({
+          success: false,
+          message: "Father ID not found in registry.",
+        });
+      }
+      if (fatherPerson.PR_GENDER !== "M") {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid gender for Father ID. Expected Male.",
+        });
+      }
+      // Optionally, set father's name here if not already set by frontend or for direct API calls
+      profileData.PR_FATHER_NAME =
+        profileData.PR_FATHER_NAME || fatherPerson.PR_FULL_NAME;
+    }
+
+    // New: Validate Mother ID for gender and existence before transaction
+    if (PR_MOTHER_ID) {
+      const motherPerson = await prisma.peopleRegistry.findFirst({
+        where: { PR_UNIQUE_ID: PR_MOTHER_ID },
+        select: { PR_GENDER: true, PR_FULL_NAME: true },
+      });
+
+      if (!motherPerson) {
+        return res.status(400).json({
+          success: false,
+          message: "Mother ID not found in registry.",
+        });
+      }
+      if (motherPerson.PR_GENDER !== "F") {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid gender for Mother ID. Expected Female.",
+        });
+      }
+      // Optionally, set mother's name here
+      profileData.PR_MOTHER_NAME =
+        profileData.PR_MOTHER_NAME || motherPerson.PR_FULL_NAME;
     }
 
     return await prisma.$transaction(async (tx) => {
@@ -136,6 +186,8 @@ export const registerUser = async (req, res) => {
           PR_CITY_CODE: city.CITY_ID,
           PR_BUSS_CODE: business?.BUSS_ID || null,
           PR_FCM_TOKEN: PR_FCM_TOKEN || null,
+          PR_FATHER_ID: PR_FATHER_ID || null, // Pass Father ID
+          PR_MOTHER_ID: PR_MOTHER_ID || null,
           ...profileData,
           PR_IS_COMPLETED: "Y", // Assuming full registration
         },
