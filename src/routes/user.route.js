@@ -125,7 +125,8 @@ const userRouter = Router();
 // userRouter.post("/remove", removeFcmToken);
 
 userRouter.get("/user/check/:uniqueId", getUserByUniqueId);
-userRouter.get("/checkPersonById/:id", checkPersonById);
+// userRouter.get("/checkPersonById/:id", checkPersonById);
+userRouter.get("/check/:id", checkPersonById);
 userRouter.get("/families/:districtCode/:cityCode", getFamiliesByLocation);
 userRouter.get("/families/:districtCode/:cityCode/:familyNo", getFamilyMembers);
 userRouter.post("/register", registerUser);
