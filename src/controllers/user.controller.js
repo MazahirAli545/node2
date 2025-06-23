@@ -750,7 +750,7 @@ export const registerUser = async (req, res) => {
           message: "Father ID not found in registry.",
         });
       }
-      if (fatherPerson.PR_GENDER !== "M") {
+      if (!fatherPerson.PR_GENDER === "M") {
         console.error(
           "Invalid gender for Father ID:",
           PR_FATHER_ID,
@@ -780,7 +780,7 @@ export const registerUser = async (req, res) => {
           message: "Mother ID not found in registry.",
         });
       }
-      if (motherPerson.PR_GENDER !== "F") {
+      if (!motherPerson.PR_GENDER === "F") {
         console.error(
           "Invalid gender for Mother ID:",
           PR_MOTHER_ID,
