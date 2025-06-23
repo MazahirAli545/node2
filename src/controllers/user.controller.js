@@ -1129,7 +1129,6 @@ export const checkPersonById = async (req, res) => {
     });
   }
 };
-
 export const convertUniqueIdToId = async (req, res) => {
   try {
     const { uniqueId } = req.params;
