@@ -126,27 +126,42 @@ export async function updateBusiness(req, res) {
       });
     } else {
       // Handle non-English update/create
-      const translation = await prisma.business_lang.upsert({
-        where: {
-          id_lang_code: {
-            id: Number(BUSS_ID),
-            lang_code,
-          },
-        },
-        update: updateData,
-        create: {
-          id: Number(BUSS_ID),
-          ...updateData,
-          lang_code,
-          BUSS_CREATED_AT: new Date(),
-        },
-      });
+      // Remove fields that don't exist in the business_lang model
+      const translationData = { ...updateData };
+      if (translationData.BUSS_ACTIVE_YN) {
+        delete translationData.BUSS_ACTIVE_YN;
+      }
 
-      return res.status(200).json({
-        message: "Business translation updated successfully",
-        success: true,
-        business: translation,
-      });
+      try {
+        const translation = await prisma.business_lang.upsert({
+          where: {
+            id_lang_code: {
+              id: Number(BUSS_ID),
+              lang_code,
+            },
+          },
+          update: translationData,
+          create: {
+            id: Number(BUSS_ID),
+            ...translationData,
+            lang_code,
+            BUSS_CREATED_AT: new Date(),
+          },
+        });
+
+        return res.status(200).json({
+          message: "Business translation updated successfully",
+          success: true,
+          business: translation,
+        });
+      } catch (error) {
+        console.error("Upsert error:", error);
+        return res.status(500).json({
+          message: "Error updating business translation",
+          success: false,
+          error: error.message,
+        });
+      }
     }
   } catch (error) {
     console.error("Error updating business:", error);
@@ -240,33 +255,44 @@ export async function getBusinessTranslations(req, res) {
 export async function createBusinessTranslation(req, res) {
   try {
     const { BUSS_ID } = req.params;
-    const { BUSS_STREM, BUSS_TYPE, BUSS_CREATED_BY, lang_code } = req.body;
+    const requestData = { ...req.body };
+    const { lang_code } = requestData;
+
+    // Remove fields that don't exist in the business_lang model
+    if (requestData.BUSS_ACTIVE_YN) {
+      delete requestData.BUSS_ACTIVE_YN;
+    }
+
     if (!lang_code || lang_code === "en") {
       return res.status(400).json({
         message: "Use this endpoint only for non-English translations.",
         success: false,
       });
     }
+
     const mainBusiness = await prisma.bUSSINESS.findUnique({
       where: { BUSS_ID: Number(BUSS_ID) },
     });
+
     if (!mainBusiness) {
       return res.status(404).json({
         message: "Business not found",
         success: false,
       });
     }
+
     try {
       const translation = await prisma.business_lang.create({
         data: {
           id: Number(BUSS_ID),
-          BUSS_STREM,
-          BUSS_TYPE,
-          BUSS_CREATED_BY,
+          BUSS_STREM: requestData.BUSS_STREM,
+          BUSS_TYPE: requestData.BUSS_TYPE,
+          BUSS_CREATED_BY: requestData.BUSS_CREATED_BY,
           BUSS_CREATED_AT: new Date(),
           lang_code,
         },
       });
+
       return res.status(201).json({
         message: "Business translation created successfully",
         success: true,
@@ -326,7 +352,13 @@ export async function getBusinessTranslationByLang(req, res) {
 export async function updateBusinessTranslation(req, res) {
   try {
     const { BUSS_ID, lang_code } = req.params;
-    const updateData = req.body;
+    const updateData = { ...req.body };
+
+    // Remove fields that don't exist in the business_lang model
+    if (updateData.BUSS_ACTIVE_YN) {
+      delete updateData.BUSS_ACTIVE_YN;
+    }
+
     const existingTranslation = await prisma.business_lang.findUnique({
       where: {
         id_lang_code: {
@@ -335,12 +367,14 @@ export async function updateBusinessTranslation(req, res) {
         },
       },
     });
+
     if (!existingTranslation) {
       return res.status(404).json({
         message: `Translation for language ${lang_code} not found`,
         success: false,
       });
     }
+
     const updatedTranslation = await prisma.business_lang.update({
       where: {
         id_lang_code: {
@@ -353,6 +387,7 @@ export async function updateBusinessTranslation(req, res) {
         BUSS_UPDATED_AT: new Date(),
       },
     });
+
     return res.status(200).json({
       message: `Business translation for language ${lang_code} updated successfully`,
       success: true,

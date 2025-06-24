@@ -523,6 +523,7 @@ model pages {
 model pages_lang {
   id           Int       @map("id")
   title        String    @db.VarChar(20)
+  link_url     String    @unique @default("/") @db.VarChar(50)
   screen_type  String    @db.VarChar(12)
   active_yn    Int
   created_by   Int
