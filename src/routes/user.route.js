@@ -27,6 +27,11 @@ import {
   createCity,
   updateCity,
   deleteCity,
+  getCityTranslations,
+  createCityTranslation,
+  getCityTranslationByLang,
+  updateCityTranslation,
+  deleteCityTranslation,
 } from "../controllers/city.controller.js";
 import {
   getEvents,
@@ -168,6 +173,20 @@ userRouter.get("/cities", getCities);
 userRouter.post("/cities", createCity);
 userRouter.put("/cities/:CITY_ID", updateCity);
 userRouter.delete("/cities/:CITY_ID", deleteCity);
+userRouter.get("/cities/:CITY_ID/translations", getCityTranslations);
+userRouter.post("/cities/:CITY_ID/translations", createCityTranslation);
+userRouter.get(
+  "/cities/:CITY_ID/translation/:lang_code",
+  getCityTranslationByLang
+);
+userRouter.put(
+  "/cities/:CITY_ID/translation/:lang_code",
+  updateCityTranslation
+);
+userRouter.delete(
+  "/cities/:CITY_ID/translation/:lang_code",
+  deleteCityTranslation
+);
 userRouter.get("/directory", DirectoryController);
 userRouter.get("/profile", verifyToken, getUserProfile);
 // Business routes

@@ -137,27 +137,36 @@ export async function updateCity(req, res) {
       });
     } else {
       // Handle non-English update/create
-      const translation = await prisma.city_lang.upsert({
-        where: {
-          id_lang_code: {
-            id: Number(CITY_ID),
-            lang_code,
+      try {
+        const translation = await prisma.city_lang.upsert({
+          where: {
+            id_lang_code: {
+              id: Number(CITY_ID),
+              lang_code,
+            },
           },
-        },
-        update: updateData,
-        create: {
-          id: Number(CITY_ID),
-          ...updateData,
-          lang_code,
-          CITY_CREATED_AT: new Date(),
-        },
-      });
+          update: updateData,
+          create: {
+            id: Number(CITY_ID),
+            ...updateData,
+            lang_code,
+            CITY_CREATED_AT: new Date(),
+          },
+        });
 
-      return res.status(200).json({
-        message: "City translation updated successfully",
-        success: true,
-        city: translation,
-      });
+        return res.status(200).json({
+          message: "City translation updated successfully",
+          success: true,
+          city: translation,
+        });
+      } catch (error) {
+        console.error("Upsert error:", error);
+        return res.status(500).json({
+          message: "Error updating city translation",
+          success: false,
+          error: error.message,
+        });
+      }
     }
   } catch (error) {
     console.error("Error updating city:", error);
@@ -247,3 +256,216 @@ export async function getCityTranslations(req, res) {
     });
   }
 }
+
+// New dedicated translation APIs
+
+export async function createCityTranslation(req, res) {
+  try {
+    const { CITY_ID } = req.params;
+    const requestData = { ...req.body };
+    const { lang_code } = requestData;
+
+    if (!lang_code || lang_code === "en") {
+      return res.status(400).json({
+        message: "Use this endpoint only for non-English translations.",
+        success: false,
+      });
+    }
+
+    const mainCity = await prisma.city.findUnique({
+      where: { CITY_ID: Number(CITY_ID) },
+    });
+
+    if (!mainCity) {
+      return res.status(404).json({
+        message: "City not found",
+        success: false,
+      });
+    }
+
+    try {
+      const translation = await prisma.city_lang.create({
+        data: {
+          id: Number(CITY_ID),
+          CITY_PIN_CODE: requestData.CITY_PIN_CODE,
+          CITY_NAME: requestData.CITY_NAME,
+          CITY_DS_CODE: requestData.CITY_DS_CODE || mainCity.CITY_DS_CODE,
+          CITY_DS_NAME: requestData.CITY_DS_NAME || mainCity.CITY_DS_NAME,
+          CITY_ST_CODE: requestData.CITY_ST_CODE || mainCity.CITY_ST_CODE,
+          CITY_ST_NAME: requestData.CITY_ST_NAME || mainCity.CITY_ST_NAME,
+          CITY_CREATED_BY:
+            requestData.CITY_CREATED_BY || mainCity.CITY_CREATED_BY,
+          CITY_CREATED_AT: new Date(),
+          lang_code,
+        },
+      });
+
+      return res.status(201).json({
+        message: "City translation created successfully",
+        success: true,
+        translation,
+      });
+    } catch (error) {
+      if (error.code === "P2002") {
+        return res.status(409).json({
+          message: "This translation already exists in the database.",
+          success: false,
+        });
+      }
+      throw error;
+    }
+  } catch (error) {
+    console.error("Error creating city translation:", error);
+    return res.status(500).json({
+      message: "Error creating city translation",
+      success: false,
+      error: error.message,
+    });
+  }
+}
+
+export async function getCityTranslationByLang(req, res) {
+  try {
+    const { CITY_ID, lang_code } = req.params;
+    const translation = await prisma.city_lang.findUnique({
+      where: {
+        id_lang_code: {
+          id: Number(CITY_ID),
+          lang_code,
+        },
+      },
+    });
+
+    if (!translation) {
+      return res.status(404).json({
+        message: `Translation for language ${lang_code} not found`,
+        success: false,
+      });
+    }
+
+    return res.status(200).json({
+      message: "City translation fetched successfully",
+      success: true,
+      translation,
+    });
+  } catch (error) {
+    console.error("Error fetching city translation:", error);
+    return res.status(500).json({
+      message: "Error fetching city translation",
+      success: false,
+      error: error.message,
+    });
+  }
+}
+
+export async function updateCityTranslation(req, res) {
+  try {
+    const { CITY_ID, lang_code } = req.params;
+    const updateData = { ...req.body };
+
+    const existingTranslation = await prisma.city_lang.findUnique({
+      where: {
+        id_lang_code: {
+          id: Number(CITY_ID),
+          lang_code,
+        },
+      },
+    });
+
+    if (!existingTranslation) {
+      return res.status(404).json({
+        message: `Translation for language ${lang_code} not found`,
+        success: false,
+      });
+    }
+
+    const updatedTranslation = await prisma.city_lang.update({
+      where: {
+        id_lang_code: {
+          id: Number(CITY_ID),
+          lang_code,
+        },
+      },
+      data: {
+        ...updateData,
+        CITY_UPDATED_AT: new Date(),
+      },
+    });
+
+    return res.status(200).json({
+      message: `City translation for language ${lang_code} updated successfully`,
+      success: true,
+      translation: updatedTranslation,
+    });
+  } catch (error) {
+    console.error("Error updating city translation:", error);
+    return res.status(500).json({
+      message: "Error updating city translation",
+      success: false,
+      error: error.message,
+    });
+  }
+}
+
+export async function deleteCityTranslation(req, res) {
+  try {
+    const { CITY_ID, lang_code } = req.params;
+
+    if (lang_code === "en") {
+      return res.status(400).json({
+        message:
+          "English content is stored in the main city table. To delete English, delete the city itself.",
+        success: false,
+      });
+    }
+
+    const existingTranslation = await prisma.city_lang.findUnique({
+      where: {
+        id_lang_code: {
+          id: Number(CITY_ID),
+          lang_code,
+        },
+      },
+    });
+
+    if (!existingTranslation) {
+      return res.status(404).json({
+        message: `Translation for language ${lang_code} not found`,
+        success: false,
+      });
+    }
+
+    await prisma.city_lang.delete({
+      where: {
+        id_lang_code: {
+          id: Number(CITY_ID),
+          lang_code,
+        },
+      },
+    });
+
+    return res.status(200).json({
+      message: `City translation for language ${lang_code} deleted successfully`,
+      success: true,
+    });
+  } catch (error) {
+    console.error("Error deleting city translation:", error);
+    return res.status(500).json({
+      message: "Error deleting city translation",
+      success: false,
+      error: error.message,
+    });
+  }
+}
+
+export default {
+  getCities,
+  createCity,
+  updateCity,
+  deleteCity,
+  getCityTranslations,
+  createCityTranslation,
+  getCityTranslationByLang,
+  updateCityTranslation,
+  deleteCityTranslation,
+};
