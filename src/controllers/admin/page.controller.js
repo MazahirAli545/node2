@@ -37,9 +37,10 @@ const getPreferredLanguage = (req) => {
 export const getPageByLinkUrl = async (req, res) => {
   const { lang_code, link_url } = req.params;
   const requestedLang = getPreferredLanguage(req);
+  const { screen_type = "both" } = req.query; // Get screen_type from query params, default to "both"
 
   try {
-    // 1. Fetch the base page details
+    // 1. Fetch the base page details with screen_type filter
     const page = await prisma.pages.findUnique({
       where: {
         // Handle root path and undefined link_url cases
@@ -55,6 +56,18 @@ export const getPageByLinkUrl = async (req, res) => {
       return res
         .status(404)
         .json({ success: false, message: "Page not found or is inactive." });
+    }
+
+    // Check if the page should be displayed on the requested screen type
+    if (
+      screen_type !== "both" &&
+      page.screen_type !== "both" &&
+      page.screen_type !== screen_type
+    ) {
+      return res.status(404).json({
+        success: false,
+        message: `Page not available on ${screen_type} screen.`,
+      });
     }
 
     // 2. Fetch content sections based on requested language
@@ -118,6 +131,7 @@ export const getPageByLinkUrl = async (req, res) => {
         title: page.title,
         link_url: page.link_url,
         active_yn: page.active_yn,
+        screen_type: page.screen_type,
         lang_code: requestedLang,
         content_sections: formattedSections,
       },
@@ -133,10 +147,19 @@ export const getPageByLinkUrl = async (req, res) => {
 
 export const getAllPages = async (req, res) => {
   try {
-    const { lang_code = "en" } = req.query;
+    const { lang_code = "en", screen_type } = req.query;
+
+    // Prepare filter conditions
+    const whereCondition = {};
+
+    // Add screen_type filter if provided
+    if (screen_type) {
+      whereCondition.OR = [{ screen_type }, { screen_type: "both" }];
+    }
 
     // Get main pages (English)
     const mainPages = await prisma.pages.findMany({
+      where: whereCondition,
       orderBy: {
         id: "asc",
       },
@@ -155,6 +178,7 @@ export const getAllPages = async (req, res) => {
     const translations = await prisma.pages_lang.findMany({
       where: {
         lang_code,
+        id: { in: mainPages.map((page) => page.id) },
       },
     });
 
@@ -181,7 +205,7 @@ export const getAllPages = async (req, res) => {
 export const getPageById = async (req, res) => {
   try {
     const { id } = req.params;
-    const { lang_code = "en" } = req.query;
+    const { lang_code = "en", screen_type } = req.query;
 
     // Get main page (English)
     const mainPage = await prisma.pages.findUnique({
@@ -192,6 +216,19 @@ export const getPageById = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: `Page with ID ${id} not found`,
+      });
+    }
+
+    // Check if the page should be displayed on the requested screen type
+    if (
+      screen_type &&
+      screen_type !== "both" &&
+      mainPage.screen_type !== "both" &&
+      mainPage.screen_type !== screen_type
+    ) {
+      return res.status(404).json({
+        success: false,
+        message: `Page not available on ${screen_type} screen.`,
       });
     }
 
@@ -231,7 +268,22 @@ export const getPageById = async (req, res) => {
 export const updatePageById = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, link_url, active_yn, updated_by, updated_date } = req.body;
+    const {
+      title,
+      link_url,
+      screen_type,
+      active_yn,
+      updated_by,
+      updated_date,
+    } = req.body;
+
+    // Validate screen_type if provided
+    if (screen_type && !["web", "app", "both"].includes(screen_type)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid screen_type. Must be 'web', 'app', or 'both'",
+      });
+    }
 
     const existingPage = await prisma.pages.findUnique({
       where: { id: Number(id) },
@@ -249,6 +301,7 @@ export const updatePageById = async (req, res) => {
       data: {
         title,
         link_url,
+        screen_type, // Add screen_type to update
         active_yn,
         updated_by,
         updated_date: updated_date ? new Date(updated_date) : null, // ensure Date object, allow null
@@ -308,12 +361,21 @@ export const addPage = async (req, res) => {
     const {
       title,
       link_url,
+      screen_type = "both", // Default to "both" if not provided
       active_yn,
       created_by,
       created_date,
       updated_by,
       updated_date,
     } = req.body;
+
+    // Validate screen_type
+    if (screen_type && !["web", "app", "both"].includes(screen_type)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid screen_type. Must be 'web', 'app', or 'both'",
+      });
+    }
 
     // Basic validation (you can expand this as needed)
     if (
@@ -334,6 +396,7 @@ export const addPage = async (req, res) => {
       data: {
         title,
         link_url: link_url || "/", // Default to "/" if empty/null, based on schema default
+        screen_type, // Add screen_type
         active_yn,
         created_by,
         created_date: new Date(created_date),
@@ -358,7 +421,21 @@ export const addPage = async (req, res) => {
 
 export const createPage = async (req, res) => {
   try {
-    const { title, content, active_yn = true, lang_code = "en" } = req.body;
+    const {
+      title,
+      content,
+      screen_type = "both",
+      active_yn = true,
+      lang_code = "en",
+    } = req.body;
+
+    // Validate screen_type
+    if (!["web", "app", "both"].includes(screen_type)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid screen_type. Must be 'web', 'app', or 'both'",
+      });
+    }
 
     // Validate required fields
     if (!title || !content) {
@@ -375,6 +452,7 @@ export const createPage = async (req, res) => {
         data: {
           title,
           content,
+          screen_type,
           active_yn,
         },
       });
@@ -386,6 +464,7 @@ export const createPage = async (req, res) => {
             id: newPage.id,
             title,
             content,
+            screen_type,
             active_yn,
             lang_code,
             created_date: new Date(),
@@ -414,6 +493,17 @@ export const updatePage = async (req, res) => {
   try {
     const { id } = req.params;
     const { lang_code = "en", ...updateData } = req.body;
+
+    // Validate screen_type if provided
+    if (
+      updateData.screen_type &&
+      !["web", "app", "both"].includes(updateData.screen_type)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid screen_type. Must be 'web', 'app', or 'both'",
+      });
+    }
 
     // Check if page exists
     const existingPage = await prisma.pages.findUnique({
