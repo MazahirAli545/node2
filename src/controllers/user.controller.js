@@ -1980,12 +1980,12 @@ export const registerUser = async (req, res) => {
   }
 };
 
-export const updateUserLanguage = async (req, res) => {
+export const updateLanguage = async (req, res) => {
   try {
-    const PR_ID = req.headers.pr_id;
+    const pr_id = req.headers.pr_id;
     const { PR_LANG } = req.body;
 
-    if (!PR_ID) {
+    if (!pr_id) {
       return res.status(400).json({
         success: false,
         message: "PR_ID is required in headers",
@@ -2000,7 +2000,7 @@ export const updateUserLanguage = async (req, res) => {
     }
 
     const updatedUser = await prisma.peopleRegistry.update({
-      where: { PR_ID: Number(PR_ID) },
+      where: { PR_ID: Number(pr_id) },
       data: { PR_LANG },
     });
 
