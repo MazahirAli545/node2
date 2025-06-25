@@ -140,6 +140,7 @@ model PeopleRegistry {
   Profession         Profession?      @relation(fields: [PR_PROFESSION_ID], references: [PROF_ID])
   Spouse             PeopleRegistry?  @relation("SpouseRelation", fields: [PR_SPOUSE_ID], references: [PR_ID])
   PeopleRegistry     PeopleRegistry[] @relation("SpouseRelation")
+  PR_LANG String? @default("en") @db.Char(2)
 
   @@unique([PR_MOBILE_NO, PR_FULL_NAME])
   @@index([PR_STATE_CODE])

@@ -1930,6 +1930,7 @@ export const registerUser = async (req, res) => {
           PR_SPOUSE_ID: PR_SPOUSE_ID || null,
           ...profileData,
           PR_IS_COMPLETED: "Y",
+          PR_LANG: profileData.PR_LANG || "en",
         },
       });
 

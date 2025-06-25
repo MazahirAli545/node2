@@ -312,32 +312,6 @@ async function EditProfile(req, res) {
           .json({ message: "Invalid city code", success: false });
     }
 
-    // if (req.body.PR_FATHER_ID) {
-    //   const father = await prisma.peopleRegistry.findUnique({
-    //     where: { PR_ID: Number(req.body.PR_FATHER_ID) },
-    //     select: { PR_GENDER: true },
-    //   });
-    //   if (!father || father.PR_GENDER?.toUpperCase() !== 'M') {
-    //     return res.status(400).json({
-    //       message: "Father ID must refer to a Male (gender 'M')",
-    //       success: false,
-    //     });
-    //   }
-    // }
-
-    // if (req.body.PR_MOTHER_ID) {
-    //   const mother = await prisma.peopleRegistry.findUnique({
-    //     where: { PR_ID: Number(req.body.PR_MOTHER_ID) },
-    //     select: { PR_GENDER: true },
-    //   });
-    //   if (!mother || mother.PR_GENDER?.toUpperCase() !== 'F') {
-    //     return res.status(400).json({
-    //       message: "Mother ID must refer to a Female (gender 'F')",
-    //       success: false,
-    //     });
-    //   }
-    // }
-
     // Handle photo upload
     let PR_PHOTO_URL = existingProfile.PR_PHOTO_URL;
     if (req.file) {
@@ -479,6 +453,7 @@ async function EditProfile(req, res) {
       PR_UPDATED_AT: new Date(),
       PR_PHOTO_URL,
       PR_IS_COMPLETED: isCompleted,
+      PR_LANG: req.body.PR_LANG || existingProfile.PR_LANG || "en",
     };
 
     // Handle location changes and unique ID generation
