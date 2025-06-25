@@ -2,6 +2,11 @@ import prisma from "../../db/prismaClient.js";
 
 // Helper to parse Accept-Language header (keep this helper function)
 const getPreferredLanguage = (req) => {
+  // 0. Skip if lang_code is 'id' (special case for getPageById route)
+  if (req.params.lang_code === "id") {
+    return "en";
+  }
+
   // 1. Get language from URL path if available
   if (
     req.params.lang_code &&
@@ -256,14 +261,19 @@ export const getAllPages = async (req, res) => {
 export const getPageById = async (req, res) => {
   try {
     const { id } = req.params;
-    const { lang_code = "en", screen_type } = req.query;
+    const requestedLang = req.query.lang_code || "en";
+    const { screen_type = "both" } = req.query;
+
+    console.log(`Fetching page with ID: ${id}, type: ${typeof id}`);
 
     // Get main page (English)
-    const mainPage = await prisma.pages.findUnique({
+    const page = await prisma.pages.findUnique({
       where: { id: Number(id) },
     });
 
-    if (!mainPage) {
+    console.log("Found page:", page);
+
+    if (!page) {
       return res.status(404).json({
         success: false,
         message: `Page with ID ${id} not found`,
@@ -272,10 +282,9 @@ export const getPageById = async (req, res) => {
 
     // Check if the page should be displayed on the requested screen type
     if (
-      screen_type &&
       screen_type !== "both" &&
-      mainPage.screen_type !== "both" &&
-      mainPage.screen_type !== screen_type
+      page.screen_type !== "both" &&
+      page.screen_type !== screen_type
     ) {
       return res.status(404).json({
         success: false,
@@ -283,43 +292,104 @@ export const getPageById = async (req, res) => {
       });
     }
 
-    // If English is requested, return main page
-    if (lang_code === "en") {
-      return res.status(200).json({
-        success: true,
-        message: "Page fetched successfully",
-        data: mainPage,
-      });
-    }
+    // Fetch content sections based on requested language
+    let contentSections;
+    let translatedPage = page;
 
-    // For non-English, get translation
-    const translation = await prisma.pages_lang.findUnique({
-      where: {
-        id_lang_code: {
-          id: Number(id),
-          lang_code,
+    if (requestedLang !== "en") {
+      // For non-English, get page translation if it exists
+      const pageTranslation = await prisma.pages_lang.findUnique({
+        where: {
+          id_lang_code: {
+            id: page.id,
+            lang_code: requestedLang,
+          },
         },
-      },
-    });
-
-    // If translation not found and language was explicitly requested, return 404
-    if (!translation) {
-      return res.status(404).json({
-        success: false,
-        message: `Translation not found for language: ${lang_code}`,
       });
+
+      if (pageTranslation) {
+        translatedPage = {
+          ...page,
+          ...pageTranslation,
+        };
+      } else if (req.query.lang_code) {
+        // If language was explicitly requested via query param and no translation exists, return 404
+        return res.status(404).json({
+          success: false,
+          message: `Translation not found for language: ${requestedLang}`,
+        });
+      }
+      // Otherwise fall back to English (default behavior)
     }
 
-    // Merge translation with main page data
-    const mergedPage = {
-      ...mainPage,
-      ...translation,
-    };
+    if (requestedLang === "en") {
+      // For English, fetch from main content_sections table
+      contentSections = await prisma.content_sections.findMany({
+        where: {
+          page_id: page.id,
+          active_yn: 1,
+        },
+        orderBy: {
+          id: "asc",
+        },
+      });
+    } else {
+      // For other languages (e.g., Hindi), fetch from content_sections_lang table
+      contentSections = await prisma.content_sections_lang.findMany({
+        where: {
+          page_id: page.id,
+          lang_code: requestedLang,
+          active_yn: 1,
+        },
+        orderBy: {
+          id: "asc",
+        },
+      });
 
+      // If no translations found and language was explicitly requested, return 404
+      if (contentSections.length === 0 && req.query.lang_code) {
+        return res.status(404).json({
+          success: false,
+          message: `No content sections found for language: ${requestedLang}`,
+        });
+      } else if (contentSections.length === 0) {
+        // If language was determined from Accept-Language header, fall back to English
+        contentSections = await prisma.content_sections.findMany({
+          where: {
+            page_id: page.id,
+            active_yn: 1,
+          },
+          orderBy: {
+            id: "asc",
+          },
+        });
+      }
+    }
+
+    // Format dates for consistency
+    const formattedSections = contentSections.map((section) => ({
+      id: section.id,
+      title: section.title,
+      description: section.description,
+      image_path: section.image_path,
+      icon_path: section.icon_path,
+      active_yn: section.active_yn,
+      lang_code: section.lang_code || requestedLang,
+    }));
+
+    // Return the combined page and content sections
     return res.status(200).json({
       success: true,
-      message: "Page translation fetched successfully",
-      data: mergedPage,
+      message: "Page with content fetched successfully.",
+      data: {
+        id: page.id,
+        title: translatedPage.title,
+        link_url: translatedPage.link_url,
+        active_yn: translatedPage.active_yn,
+        screen_type: translatedPage.screen_type,
+        lang_code: requestedLang,
+        content_sections: formattedSections,
+      },
     });
   } catch (error) {
     console.error("Error fetching page by ID:", error);
