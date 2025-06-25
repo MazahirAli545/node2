@@ -130,7 +130,7 @@ const userRouter = Router();
 // userRouter.post("/register", registeredfcmToken);
 // userRouter.post("/remove", removeFcmToken);
 
-userRouter.post("/user/language", updateUserLanguage);
+userRouter.put("/user/language", updateUserLanguage);
 userRouter.get("/user/check/:uniqueId", getUserByUniqueId);
 userRouter.get("/checkPersonById/:id", checkPersonById);
 // userRouter.get("/check/:id", checkPersonById);
