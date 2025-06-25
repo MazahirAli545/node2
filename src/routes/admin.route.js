@@ -90,18 +90,18 @@ router.delete("/business/:id", deleteBusiness);
 // router.get("/language/:locale", getTranslations)
 
 // Pages
+// Admin API for managing pages by ID - SPECIFIC ROUTES MUST COME BEFORE WILDCARD ROUTES
+router.get("/v1/pages", getAllPages); // Get all pages (e.g., for admin list)
+router.post("/v1/pages", addPage); // Add a new page
+router.get("/v1/pages/id/:id", getPageById); // Get page by numeric ID
+router.put("/v1/pages/id/:id", updatePageById); // Update page by numeric ID
+router.delete("/v1/pages/id/:id", deletePageById); // Delete page by numeric ID
+
 // Public API for fetching page content by link_url (including multilingual content)
 // Route for root path with language code
 router.get("/v1/pages/:lang_code", getPageByLinkUrl); // For root path like /en or /hi
 // Route for all other paths with language code
 router.get("/v1/pages/:lang_code/:link_url(*)", getPageByLinkUrl); // For paths like /en/about, /hi/contact, etc.
-
-// Admin API for managing pages by ID (existing functions)
-router.get("/v1/pages", getAllPages); // Get all pages (e.g., for admin list)
-router.post("/v1/pages", addPage); // Add a new page
-router.get("/v1/pages/id/:id", getPageById); // Get page by numeric ID (renamed to avoid conflict)
-router.put("/v1/pages/id/:id", updatePageById); // Update page by numeric ID (renamed to avoid conflict)
-router.delete("/v1/pages/id/:id", deletePageById); // Delete page by numeric ID (renamed to avoid conflict)
 
 // Content
 // Routes for content_sections (default/English content blocks)
