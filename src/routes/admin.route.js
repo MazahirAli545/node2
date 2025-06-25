@@ -61,6 +61,10 @@ import {
   deleteEventTranslation,
   getEventsWithAllTranslations,
 } from "../controllers/events.controller.js";
+import {
+  adminRegisterFcmToken,
+  adminRemoveFcmToken,
+} from "../controllers/admin/fcmAdmin.controller.js";
 
 const router = Router();
 
@@ -178,5 +182,9 @@ router.delete(
   "/categories/:CATE_ID/translation/:lang_code",
   deleteCategoryTranslation
 ); // Delete a translation for a category
+
+// Add these after other admin routes, before export default router
+router.post("/v1/admin-fcm/register", adminRegisterFcmToken);
+router.post("/v1/admin-fcm/remove", adminRemoveFcmToken);
 
 export default router;
