@@ -124,14 +124,15 @@ import { convertUniqueIdToId } from "../controllers/user.controller.js";
 import { getUserByUniqueId } from "../controllers/user.controller.js";
 import { UpdateNotification } from "../controllers/UpdateNotification.controller.js";
 // import { updateUserLanguage } from "../controllers/UpdateLang.controller.js";
-import { updateLanguage } from "../controllers/user.controller.js";
+import { updateLanguage, getLanguage } from "../controllers/user.controller.js";
 
 const userRouter = Router();
 
 // userRouter.post("/register", registeredfcmToken);
 // userRouter.post("/remove", removeFcmToken);
 
-userRouter.put("/user/language", updateLanguage);
+userRouter.put("/language", updateLanguage);
+userRouter.get("/language", getLanguage);
 userRouter.get("/user/check/:uniqueId", getUserByUniqueId);
 userRouter.get("/checkPersonById/:id", checkPersonById);
 // userRouter.get("/check/:id", checkPersonById);
