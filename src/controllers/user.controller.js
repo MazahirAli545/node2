@@ -1980,6 +1980,44 @@ export const registerUser = async (req, res) => {
   }
 };
 
+export const updateUserLanguage = async (req, res) => {
+  try {
+    const PR_ID = req.headers.pr_id;
+    const { PR_LANG } = req.body;
+
+    if (!PR_ID) {
+      return res.status(400).json({
+        success: false,
+        message: "PR_ID is required in headers",
+      });
+    }
+
+    if (!PR_LANG || !["en", "hi"].includes(PR_LANG)) {
+      return res.status(400).json({
+        success: false,
+        message: "Valid language code is required (en or hi)",
+      });
+    }
+
+    const updatedUser = await prisma.peopleRegistry.update({
+      where: { PR_ID: Number(PR_ID) },
+      data: { PR_LANG },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Language updated successfully",
+      data: updatedUser,
+    });
+  } catch (error) {
+    console.error("Language update error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update language",
+    });
+  }
+};
+
 export const checkMobileVerified = async (mobile, otp) => {
   const otpRecord = await prisma.otp.findFirst({
     where: { PR_MOBILE_NO: mobile, otp },

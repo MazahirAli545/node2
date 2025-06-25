@@ -123,7 +123,8 @@ import { checkPersonById } from "../controllers/user.controller.js";
 import { convertUniqueIdToId } from "../controllers/user.controller.js";
 import { getUserByUniqueId } from "../controllers/user.controller.js";
 import { UpdateNotification } from "../controllers/UpdateNotification.controller.js";
-import { updateUserLanguage } from "../controllers/UpdateLang.controller.js";
+// import { updateUserLanguage } from "../controllers/UpdateLang.controller.js";
+import { updateUserLanguage } from "../controllers/user.controller.js";
 
 const userRouter = Router();
 
