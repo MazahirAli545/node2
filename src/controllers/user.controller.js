@@ -2090,7 +2090,7 @@ export const getLanguage = async (req, res) => {
     }
 
     const user = await prisma.peopleRegistry.findUnique({
-      where: { PR_ID: userId },
+      where: { PR_ID: parseInt(userId, 10) },
       select: { PR_LANG: true },
     });
 
@@ -2135,7 +2135,7 @@ export const updateLanguage = async (req, res) => {
     }
 
     await prisma.peopleRegistry.update({
-      where: { PR_ID: userId },
+      where: { PR_ID: parseInt(userId, 10) },
       data: { PR_LANG },
     });
 
