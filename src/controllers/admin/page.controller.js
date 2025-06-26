@@ -183,6 +183,322 @@ export const getPageByLinkUrl = async (req, res) => {
 };
 // --- END NEW API FUNCTION ---
 
+// --- TRANSLATION API FUNCTIONS ---
+
+/**
+ * Add a translation for a specific page
+ */
+export const addPageTranslation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      title,
+      link_url,
+      screen_type = "both",
+      active_yn = 1,
+      lang_code,
+    } = req.body;
+
+    // Validate required fields
+    if (!lang_code || !title) {
+      return res.status(400).json({
+        success: false,
+        message: "Language code and title are required",
+      });
+    }
+
+    // Check if the page exists
+    const existingPage = await prisma.pages.findUnique({
+      where: { id: Number(id) },
+    });
+
+    if (!existingPage) {
+      return res.status(404).json({
+        success: false,
+        message: `Page with ID ${id} not found`,
+      });
+    }
+
+    // Check if translation already exists
+    const existingTranslation = await prisma.pages_lang.findUnique({
+      where: {
+        id_lang_code: {
+          id: Number(id),
+          lang_code,
+        },
+      },
+    });
+
+    if (existingTranslation) {
+      return res.status(409).json({
+        success: false,
+        message: `Translation for language ${lang_code} already exists for this page`,
+      });
+    }
+
+    // Create the translation
+    const translation = await prisma.pages_lang.create({
+      data: {
+        id: Number(id),
+        title,
+        link_url: link_url || existingPage.link_url,
+        screen_type,
+        active_yn,
+        lang_code,
+        created_date: new Date(),
+        updated_date: new Date(),
+      },
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Page translation added successfully",
+      data: translation,
+    });
+  } catch (error) {
+    console.error("Error adding page translation:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to add page translation",
+    });
+  }
+};
+
+/**
+ * Update a specific page translation
+ */
+export const updatePageTranslation = async (req, res) => {
+  try {
+    const { id, lang_code } = req.params;
+    const { title, link_url, screen_type, active_yn } = req.body;
+
+    // Check if the page exists
+    const existingPage = await prisma.pages.findUnique({
+      where: { id: Number(id) },
+    });
+
+    if (!existingPage) {
+      return res.status(404).json({
+        success: false,
+        message: `Page with ID ${id} not found`,
+      });
+    }
+
+    // Check if the translation exists
+    const existingTranslation = await prisma.pages_lang.findUnique({
+      where: {
+        id_lang_code: {
+          id: Number(id),
+          lang_code,
+        },
+      },
+    });
+
+    if (!existingTranslation) {
+      return res.status(404).json({
+        success: false,
+        message: `Translation for language ${lang_code} not found for this page`,
+      });
+    }
+
+    // Update the translation
+    const updatedTranslation = await prisma.pages_lang.update({
+      where: {
+        id_lang_code: {
+          id: Number(id),
+          lang_code,
+        },
+      },
+      data: {
+        title: title !== undefined ? title : existingTranslation.title,
+        link_url:
+          link_url !== undefined ? link_url : existingTranslation.link_url,
+        screen_type:
+          screen_type !== undefined
+            ? screen_type
+            : existingTranslation.screen_type,
+        active_yn:
+          active_yn !== undefined ? active_yn : existingTranslation.active_yn,
+        updated_date: new Date(),
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Page translation updated successfully",
+      data: updatedTranslation,
+    });
+  } catch (error) {
+    console.error("Error updating page translation:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update page translation",
+    });
+  }
+};
+
+/**
+ * Get a specific page translation
+ */
+export const getPageTranslation = async (req, res) => {
+  try {
+    const { id, lang_code } = req.params;
+
+    // Check if the page exists
+    const existingPage = await prisma.pages.findUnique({
+      where: { id: Number(id) },
+    });
+
+    if (!existingPage) {
+      return res.status(404).json({
+        success: false,
+        message: `Page with ID ${id} not found`,
+      });
+    }
+
+    // If requesting English, return the main page
+    if (lang_code === "en") {
+      return res.status(200).json({
+        success: true,
+        message: "Page translation fetched successfully",
+        data: {
+          ...existingPage,
+          lang_code: "en",
+        },
+      });
+    }
+
+    // Get the translation
+    const translation = await prisma.pages_lang.findUnique({
+      where: {
+        id_lang_code: {
+          id: Number(id),
+          lang_code,
+        },
+      },
+    });
+
+    if (!translation) {
+      return res.status(404).json({
+        success: false,
+        message: `Translation for language ${lang_code} not found for this page`,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Page translation fetched successfully",
+      data: translation,
+    });
+  } catch (error) {
+    console.error("Error fetching page translation:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch page translation",
+    });
+  }
+};
+
+/**
+ * Delete a specific page translation
+ */
+export const deletePageTranslation = async (req, res) => {
+  try {
+    const { id, lang_code } = req.params;
+
+    // Cannot delete English (main page)
+    if (lang_code === "en") {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Cannot delete the main page (English). Use deletePage instead.",
+      });
+    }
+
+    // Check if the translation exists
+    const existingTranslation = await prisma.pages_lang.findUnique({
+      where: {
+        id_lang_code: {
+          id: Number(id),
+          lang_code,
+        },
+      },
+    });
+
+    if (!existingTranslation) {
+      return res.status(404).json({
+        success: false,
+        message: `Translation for language ${lang_code} not found for page ID ${id}`,
+      });
+    }
+
+    // Delete the translation
+    await prisma.pages_lang.delete({
+      where: {
+        id_lang_code: {
+          id: Number(id),
+          lang_code,
+        },
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: `Page translation for language ${lang_code} deleted successfully`,
+    });
+  } catch (error) {
+    console.error("Error deleting page translation:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to delete page translation",
+    });
+  }
+};
+
+/**
+ * Get all available languages for a page
+ */
+export const getPageAvailableLanguages = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if the page exists
+    const existingPage = await prisma.pages.findUnique({
+      where: { id: Number(id) },
+    });
+
+    if (!existingPage) {
+      return res.status(404).json({
+        success: false,
+        message: `Page with ID ${id} not found`,
+      });
+    }
+
+    // Get all translations for this page
+    const translations = await prisma.pages_lang.findMany({
+      where: { id: Number(id) },
+      select: { lang_code: true },
+    });
+
+    // Always include English (main page)
+    const languages = ["en", ...translations.map((t) => t.lang_code)];
+
+    return res.status(200).json({
+      success: true,
+      message: "Available languages fetched successfully",
+      data: languages,
+    });
+  } catch (error) {
+    console.error("Error fetching available languages:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch available languages",
+    });
+  }
+};
+
+// --- END TRANSLATION API FUNCTIONS ---
+
 export const getAllPages = async (req, res) => {
   try {
     const { lang_code = "en", screen_type } = req.query;

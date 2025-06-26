@@ -33,6 +33,12 @@ import {
   deletePageById,
   addPage,
   getPageByLinkUrl,
+  addPageTranslation,
+  updatePageTranslation,
+  getPageTranslation,
+  deletePageTranslation,
+  getPageAvailableLanguages,
+  getPageTranslations,
 } from "../controllers/admin/page.controller.js";
 import {
   getAllContentSections,
@@ -106,6 +112,17 @@ router.delete("/v1/pages/id/:id", deletePageById); // Delete page by numeric ID
 router.get("/v1/pages/:lang_code", getPageByLinkUrl); // For root path like /en or /hi
 // Route for all other paths with language code
 router.get("/v1/pages/:lang_code/:link_url(*)", getPageByLinkUrl); // For paths like /en/about, /hi/contact, etc.
+
+// Page Translations
+router.get("/v1/pages/id/:id/translations", getPageTranslations); // Get all translations for a page
+router.get("/v1/pages/id/:id/languages", getPageAvailableLanguages); // Get all available languages for a page
+router.post("/v1/pages/id/:id/translations", addPageTranslation); // Add a new translation for a page
+router.get("/v1/pages/id/:id/translations/:lang_code", getPageTranslation); // Get a specific translation
+router.put("/v1/pages/id/:id/translations/:lang_code", updatePageTranslation); // Update a specific translation
+router.delete(
+  "/v1/pages/id/:id/translations/:lang_code",
+  deletePageTranslation
+); // Delete a specific translation
 
 // Content
 // Routes for content_sections (default/English content blocks)
