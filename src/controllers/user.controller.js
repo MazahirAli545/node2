@@ -2064,94 +2064,25 @@ export const registerUser = async (req, res) => {
 //     });
 //   }
 // };
-//////////////////////////////////////////////////////////////////////////
-// export const updateLanguage = async (req, res) => {
-//   try {
-//     const { PR_LANG } = req.body;
-//     const pr_id_header = req.headers.pr_id; // Assuming pr_id is passed in headers
-
-//     if (!pr_id_header) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "PR_ID is required in headers",
-//       });
-//     }
-
-//     // Validate PR_LANG
-//     const languageSchema = Joi.object({
-//       PR_LANG: Joi.string().valid("hi", "en").required(), // Assuming 'hi' for Hindi and 'en' for English
-//     });
-
-//     const { error } = languageSchema.validate({ PR_LANG });
-//     if (error) {
-//       return res.status(400).json({
-//         success: false,
-//         message: error.details[0].message,
-//       });
-//     }
-
-//     const pr_id = parseInt(pr_id_header, 10);
-
-//     /////////////////////////
-
-//     const existingUser = await prisma.peopleRegistry.findUnique({
-//       where: { PR_ID: pr_id },
-//     });
-
-//     if (!existingUser) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "User not found",
-//       });
-//     }
-//     ///////////////////////
-
-//     const updatedUser = await prisma.peopleRegistry.update({
-//       where: { PR_ID: pr_id },
-//       data: { PR_LANG: PR_LANG },
-//     });
-
-//     // if (!updatedUser) {
-//     //   return res.status(404).json({
-//     //     success: false,
-//     //     message: "User not found or language not updated",
-//     //   });
-//     // }
-
-//     return res.status(200).json({
-//       success: true,
-//       message: "Language updated successfully",
-//       data: {
-//         PR_ID: updatedUser.PR_ID,
-//         PR_LANG: updatedUser.PR_LANG,
-//       },
-//     });
-//   } catch (error) {
-//     console.error("Error updating language:", error);
-//     return res.status(500).json({
-//       success: false,
-//       message: "Internal server error",
-//       error: process.env.NODE_ENV === "development" ? error.message : undefined,
-//     });
-//   }
-// };
 
 export const updateLanguage = async (req, res) => {
   try {
     const { PR_LANG } = req.body;
-    const pr_id = parseInt(req.headers.pr_id, 10);
+    const pr_id_header = req.headers.pr_id; // Assuming pr_id is passed in headers
 
-    if (!pr_id || isNaN(pr_id)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid PR_ID in header" });
+    if (!pr_id_header) {
+      return res.status(400).json({
+        success: false,
+        message: "PR_ID is required in headers",
+      });
     }
 
-    const schema = Joi.object({
-      PR_LANG: Joi.string().valid("hi", "en").required(),
+    // Validate PR_LANG
+    const languageSchema = Joi.object({
+      PR_LANG: Joi.string().valid("hi", "en").required(), // Assuming 'hi' for Hindi and 'en' for English
     });
 
-    const { error } = schema.validate({ PR_LANG });
+    const { error } = languageSchema.validate({ PR_LANG });
     if (error) {
       return res.status(400).json({
         success: false,
@@ -2159,32 +2090,33 @@ export const updateLanguage = async (req, res) => {
       });
     }
 
-    // Make sure the user exists
-    const userExists = await prisma.peopleRegistry.findUnique({
+    const pr_id = parseInt(pr_id_header, 10);
+
+    const updatedUser = await prisma.peopleRegistry.update({
       where: { PR_ID: pr_id },
+      data: { PR_LANG: PR_LANG },
     });
 
-    if (!userExists) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found or language not updated",
+      });
     }
-
-    const updated = await prisma.peopleRegistry.update({
-      where: { PR_ID: pr_id },
-      data: { PR_LANG },
-    });
 
     return res.status(200).json({
       success: true,
       message: "Language updated successfully",
-      data: { PR_ID: updated.PR_ID, PR_LANG: updated.PR_LANG },
+      data: {
+        PR_ID: updatedUser.PR_ID,
+        PR_LANG: updatedUser.PR_LANG,
+      },
     });
   } catch (error) {
     console.error("Error updating language:", error);
     return res.status(500).json({
       success: false,
-      message: "Failed to update language",
+      message: "Internal server error",
       error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
@@ -2192,22 +2124,16 @@ export const updateLanguage = async (req, res) => {
 
 export const getLanguage = async (req, res) => {
   try {
-    // const pr_id_header = req.headers.pr_id; // Assuming pr_id is passed in headers
+    const pr_id_header = req.headers.pr_id; // Assuming pr_id is passed in headers
 
-    // if (!pr_id_header) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "PR_ID is required in headers",
-    //   });
-    // }
+    if (!pr_id_header) {
+      return res.status(400).json({
+        success: false,
+        message: "PR_ID is required in headers",
+      });
+    }
 
     const pr_id = parseInt(pr_id_header, 10);
-
-    if (!pr_id || isNaN(pr_id)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid PR_ID in header" });
-    }
 
     const user = await prisma.peopleRegistry.findUnique({
       where: { PR_ID: pr_id },
