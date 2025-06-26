@@ -2092,17 +2092,31 @@ export const updateLanguage = async (req, res) => {
 
     const pr_id = parseInt(pr_id_header, 10);
 
+    /////////////////////////
+
+    const existingUser = await prisma.peopleRegistry.findUnique({
+      where: { PR_ID: pr_id },
+    });
+
+    if (!existingUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+    ///////////////////////
+
     const updatedUser = await prisma.peopleRegistry.update({
       where: { PR_ID: pr_id },
       data: { PR_LANG: PR_LANG },
     });
 
-    if (!updatedUser) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found or language not updated",
-      });
-    }
+    // if (!updatedUser) {
+    //   return res.status(404).json({
+    //     success: false,
+    //     message: "User not found or language not updated",
+    //   });
+    // }
 
     return res.status(200).json({
       success: true,
