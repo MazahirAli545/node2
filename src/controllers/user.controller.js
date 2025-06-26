@@ -2120,12 +2120,12 @@ export const updateLanguage = async (req, res) => {
     const userId = req.headers.pr_id;
     const { PR_LANG } = req.body;
 
-    if (!userId) {
-      return res.status(400).json({
-        success: false,
-        message: "User ID not provided in headers",
-      });
-    }
+    // if (!userId) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "User ID not provided in headers",
+    //   });
+    // }
 
     if (!PR_LANG) {
       return res.status(400).json({
