@@ -2311,6 +2311,48 @@ export const LoginUser = async (req, res) => {
   }
 };
 
+export const logoutUser = async (req, res) => {
+  try {
+    const { PR_ID } = req.body;
+    const authToken = req.headers.authorization?.split(" ")[1];
+
+    // Validate required fields
+    if (!PR_ID) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID (PR_ID) is required",
+      });
+    }
+
+    if (!authToken) {
+      return res.status(401).json({
+        success: false,
+        message: "Authorization token is required",
+      });
+    }
+
+    // Optionally: Add token to blacklist if using JWT
+    // await prisma.blacklistedToken.create({
+    //   data: {
+    //     token: authToken,
+    //     expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
+    //   }
+    // });
+
+    return res.status(200).json({
+      success: true,
+      message: "User logged out successfully",
+    });
+  } catch (error) {
+    console.error("Logout Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to logout. Please try again.",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+};
+
 export const checkPersonById = async (req, res) => {
   try {
     const { id } = req.params;
