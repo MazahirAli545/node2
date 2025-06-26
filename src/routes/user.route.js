@@ -125,14 +125,14 @@ import { getUserByUniqueId } from "../controllers/user.controller.js";
 import { UpdateNotification } from "../controllers/UpdateNotification.controller.js";
 // import { updateUserLanguage } from "../controllers/UpdateLang.controller.js";
 import { updateLanguage, getLanguage } from "../controllers/user.controller.js";
-import { logoutUser } from "../controllers/user.controller.js";
+// import { logoutUser } from "../controllers/user.controller.js";
 
 const userRouter = Router();
 
 // userRouter.post("/register", registeredfcmToken);
 // userRouter.post("/remove", removeFcmToken);
 
-userRouter.post("/logout", verifyToken, logoutUser);
+// userRouter.post("/logout", verifyToken, logoutUser);
 userRouter.put("/language", updateLanguage);
 userRouter.get("/language", getLanguage);
 userRouter.get("/user/check/:uniqueId", getUserByUniqueId);
