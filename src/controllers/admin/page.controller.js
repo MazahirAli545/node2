@@ -157,6 +157,11 @@ export const getPageByLinkUrl = async (req, res) => {
       image_path: section.image_path,
       icon_path: section.icon_path,
       active_yn: section.active_yn,
+      button_one: section.button_one,
+      button_one_slug: section.button_one_slug,
+      button_two: section.button_two,
+      button_two_slug: section.button_two_slug,
+      flex_01: section.flex_01,
       lang_code: section.lang_code || requestedLang,
     }));
 
@@ -690,6 +695,11 @@ export const getPageById = async (req, res) => {
       image_path: section.image_path,
       icon_path: section.icon_path,
       active_yn: section.active_yn,
+      button_one: section.button_one,
+      button_one_slug: section.button_one_slug,
+      button_two: section.button_two,
+      button_two_slug: section.button_two_slug,
+      flex_01: section.flex_01,
       lang_code: section.lang_code || requestedLang,
     }));
 
