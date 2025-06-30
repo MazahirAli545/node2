@@ -1,5 +1,5 @@
 import prisma from "../../db/prismaClient.js";
-import withRetry from "../../utils/dbRetry.js";
+import withConnectionManagement from "../../utils/dbRetry.js";
 
 // Helper to parse Accept-Language header (keep this helper function)
 const getPreferredLanguage = (req) => {
@@ -45,9 +45,16 @@ export const getPageByLinkUrl = async (req, res) => {
   const requestedLang = getPreferredLanguage(req);
   const { screen_type = "both" } = req.query; // Get screen_type from query params, default to "both"
 
+  // Add request tracking
+  const requestId =
+    req.requestId || Math.random().toString(36).substring(2, 10);
+  console.log(
+    `[${requestId}] Starting getPageByLinkUrl for link: ${link_url}, lang: ${requestedLang}`
+  );
+
   try {
     // 1. Fetch the base page details with screen_type filter
-    const page = await withRetry(() =>
+    const page = await withConnectionManagement(() =>
       prisma.pages.findUnique({
         where: {
           // Handle root path and undefined link_url cases
@@ -84,7 +91,7 @@ export const getPageByLinkUrl = async (req, res) => {
 
     if (requestedLang !== "en") {
       // For non-English, get page translation if it exists
-      const pageTranslation = await withRetry(() =>
+      const pageTranslation = await withConnectionManagement(() =>
         prisma.pages_lang.findUnique({
           where: {
             id_lang_code: {
@@ -110,9 +117,15 @@ export const getPageByLinkUrl = async (req, res) => {
       // Otherwise fall back to English (default behavior)
     }
 
+    // Log progress
+    console.log(
+      `[${requestId}] Fetching content sections for page ID ${page.id}, lang: ${requestedLang}`
+    );
+
+    // For improved stability, do these queries sequentially rather than in parallel
     if (requestedLang === "en") {
       // For English, fetch from main content_sections table
-      contentSections = await withRetry(() =>
+      contentSections = await withConnectionManagement(() =>
         prisma.content_sections.findMany({
           where: {
             page_id: page.id,
@@ -125,7 +138,7 @@ export const getPageByLinkUrl = async (req, res) => {
       );
     } else {
       // For other languages (e.g., Hindi), fetch from content_sections_lang table
-      contentSections = await withRetry(() =>
+      contentSections = await withConnectionManagement(() =>
         prisma.content_sections_lang.findMany({
           where: {
             page_id: page.id,
@@ -146,7 +159,7 @@ export const getPageByLinkUrl = async (req, res) => {
         });
       } else if (contentSections.length === 0) {
         // If language was determined from Accept-Language header, fall back to English
-        contentSections = await withRetry(() =>
+        contentSections = await withConnectionManagement(() =>
           prisma.content_sections.findMany({
             where: {
               page_id: page.id,
@@ -176,6 +189,10 @@ export const getPageByLinkUrl = async (req, res) => {
       lang_code: section.lang_code || requestedLang,
     }));
 
+    console.log(
+      `[${requestId}] Successfully processed getPageByLinkUrl: ${contentSections.length} sections found`
+    );
+
     // Return the combined page and content sections
     return res.status(200).json({
       success: true,
@@ -191,7 +208,7 @@ export const getPageByLinkUrl = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error fetching page by link_url:", error);
+    console.error(`[${requestId}] Error fetching page by link_url:`, error);
 
     // Check for specific Prisma connection errors
     if (error.message && error.message.includes("max_user_connections")) {
@@ -206,6 +223,13 @@ export const getPageByLinkUrl = async (req, res) => {
       message: "Failed to fetch page by link URL.",
       error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
+  } finally {
+    // Ensure connection is released regardless of success or failure
+    try {
+      await prisma.$disconnect();
+    } catch (e) {
+      // Ignore disconnect errors
+    }
   }
 };
 // --- END NEW API FUNCTION ---
@@ -607,16 +631,19 @@ export const getPageById = async (req, res) => {
     const requestedLang = req.query.lang_code || "en";
     const { screen_type = "both" } = req.query;
 
-    console.log(`Fetching page with ID: ${id}, type: ${typeof id}`);
+    // Add request tracking
+    const requestId =
+      req.requestId || Math.random().toString(36).substring(2, 10);
+    console.log(
+      `[${requestId}] Starting getPageById for ID: ${id}, lang: ${requestedLang}`
+    );
 
     // Get main page (English)
-    const page = await withRetry(() =>
+    const page = await withConnectionManagement(() =>
       prisma.pages.findUnique({
         where: { id: Number(id) },
       })
     );
-
-    console.log("Found page:", page);
 
     if (!page) {
       return res.status(404).json({
@@ -643,7 +670,7 @@ export const getPageById = async (req, res) => {
 
     if (requestedLang !== "en") {
       // For non-English, get page translation if it exists
-      const pageTranslation = await withRetry(() =>
+      const pageTranslation = await withConnectionManagement(() =>
         prisma.pages_lang.findUnique({
           where: {
             id_lang_code: {
@@ -669,9 +696,15 @@ export const getPageById = async (req, res) => {
       // Otherwise fall back to English (default behavior)
     }
 
+    // Log progress
+    console.log(
+      `[${requestId}] Fetching content sections for page ID ${page.id}, lang: ${requestedLang}`
+    );
+
+    // For improved stability, do these queries sequentially rather than in parallel
     if (requestedLang === "en") {
       // For English, fetch from main content_sections table
-      contentSections = await withRetry(() =>
+      contentSections = await withConnectionManagement(() =>
         prisma.content_sections.findMany({
           where: {
             page_id: page.id,
@@ -684,7 +717,7 @@ export const getPageById = async (req, res) => {
       );
     } else {
       // For other languages (e.g., Hindi), fetch from content_sections_lang table
-      contentSections = await withRetry(() =>
+      contentSections = await withConnectionManagement(() =>
         prisma.content_sections_lang.findMany({
           where: {
             page_id: page.id,
@@ -705,7 +738,7 @@ export const getPageById = async (req, res) => {
         });
       } else if (contentSections.length === 0) {
         // If language was determined from Accept-Language header, fall back to English
-        contentSections = await withRetry(() =>
+        contentSections = await withConnectionManagement(() =>
           prisma.content_sections.findMany({
             where: {
               page_id: page.id,
@@ -718,6 +751,10 @@ export const getPageById = async (req, res) => {
         );
       }
     }
+
+    console.log(
+      `[${requestId}] Successfully processed getPageById: ${contentSections.length} sections found`
+    );
 
     // Format dates for consistency
     const formattedSections = contentSections.map((section) => ({
@@ -765,6 +802,13 @@ export const getPageById = async (req, res) => {
       message: "Failed to fetch page",
       error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
+  } finally {
+    // Ensure connection is released regardless of success or failure
+    try {
+      await prisma.$disconnect();
+    } catch (e) {
+      // Ignore disconnect errors
+    }
   }
 };
 

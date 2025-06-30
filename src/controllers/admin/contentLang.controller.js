@@ -1,5 +1,5 @@
 import prisma from "../../db/prismaClient.js";
-import withRetry from "../../utils/dbRetry.js";
+import withConnectionManagement from "../../utils/dbRetry.js";
 
 // Helper for date formatting
 const formatDateToYYYYMMDD = (date) => {
@@ -8,8 +8,15 @@ const formatDateToYYYYMMDD = (date) => {
 };
 
 export const getAllContentSectionsLang = async (req, res) => {
+  // Add request tracking
+  const requestId =
+    req.requestId || Math.random().toString(36).substring(2, 10);
+
   try {
     const { id, lang_code } = req.query; // 'id' now refers to the parent content section ID
+    console.log(
+      `[${requestId}] Getting all content sections lang, id: ${id}, lang_code: ${lang_code}`
+    );
 
     const where = {};
     if (id) {
@@ -23,14 +30,18 @@ export const getAllContentSectionsLang = async (req, res) => {
       not: "en",
     };
 
-    // Use the retry utility for the database operation
-    const data = await withRetry(() =>
+    // Use the enhanced connection management utility
+    const data = await withConnectionManagement(() =>
       prisma.content_sections_lang.findMany({
         where, // Apply filters (including auto-filtering 'en')
         orderBy: {
           id: "asc", // Order by parent content ID
         },
       })
+    );
+
+    console.log(
+      `[${requestId}] Found ${data.length} multilingual content sections`
     );
 
     // Format dates for consistency
@@ -47,7 +58,10 @@ export const getAllContentSectionsLang = async (req, res) => {
       data: formattedData,
     });
   } catch (error) {
-    console.error("Error fetching multilingual content sections:", error);
+    console.error(
+      `[${requestId}] Error fetching multilingual content sections:`,
+      error
+    );
 
     // Check for specific Prisma connection errors
     if (error.message && error.message.includes("max_user_connections")) {
@@ -62,6 +76,13 @@ export const getAllContentSectionsLang = async (req, res) => {
       message: "Failed to fetch data",
       error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
+  } finally {
+    // Ensure connection is released regardless of success or failure
+    try {
+      await prisma.$disconnect();
+    } catch (e) {
+      // Ignore disconnect errors
+    }
   }
 };
 
