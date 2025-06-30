@@ -1,4 +1,5 @@
 import prisma from "../../db/prismaClient.js";
+import withConnectionManagement from "../../utils/dbRetry.js";
 
 // Helper for date formatting, if needed in responses (though your existing code handles it)
 const formatDateToYYYYMMDD = (date) => {
@@ -7,8 +8,15 @@ const formatDateToYYYYMMDD = (date) => {
 };
 
 export const getAllContentSections = async (req, res) => {
+  // Add request tracking
+  const requestId =
+    req.requestId || Math.random().toString(36).substring(2, 10);
+
   try {
     const { page_id, active_yn } = req.query; // Get query parameters
+    console.log(
+      `[${requestId}] Getting all content sections, page_id: ${page_id}, active_yn: ${active_yn}`
+    );
 
     const where = {};
     if (page_id) {
@@ -19,12 +27,17 @@ export const getAllContentSections = async (req, res) => {
       where.active_yn = parseInt(active_yn); // Convert to number
     }
 
-    const sections = await prisma.content_sections.findMany({
-      where, // Apply filters
-      orderBy: {
-        id: "asc",
-      },
-    });
+    // Use the enhanced connection management utility for the database operation
+    const sections = await withConnectionManagement(() =>
+      prisma.content_sections.findMany({
+        where, // Apply filters
+        orderBy: {
+          id: "asc",
+        },
+      })
+    );
+
+    console.log(`[${requestId}] Found ${sections.length} content sections`);
 
     // Format dates for consistency in output
     const formattedSections = sections.map((section) => ({
@@ -41,23 +54,47 @@ export const getAllContentSections = async (req, res) => {
       data: formattedSections,
     });
   } catch (error) {
-    console.error("Error fetching content sections:", error);
+    console.error(`[${requestId}] Error fetching content sections:`, error);
+
+    // Check for specific Prisma connection errors
+    if (error.message && error.message.includes("max_user_connections")) {
+      return res.status(503).json({
+        success: false,
+        message: "Database connection limit reached. Please try again later.",
+      });
+    }
+
     return res.status(500).json({
       success: false,
       message: "Failed to fetch content sections",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
+  } finally {
+    // Ensure connection is released regardless of success or failure
+    try {
+      await prisma.$disconnect();
+    } catch (e) {
+      // Ignore disconnect errors
+    }
   }
 };
 
 // --- NEW API FUNCTION: getContentSectionById ---
 export const getContentSectionById = async (req, res) => {
+  // Add request tracking
+  const requestId =
+    req.requestId || Math.random().toString(36).substring(2, 10);
+
   try {
     const { id } = req.params;
+    console.log(`[${requestId}] Getting content section by ID: ${id}`);
 
     // Fetch the main content section
-    const section = await prisma.content_sections.findUnique({
-      where: { id: parseInt(id) },
-    });
+    const section = await withConnectionManagement(() =>
+      prisma.content_sections.findUnique({
+        where: { id: parseInt(id) },
+      })
+    );
 
     if (!section) {
       return res.status(404).json({
@@ -66,17 +103,23 @@ export const getContentSectionById = async (req, res) => {
       });
     }
 
+    console.log(`[${requestId}] Found content section, fetching translations`);
+
     // Fetch all translations for this content section
     // IMPORTANT: Use 'id' for filtering here, as 'id' in content_sections_lang
     // is now the foreign key referencing content_sections.id
-    const translations = await prisma.content_sections_lang.findMany({
-      where: {
-        id: section.id, // <-- CORRECTED: Changed from id_id to id
-      },
-      orderBy: {
-        lang_code: "asc", // Order translations by language code
-      },
-    });
+    const translations = await withConnectionManagement(() =>
+      prisma.content_sections_lang.findMany({
+        where: {
+          id: section.id, // <-- CORRECTED: Changed from id_id to id
+        },
+        orderBy: {
+          lang_code: "asc", // Order translations by language code
+        },
+      })
+    );
+
+    console.log(`[${requestId}] Found ${translations.length} translations`);
 
     // Format dates for the main section
     const formattedSection = {
@@ -101,12 +144,31 @@ export const getContentSectionById = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error fetching content section by ID:", error);
+    console.error(
+      `[${requestId}] Error fetching content section by ID:`,
+      error
+    );
+
+    // Check for specific Prisma connection errors
+    if (error.message && error.message.includes("max_user_connections")) {
+      return res.status(503).json({
+        success: false,
+        message: "Database connection limit reached. Please try again later.",
+      });
+    }
+
     return res.status(500).json({
       success: false,
       message: "Failed to fetch content section",
-      error: error.message, // Include error message for debugging on frontend
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
+  } finally {
+    // Ensure connection is released regardless of success or failure
+    try {
+      await prisma.$disconnect();
+    } catch (e) {
+      // Ignore disconnect errors
+    }
   }
 };
 
