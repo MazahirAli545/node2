@@ -1024,3 +1024,15 @@ export const updateProfile = async (req, res) => {
     });
   }
 };
+
+export async function verifyFunc(PR_MOBILE_NO, otp) {
+  try {
+    const verificationUrl = `https://2factor.in/API/V1/${API_KEY}/SMS/VERIFY3/${PR_MOBILE_NO}/${otp}`;
+    const verificationResponse = await axios.get(verificationUrl);
+
+    return verificationResponse.data.Status === "Success";
+  } catch (error) {
+    console.log("Error in OTP verification:", error);
+    return false;
+  }
+}
