@@ -3,7 +3,7 @@ import prisma from "../db/prismaClient.js";
 
 export const getUserEventsAndPayments = async (req, res) => {
   try {
-    const { PR_ID } = req.params;
+    const { PR_ID } = req.query;
 
     if (!PR_ID) {
       return res
