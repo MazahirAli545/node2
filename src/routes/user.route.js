@@ -126,12 +126,13 @@ import { UpdateNotification } from "../controllers/UpdateNotification.controller
 // import { updateUserLanguage } from "../controllers/UpdateLang.controller.js";
 import { updateLanguage, getLanguage } from "../controllers/user.controller.js";
 import { logoutUser } from "../controllers/user.controller.js";
+import { getUserEventsAndPayments } from "../controllers/UserNotification.controller.js";
 
 const userRouter = Router();
 
 // userRouter.post("/register", registeredfcmToken);
 // userRouter.post("/remove", removeFcmToken);
-
+userRouter.get("/user/combined:PR_ID", getUserEventsAndPayments);
 userRouter.post("/logout", verifyToken, logoutUser);
 userRouter.put("/language", updateLanguage);
 userRouter.get("/language", getLanguage);
