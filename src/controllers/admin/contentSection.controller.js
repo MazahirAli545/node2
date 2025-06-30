@@ -1,4 +1,5 @@
 import prisma from "../../db/prismaClient.js";
+import withRetry from "../../utils/dbRetry.js";
 
 // Helper for date formatting, if needed in responses (though your existing code handles it)
 const formatDateToYYYYMMDD = (date) => {
@@ -19,12 +20,15 @@ export const getAllContentSections = async (req, res) => {
       where.active_yn = parseInt(active_yn); // Convert to number
     }
 
-    const sections = await prisma.content_sections.findMany({
-      where, // Apply filters
-      orderBy: {
-        id: "asc",
-      },
-    });
+    // Use the retry utility for the database operation
+    const sections = await withRetry(() =>
+      prisma.content_sections.findMany({
+        where, // Apply filters
+        orderBy: {
+          id: "asc",
+        },
+      })
+    );
 
     // Format dates for consistency in output
     const formattedSections = sections.map((section) => ({
@@ -42,9 +46,19 @@ export const getAllContentSections = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching content sections:", error);
+
+    // Check for specific Prisma connection errors
+    if (error.message && error.message.includes("max_user_connections")) {
+      return res.status(503).json({
+        success: false,
+        message: "Database connection limit reached. Please try again later.",
+      });
+    }
+
     return res.status(500).json({
       success: false,
       message: "Failed to fetch content sections",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };
@@ -55,9 +69,11 @@ export const getContentSectionById = async (req, res) => {
     const { id } = req.params;
 
     // Fetch the main content section
-    const section = await prisma.content_sections.findUnique({
-      where: { id: parseInt(id) },
-    });
+    const section = await withRetry(() =>
+      prisma.content_sections.findUnique({
+        where: { id: parseInt(id) },
+      })
+    );
 
     if (!section) {
       return res.status(404).json({
@@ -69,14 +85,16 @@ export const getContentSectionById = async (req, res) => {
     // Fetch all translations for this content section
     // IMPORTANT: Use 'id' for filtering here, as 'id' in content_sections_lang
     // is now the foreign key referencing content_sections.id
-    const translations = await prisma.content_sections_lang.findMany({
-      where: {
-        id: section.id, // <-- CORRECTED: Changed from id_id to id
-      },
-      orderBy: {
-        lang_code: "asc", // Order translations by language code
-      },
-    });
+    const translations = await withRetry(() =>
+      prisma.content_sections_lang.findMany({
+        where: {
+          id: section.id, // <-- CORRECTED: Changed from id_id to id
+        },
+        orderBy: {
+          lang_code: "asc", // Order translations by language code
+        },
+      })
+    );
 
     // Format dates for the main section
     const formattedSection = {
@@ -102,10 +120,19 @@ export const getContentSectionById = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching content section by ID:", error);
+
+    // Check for specific Prisma connection errors
+    if (error.message && error.message.includes("max_user_connections")) {
+      return res.status(503).json({
+        success: false,
+        message: "Database connection limit reached. Please try again later.",
+      });
+    }
+
     return res.status(500).json({
       success: false,
       message: "Failed to fetch content section",
-      error: error.message, // Include error message for debugging on frontend
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };
