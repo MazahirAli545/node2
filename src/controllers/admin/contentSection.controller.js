@@ -122,6 +122,11 @@ export const createContentSection = async (req, res) => {
       created_by,
       page_id,
       refrence_page_id,
+      button_one,
+      button_one_slug,
+      button_two,
+      button_two_slug,
+      flex_01,
       lang_code, // Main content's language code (should be 'en')
     } = req.body;
 
@@ -153,6 +158,11 @@ export const createContentSection = async (req, res) => {
         created_date: new Date(), // Prisma @default(now()) should handle, but explicit is fine
         page_id,
         refrence_page_id: refrence_page_id || null,
+        button_one: button_one || null,
+        button_one_slug: button_one_slug || null,
+        button_two: button_two || null,
+        button_two_slug: button_two_slug || null,
+        flex_01: flex_01 || null,
         lang_code: lang_code || "en", // Default to 'en' if not provided for main section
       },
     });
@@ -174,6 +184,12 @@ export const createContentSection = async (req, res) => {
             created_date: new Date(), // Current date for translation record
             page_id: newMainSection.page_id,
             refrence_page_id: newMainSection.refrence_page_id,
+            id_id: newMainSection.id_id,
+            button_one: newMainSection.button_one,
+            button_one_slug: newMainSection.button_one_slug,
+            button_two: newMainSection.button_two,
+            button_two_slug: newMainSection.button_two_slug,
+            flex_01: newMainSection.flex_01,
           },
         });
         console.log(
@@ -220,6 +236,11 @@ export const updateContentSection = async (req, res) => {
       updated_by,
       page_id,
       refrence_page_id,
+      button_one,
+      button_one_slug,
+      button_two,
+      button_two_slug,
+      flex_01,
       lang_code,
     } = req.body;
 
@@ -259,6 +280,19 @@ export const updateContentSection = async (req, res) => {
           refrence_page_id !== undefined
             ? refrence_page_id
             : existingSection.refrence_page_id,
+        button_one:
+          button_one !== undefined ? button_one : existingSection.button_one,
+        button_one_slug:
+          button_one_slug !== undefined
+            ? button_one_slug
+            : existingSection.button_one_slug,
+        button_two:
+          button_two !== undefined ? button_two : existingSection.button_two,
+        button_two_slug:
+          button_two_slug !== undefined
+            ? button_two_slug
+            : existingSection.button_two_slug,
+        flex_01: flex_01 !== undefined ? flex_01 : existingSection.flex_01,
         lang_code:
           lang_code !== undefined ? lang_code : existingSection.lang_code,
       },
