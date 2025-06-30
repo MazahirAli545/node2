@@ -1,5 +1,4 @@
 import prisma from "../../db/prismaClient.js";
-import withConnectionManagement from "../../utils/dbRetry.js";
 
 // Helper for date formatting
 const formatDateToYYYYMMDD = (date) => {
@@ -8,15 +7,8 @@ const formatDateToYYYYMMDD = (date) => {
 };
 
 export const getAllContentSectionsLang = async (req, res) => {
-  // Add request tracking
-  const requestId =
-    req.requestId || Math.random().toString(36).substring(2, 10);
-
   try {
     const { id, lang_code } = req.query; // 'id' now refers to the parent content section ID
-    console.log(
-      `[${requestId}] Getting all content sections lang, id: ${id}, lang_code: ${lang_code}`
-    );
 
     const where = {};
     if (id) {
@@ -30,19 +22,12 @@ export const getAllContentSectionsLang = async (req, res) => {
       not: "en",
     };
 
-    // Use the enhanced connection management utility
-    const data = await withConnectionManagement(() =>
-      prisma.content_sections_lang.findMany({
-        where, // Apply filters (including auto-filtering 'en')
-        orderBy: {
-          id: "asc", // Order by parent content ID
-        },
-      })
-    );
-
-    console.log(
-      `[${requestId}] Found ${data.length} multilingual content sections`
-    );
+    const data = await prisma.content_sections_lang.findMany({
+      where, // Apply filters (including auto-filtering 'en')
+      orderBy: {
+        id: "asc", // Order by parent content ID
+      },
+    });
 
     // Format dates for consistency
     const formattedData = data.map((entry) => ({
@@ -58,31 +43,12 @@ export const getAllContentSectionsLang = async (req, res) => {
       data: formattedData,
     });
   } catch (error) {
-    console.error(
-      `[${requestId}] Error fetching multilingual content sections:`,
-      error
-    );
-
-    // Check for specific Prisma connection errors
-    if (error.message && error.message.includes("max_user_connections")) {
-      return res.status(503).json({
-        success: false,
-        message: "Database connection limit reached. Please try again later.",
-      });
-    }
-
+    console.error("Error fetching multilingual content sections:", error);
     return res.status(500).json({
       success: false,
       message: "Failed to fetch data",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      error: error.message,
     });
-  } finally {
-    // Ensure connection is released regardless of success or failure
-    try {
-      await prisma.$disconnect();
-    } catch (e) {
-      // Ignore disconnect errors
-    }
   }
 };
 
