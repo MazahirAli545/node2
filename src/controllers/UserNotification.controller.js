@@ -1,4 +1,4 @@
-// controllers/combined.controller.js
+// controllers/UserNotification.controller.js
 import prisma from "../db/prismaClient.js";
 
 export const getUserEventsAndPayments = async (req, res) => {
@@ -6,13 +6,21 @@ export const getUserEventsAndPayments = async (req, res) => {
     const { PR_ID } = req.query;
 
     if (!PR_ID) {
-      return res
-        .status(400)
-        .json({ success: false, error: "PR_ID is required" });
+      return res.status(400).json({
+        success: false,
+        error: "PR_ID is required",
+      });
     }
 
-    // 1. Fetch all Events
-    const allEvents = await prisma.Event.findMany({
+    const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000); // 48 hours ago
+
+    // 1. Fetch Events from the last 2 days
+    const recentEvents = await prisma.events.findMany({
+      where: {
+        EVET_CREATED_DT: {
+          gte: twoDaysAgo,
+        },
+      },
       orderBy: { EVET_CREATED_DT: "desc" },
       include: {
         Category: true,
@@ -20,7 +28,7 @@ export const getUserEventsAndPayments = async (req, res) => {
       },
     });
 
-    const formattedEvents = allEvents.map((event) => ({
+    const formattedEvents = recentEvents.map((event) => ({
       type: "event",
       id: event.ENVT_ID,
       createdAt: event.EVET_CREATED_DT,
@@ -29,9 +37,14 @@ export const getUserEventsAndPayments = async (req, res) => {
       event: event,
     }));
 
-    // 2. Fetch all Donations by the user
-    const donations = await prisma.donationPayment.findMany({
-      where: { PR_ID: parseInt(PR_ID) },
+    // 2. Fetch Donations from the last 2 days
+    const recentDonations = await prisma.donationPayment.findMany({
+      where: {
+        PR_ID: parseInt(PR_ID),
+        createdAt: {
+          gte: twoDaysAgo,
+        },
+      },
       include: {
         Event: {
           include: {
@@ -43,7 +56,7 @@ export const getUserEventsAndPayments = async (req, res) => {
       orderBy: { createdAt: "desc" },
     });
 
-    const formattedDonations = donations.map((donation) => ({
+    const formattedDonations = recentDonations.map((donation) => ({
       type: "payment",
       id: donation.paymentId,
       createdAt: donation.createdAt,
@@ -54,7 +67,7 @@ export const getUserEventsAndPayments = async (req, res) => {
       raw: donation,
     }));
 
-    // 3. Merge and sort by `createdAt` (most recent first)
+    // 3. Merge and sort both by `createdAt` (most recent first)
     const combined = [...formattedEvents, ...formattedDonations].sort(
       (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
     );
