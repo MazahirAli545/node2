@@ -132,7 +132,7 @@ const userRouter = Router();
 
 // userRouter.post("/register", registeredfcmToken);
 // userRouter.post("/remove", removeFcmToken);
-userRouter.get("/user/combined:PR_ID", getUserEventsAndPayments);
+userRouter.get("/user/combined", getUserEventsAndPayments);
 userRouter.post("/logout", verifyToken, logoutUser);
 userRouter.put("/language", updateLanguage);
 userRouter.get("/language", getLanguage);
