@@ -12,7 +12,7 @@ export const getUserEventsAndPayments = async (req, res) => {
     }
 
     // 1. Fetch all Events
-    const allEvents = await prisma.event.findMany({
+    const allEvents = await prisma.Event.findMany({
       orderBy: { EVET_CREATED_DT: "desc" },
       include: {
         Category: true,
