@@ -16,7 +16,7 @@ export async function getCities(req, res) {
       });
     } else {
       // Fetch only requested language translations
-      const cities = await prisma.city_lang.findMany({
+      const cities = await prisma.city_translations.findMany({
         where: { lang_code },
         include: {
           city: true,
@@ -72,7 +72,7 @@ export async function createCity(req, res) {
 
       // If non-English, create translation
       if (lang_code !== "en") {
-        await prisma.city_lang.create({
+        await prisma.city_translations.create({
           data: {
             id: newCity.CITY_ID,
             CITY_PIN_CODE,
@@ -138,7 +138,7 @@ export async function updateCity(req, res) {
     } else {
       // Handle non-English update/create
       try {
-        const translation = await prisma.city_lang.upsert({
+        const translation = await prisma.city_translations.upsert({
           where: {
             id_lang_code: {
               id: Number(CITY_ID),
@@ -185,7 +185,7 @@ export async function deleteCity(req, res) {
 
     if (lang_code && lang_code !== "en") {
       // Delete specific translation
-      await prisma.city_lang.delete({
+      await prisma.city_translations.delete({
         where: {
           id_lang_code: {
             id: Number(CITY_ID),
@@ -236,7 +236,7 @@ export async function getCityTranslations(req, res) {
     }
 
     // Get all translations
-    const translations = await prisma.city_lang.findMany({
+    const translations = await prisma.city_translations.findMany({
       where: { id: Number(CITY_ID) },
     });
 
@@ -284,7 +284,7 @@ export async function createCityTranslation(req, res) {
     }
 
     try {
-      const translation = await prisma.city_lang.create({
+      const translation = await prisma.city_translations.create({
         data: {
           id: Number(CITY_ID),
           CITY_PIN_CODE: requestData.CITY_PIN_CODE,
@@ -327,7 +327,7 @@ export async function createCityTranslation(req, res) {
 export async function getCityTranslationByLang(req, res) {
   try {
     const { CITY_ID, lang_code } = req.params;
-    const translation = await prisma.city_lang.findUnique({
+    const translation = await prisma.city_translations.findUnique({
       where: {
         id_lang_code: {
           id: Number(CITY_ID),
@@ -363,7 +363,7 @@ export async function updateCityTranslation(req, res) {
     const { CITY_ID, lang_code } = req.params;
     const updateData = { ...req.body };
 
-    const existingTranslation = await prisma.city_lang.findUnique({
+    const existingTranslation = await prisma.city_translations.findUnique({
       where: {
         id_lang_code: {
           id: Number(CITY_ID),
@@ -379,7 +379,7 @@ export async function updateCityTranslation(req, res) {
       });
     }
 
-    const updatedTranslation = await prisma.city_lang.update({
+    const updatedTranslation = await prisma.city_translations.update({
       where: {
         id_lang_code: {
           id: Number(CITY_ID),
@@ -419,7 +419,7 @@ export async function deleteCityTranslation(req, res) {
       });
     }
 
-    const existingTranslation = await prisma.city_lang.findUnique({
+    const existingTranslation = await prisma.city_translations.findUnique({
       where: {
         id_lang_code: {
           id: Number(CITY_ID),
@@ -435,7 +435,7 @@ export async function deleteCityTranslation(req, res) {
       });
     }
 
-    await prisma.city_lang.delete({
+    await prisma.city_translations.delete({
       where: {
         id_lang_code: {
           id: Number(CITY_ID),

@@ -27,7 +27,7 @@ export const getCategories = async (req, res) => {
     }
 
     // For non-English, get translations
-    const translations = await prisma.category_lang.findMany({
+    const translations = await prisma.category_translations.findMany({
       where: {
         lang_code,
       },
@@ -86,7 +86,7 @@ export const createCategory = async (req, res) => {
 
       // If non-English, create translation
       if (lang_code !== "en") {
-        await prisma.category_lang.create({
+        await prisma.category_translations.create({
           data: {
             id: newCategory.CATE_ID,
             CATE_DESC,
@@ -156,7 +156,7 @@ export const updateCategory = async (req, res) => {
       });
     } else {
       // Handle non-English update/create
-      const translation = await prisma.category_lang.upsert({
+      const translation = await prisma.category_translations.upsert({
         where: {
           id_lang_code: {
             id: Number(CATE_ID),
@@ -199,7 +199,7 @@ export const deleteCategory = async (req, res) => {
 
     if (lang_code && lang_code !== "en") {
       // Delete specific translation
-      await prisma.category_lang.delete({
+      await prisma.category_translations.delete({
         where: {
           id_lang_code: {
             id: Number(CATE_ID),
@@ -249,7 +249,7 @@ export const getCategoryTranslations = async (req, res) => {
     }
 
     // Get all translations
-    const translations = await prisma.category_lang.findMany({
+    const translations = await prisma.category_translations.findMany({
       where: { id: Number(CATE_ID) },
     });
 
@@ -292,7 +292,7 @@ export const createCategoryTranslation = async (req, res) => {
     }
 
     // Check if translation already exists
-    const existing = await prisma.category_lang.findUnique({
+    const existing = await prisma.category_translations.findUnique({
       where: {
         id_lang_code: {
           id: Number(CATE_ID),
@@ -308,7 +308,7 @@ export const createCategoryTranslation = async (req, res) => {
     }
 
     // Create translation
-    const translation = await prisma.category_lang.create({
+    const translation = await prisma.category_translations.create({
       data: {
         id: Number(CATE_ID),
         CATE_DESC,
@@ -338,7 +338,7 @@ export const createCategoryTranslation = async (req, res) => {
 export const getCategoryTranslation = async (req, res) => {
   try {
     const { CATE_ID, lang_code } = req.params;
-    const translation = await prisma.category_lang.findUnique({
+    const translation = await prisma.category_translations.findUnique({
       where: {
         id_lang_code: {
           id: Number(CATE_ID),
@@ -373,7 +373,7 @@ export const updateCategoryTranslation = async (req, res) => {
     const { CATE_DESC, CATE_CATE_ID, CATE_ACTIVE_YN } = req.body;
 
     // Check if translation exists
-    const existing = await prisma.category_lang.findUnique({
+    const existing = await prisma.category_translations.findUnique({
       where: {
         id_lang_code: {
           id: Number(CATE_ID),
@@ -388,7 +388,7 @@ export const updateCategoryTranslation = async (req, res) => {
       });
     }
 
-    const updated = await prisma.category_lang.update({
+    const updated = await prisma.category_translations.update({
       where: {
         id_lang_code: {
           id: Number(CATE_ID),
@@ -424,7 +424,7 @@ export const updateCategoryTranslation = async (req, res) => {
 export const deleteCategoryTranslation = async (req, res) => {
   try {
     const { CATE_ID, lang_code } = req.params;
-    await prisma.category_lang.delete({
+    await prisma.category_translations.delete({
       where: {
         id_lang_code: {
           id: Number(CATE_ID),

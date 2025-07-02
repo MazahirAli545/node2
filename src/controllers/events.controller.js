@@ -25,7 +25,7 @@ export async function getEvents(req, res) {
       });
     } else {
       // Fetch translated events from events_lang
-      const events = await prisma.events_lang.findMany({
+      const events = await prisma.events_translations.findMany({
         where: { lang_code },
         include: {
           event: {
@@ -105,7 +105,7 @@ export async function getEventById(req, res) {
     }
 
     // Get available translations
-    const availableTranslations = await prisma.events_lang.findMany({
+    const availableTranslations = await prisma.events_translations.findMany({
       where: {
         id: Number(ENVT_ID),
       },
@@ -179,7 +179,7 @@ export async function createEvent(req, res) {
 
       // Only create translation entry if the language is not English
       if (lang_code !== "en") {
-        await prisma.events_lang.create({
+        await prisma.events_translations.create({
           data: {
             id: newEvent.ENVT_ID,
             ENVT_DESC,
@@ -291,7 +291,7 @@ export async function deleteEvent(req, res) {
     if (lang_code && lang_code !== "en") {
       // If lang_code is provided and not 'en', delete only that specific translation
       // This is handled by the deleteEventTranslation function, but included here for API consistency
-      await prisma.events_lang.delete({
+      await prisma.events_translations.delete({
         where: {
           id_lang_code: {
             id: Number(ENVT_ID),
@@ -320,7 +320,7 @@ export async function deleteEvent(req, res) {
         });
 
         // Then delete all translations (non-English versions)
-        await prisma.events_lang.deleteMany({
+        await prisma.events_translations.deleteMany({
           where: { id: Number(ENVT_ID) },
         });
 
@@ -387,7 +387,7 @@ export async function createEventTranslation(req, res) {
     }
 
     // Check if translation already exists
-    const existingTranslation = await prisma.events_lang.findUnique({
+    const existingTranslation = await prisma.events_translations.findUnique({
       where: {
         id_lang_code: {
           id: Number(ENVT_ID),
@@ -404,7 +404,7 @@ export async function createEventTranslation(req, res) {
     }
 
     // Create the translation (non-English only)
-    const translation = await prisma.events_lang.create({
+    const translation = await prisma.events_translations.create({
       data: {
         id: Number(ENVT_ID),
         ENVT_CATE_ID: mainEvent.ENVT_CATE_ID,
@@ -459,7 +459,7 @@ export async function getEventTranslations(req, res) {
     }
 
     // Get all translations
-    const translations = await prisma.events_lang.findMany({
+    const translations = await prisma.events_translations.findMany({
       where: { id: Number(ENVT_ID) },
     });
 
@@ -484,7 +484,7 @@ export async function getEventTranslationByLang(req, res) {
     const { ENVT_ID, lang_code } = req.params;
 
     // Try to find the translation
-    const translation = await prisma.events_lang.findUnique({
+    const translation = await prisma.events_translations.findUnique({
       where: {
         id_lang_code: {
           id: Number(ENVT_ID),
@@ -521,7 +521,7 @@ export async function updateEventTranslation(req, res) {
     const updateData = req.body;
 
     // Check if the translation exists
-    const existingTranslation = await prisma.events_lang.findUnique({
+    const existingTranslation = await prisma.events_translations.findUnique({
       where: {
         id_lang_code: {
           id: Number(ENVT_ID),
@@ -538,7 +538,7 @@ export async function updateEventTranslation(req, res) {
     }
 
     // Update the translation
-    const updatedTranslation = await prisma.events_lang.update({
+    const updatedTranslation = await prisma.events_translations.update({
       where: {
         id_lang_code: {
           id: Number(ENVT_ID),
@@ -580,7 +580,7 @@ export async function deleteEventTranslation(req, res) {
     }
 
     // Check if the translation exists
-    const existingTranslation = await prisma.events_lang.findUnique({
+    const existingTranslation = await prisma.events_translations.findUnique({
       where: {
         id_lang_code: {
           id: Number(ENVT_ID),
@@ -597,7 +597,7 @@ export async function deleteEventTranslation(req, res) {
     }
 
     // Delete the translation
-    await prisma.events_lang.delete({
+    await prisma.events_translations.delete({
       where: {
         id_lang_code: {
           id: Number(ENVT_ID),
@@ -637,7 +637,7 @@ export async function getEventsWithAllTranslations(req, res) {
     // Get all translations for these events
     const eventsWithTranslations = await Promise.all(
       mainEvents.map(async (event) => {
-        const translations = await prisma.events_lang.findMany({
+        const translations = await prisma.events_translations.findMany({
           where: {
             id: event.ENVT_ID,
           },

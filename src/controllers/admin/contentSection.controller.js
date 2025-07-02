@@ -69,7 +69,7 @@ export const getContentSectionById = async (req, res) => {
     // Fetch all translations for this content section
     // IMPORTANT: Use 'id' for filtering here, as 'id' in content_sections_lang
     // is now the foreign key referencing content_sections.id
-    const translations = await prisma.content_sections_lang.findMany({
+    const translations = await prisma.content_sections_translations.findMany({
       where: {
         id: section.id, // <-- CORRECTED: Changed from id_id to id
       },
@@ -171,7 +171,7 @@ export const createContentSection = async (req, res) => {
     // Only if the main section created is NOT 'hi' (i.e., 'en' as expected)
     if (newMainSection.lang_code.toLowerCase() === "en") {
       try {
-        await prisma.content_sections_lang.create({
+        await prisma.content_sections_translations.create({
           data: {
             id: newMainSection.id, // Use the ID of the newly created main section
             lang_code: "hi", // Hardcode 'hi' for the automatic translation

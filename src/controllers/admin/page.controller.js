@@ -81,7 +81,7 @@ export const getPageByLinkUrl = async (req, res) => {
 
     if (requestedLang !== "en") {
       // For non-English, get page translation if it exists
-      const pageTranslation = await prisma.pages_lang.findUnique({
+      const pageTranslation = await prisma.pages_translations.findUnique({
         where: {
           id_lang_code: {
             id: page.id,
@@ -118,7 +118,7 @@ export const getPageByLinkUrl = async (req, res) => {
       });
     } else {
       // For other languages (e.g., Hindi), fetch from content_sections_lang table
-      contentSections = await prisma.content_sections_lang.findMany({
+      contentSections = await prisma.content_sections_translations.findMany({
         where: {
           page_id: page.id,
           lang_code: requestedLang,
@@ -224,7 +224,7 @@ export const addPageTranslation = async (req, res) => {
     }
 
     // Check if translation already exists
-    const existingTranslation = await prisma.pages_lang.findUnique({
+    const existingTranslation = await prisma.pages_translations.findUnique({
       where: {
         id_lang_code: {
           id: Number(id),
@@ -241,7 +241,7 @@ export const addPageTranslation = async (req, res) => {
     }
 
     // Create the translation
-    const translation = await prisma.pages_lang.create({
+    const translation = await prisma.pages_translations.create({
       data: {
         id: Number(id),
         title,
@@ -289,7 +289,7 @@ export const updatePageTranslation = async (req, res) => {
     }
 
     // Check if the translation exists
-    const existingTranslation = await prisma.pages_lang.findUnique({
+    const existingTranslation = await prisma.pages_translations.findUnique({
       where: {
         id_lang_code: {
           id: Number(id),
@@ -306,7 +306,7 @@ export const updatePageTranslation = async (req, res) => {
     }
 
     // Update the translation
-    const updatedTranslation = await prisma.pages_lang.update({
+    const updatedTranslation = await prisma.pages_translations.update({
       where: {
         id_lang_code: {
           id: Number(id),
@@ -373,7 +373,7 @@ export const getPageTranslation = async (req, res) => {
     }
 
     // Get the translation
-    const translation = await prisma.pages_lang.findUnique({
+    const translation = await prisma.pages_translations.findUnique({
       where: {
         id_lang_code: {
           id: Number(id),
@@ -420,7 +420,7 @@ export const deletePageTranslation = async (req, res) => {
     }
 
     // Check if the translation exists
-    const existingTranslation = await prisma.pages_lang.findUnique({
+    const existingTranslation = await prisma.pages_translations.findUnique({
       where: {
         id_lang_code: {
           id: Number(id),
@@ -437,7 +437,7 @@ export const deletePageTranslation = async (req, res) => {
     }
 
     // Delete the translation
-    await prisma.pages_lang.delete({
+    await prisma.pages_translations.delete({
       where: {
         id_lang_code: {
           id: Number(id),
@@ -479,7 +479,7 @@ export const getPageAvailableLanguages = async (req, res) => {
     }
 
     // Get all translations for this page
-    const translations = await prisma.pages_lang.findMany({
+    const translations = await prisma.pages_translations.findMany({
       where: { id: Number(id) },
       select: { lang_code: true },
     });
@@ -533,7 +533,7 @@ export const getAllPages = async (req, res) => {
     }
 
     // For non-English, get translations
-    const translations = await prisma.pages_lang.findMany({
+    const translations = await prisma.pages_translations.findMany({
       where: {
         lang_code,
         id: { in: mainPages.map((page) => page.id) },
@@ -614,7 +614,7 @@ export const getPageById = async (req, res) => {
 
     if (requestedLang !== "en") {
       // For non-English, get page translation if it exists
-      const pageTranslation = await prisma.pages_lang.findUnique({
+      const pageTranslation = await prisma.pages_translations.findUnique({
         where: {
           id_lang_code: {
             id: page.id,
@@ -651,7 +651,7 @@ export const getPageById = async (req, res) => {
       });
     } else {
       // For other languages (e.g., Hindi), fetch from content_sections_lang table
-      contentSections = await prisma.content_sections_lang.findMany({
+      contentSections = await prisma.content_sections_translations.findMany({
         where: {
           page_id: page.id,
           lang_code: requestedLang,
@@ -914,7 +914,7 @@ export const createPage = async (req, res) => {
 
       // If non-English, create translation
       if (lang_code !== "en") {
-        await prisma.pages_lang.create({
+        await prisma.pages_translations.create({
           data: {
             id: newPage.id,
             title,
@@ -989,7 +989,7 @@ export const updatePage = async (req, res) => {
       });
     } else {
       // Handle non-English update/create
-      const translation = await prisma.pages_lang.upsert({
+      const translation = await prisma.pages_translations.upsert({
         where: {
           id_lang_code: {
             id: Number(id),
@@ -1030,7 +1030,7 @@ export const deletePage = async (req, res) => {
 
     if (lang_code && lang_code !== "en") {
       // Delete specific translation
-      await prisma.pages_lang.delete({
+      await prisma.pages_translations.delete({
         where: {
           id_lang_code: {
             id: Number(id),
@@ -1080,7 +1080,7 @@ export const getPageTranslations = async (req, res) => {
     }
 
     // Get all translations
-    const translations = await prisma.pages_lang.findMany({
+    const translations = await prisma.pages_translations.findMany({
       where: { id: Number(id) },
     });
 

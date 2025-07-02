@@ -15,7 +15,7 @@ export async function getEducations(req, res) {
       });
     } else {
       // Fetch only requested language translations
-      const educations = await prisma.education_lang.findMany({
+      const educations = await prisma.education_translations.findMany({
         where: { lang_code },
         include: {
           education: true,
@@ -67,7 +67,7 @@ export async function getEducationById(req, res) {
       });
     } else {
       // For non-English, get the translation
-      const translation = await prisma.education_lang.findUnique({
+      const translation = await prisma.education_translations.findUnique({
         where: {
           id_lang_code: {
             id: Number(EDUCATION_ID),
@@ -186,19 +186,20 @@ export async function updateEducation(req, res) {
       }
 
       // Check if translation exists
-      const existingTranslation = await prisma.education_lang.findUnique({
-        where: {
-          id_lang_code: {
-            id: Number(EDUCATION_ID),
-            lang_code,
+      const existingTranslation =
+        await prisma.education_translations.findUnique({
+          where: {
+            id_lang_code: {
+              id: Number(EDUCATION_ID),
+              lang_code,
+            },
           },
-        },
-      });
+        });
 
       let translation;
       if (existingTranslation) {
         // Update existing translation
-        translation = await prisma.education_lang.update({
+        translation = await prisma.education_translations.update({
           where: {
             id_lang_code: {
               id: Number(EDUCATION_ID),
@@ -214,7 +215,7 @@ export async function updateEducation(req, res) {
         });
       } else {
         // Create new translation
-        translation = await prisma.education_lang.create({
+        translation = await prisma.education_translations.create({
           data: {
             id: Number(EDUCATION_ID),
             EDUCATION_NAME,
@@ -253,7 +254,7 @@ export async function deleteEducation(req, res) {
 
     if (lang_code && lang_code !== "en") {
       // Delete specific translation
-      await prisma.education_lang.delete({
+      await prisma.education_translations.delete({
         where: {
           id_lang_code: {
             id: Number(EDUCATION_ID),
@@ -276,7 +277,7 @@ export async function deleteEducation(req, res) {
       // Delete all translations first, then the main education record
       await prisma.$transaction(async (prisma) => {
         // Delete all translations
-        await prisma.education_lang.deleteMany({
+        await prisma.education_translations.deleteMany({
           where: { id: Number(EDUCATION_ID) },
         });
 
@@ -330,7 +331,7 @@ export async function createEducationTranslation(req, res) {
     }
 
     // Check if translation already exists
-    const existingTranslation = await prisma.education_lang.findUnique({
+    const existingTranslation = await prisma.education_translations.findUnique({
       where: {
         id_lang_code: {
           id: Number(EDUCATION_ID),
@@ -347,7 +348,7 @@ export async function createEducationTranslation(req, res) {
     }
 
     // Create the translation
-    const translation = await prisma.education_lang.create({
+    const translation = await prisma.education_translations.create({
       data: {
         id: Number(EDUCATION_ID),
         EDUCATION_NAME,
@@ -392,7 +393,7 @@ export async function getEducationTranslations(req, res) {
     }
 
     // Get all translations
-    const translations = await prisma.education_lang.findMany({
+    const translations = await prisma.education_translations.findMany({
       where: { id: Number(EDUCATION_ID) },
     });
 
@@ -419,7 +420,7 @@ export async function updateEducationTranslation(req, res) {
       req.body;
 
     // Check if translation exists
-    const existingTranslation = await prisma.education_lang.findUnique({
+    const existingTranslation = await prisma.education_translations.findUnique({
       where: {
         id_lang_code: {
           id: Number(EDUCATION_ID),
@@ -435,7 +436,7 @@ export async function updateEducationTranslation(req, res) {
       });
     }
 
-    const updatedTranslation = await prisma.education_lang.update({
+    const updatedTranslation = await prisma.education_translations.update({
       where: {
         id_lang_code: {
           id: Number(EDUCATION_ID),
@@ -470,7 +471,7 @@ export async function deleteEducationTranslation(req, res) {
     const { EDUCATION_ID, lang_code } = req.params;
 
     // Check if translation exists
-    const existingTranslation = await prisma.education_lang.findUnique({
+    const existingTranslation = await prisma.education_translations.findUnique({
       where: {
         id_lang_code: {
           id: Number(EDUCATION_ID),
@@ -486,7 +487,7 @@ export async function deleteEducationTranslation(req, res) {
       });
     }
 
-    await prisma.education_lang.delete({
+    await prisma.education_translations.delete({
       where: {
         id_lang_code: {
           id: Number(EDUCATION_ID),

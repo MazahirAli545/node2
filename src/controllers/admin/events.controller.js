@@ -25,7 +25,7 @@ export const getAllEvents = async (req, res) => {
       });
     } else {
       // Translated events from events_lang
-      const events = await prisma.events_lang.findMany({
+      const events = await prisma.events_translations.findMany({
         where: { lang_code },
         include: {
           event: {
@@ -200,7 +200,7 @@ export const createEvent = async (req, res) => {
 
       // If Hindi translation is provided, create it
       if (translations.hi) {
-        await prisma.events_lang.create({
+        await prisma.events_translations.create({
           data: {
             id: newEvent.ENVT_ID,
             ENVT_CATE_ID: categoryId,
@@ -299,7 +299,7 @@ export const updateEvent = async (req, res) => {
 
       // Handle Hindi translation
       if (translations.hi) {
-        await prisma.events_lang.upsert({
+        await prisma.events_translations.upsert({
           where: {
             id_lang_code: {
               id: Number(id),

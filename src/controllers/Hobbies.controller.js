@@ -51,7 +51,7 @@ export async function getHobbies(req, res) {
       });
     } else {
       // Fetch only requested language translations
-      const hobbies = await prisma.hobbies_lang.findMany({
+      const hobbies = await prisma.hobbies_translations.findMany({
         where: { lang_code },
         include: {
           hobby: true,
@@ -196,7 +196,7 @@ export async function createHobbyTranslation(req, res) {
       });
     }
 
-    const translation = await prisma.hobbies_lang.create({
+    const translation = await prisma.hobbies_translations.create({
       data: {
         id: Number(HOBBY_ID),
         HOBBY_NAME,
@@ -227,7 +227,7 @@ export async function updateHobbyTranslation(req, res) {
     const { HOBBY_ID, lang_code } = req.params;
     const updateData = req.body;
 
-    const translation = await prisma.hobbies_lang.update({
+    const translation = await prisma.hobbies_translations.update({
       where: {
         id_lang_code: {
           id: Number(HOBBY_ID),
@@ -259,7 +259,7 @@ export async function deleteHobbyTranslation(req, res) {
   try {
     const { HOBBY_ID, lang_code } = req.params;
 
-    await prisma.hobbies_lang.delete({
+    await prisma.hobbies_translations.delete({
       where: {
         id_lang_code: {
           id: Number(HOBBY_ID),
@@ -286,7 +286,7 @@ export async function getHobbyTranslations(req, res) {
   try {
     const { HOBBY_ID } = req.params;
 
-    const translations = await prisma.hobbies_lang.findMany({
+    const translations = await prisma.hobbies_translations.findMany({
       where: { id: Number(HOBBY_ID) },
     });
 

@@ -22,7 +22,7 @@ export const getAllContentSectionsLang = async (req, res) => {
       not: "en",
     };
 
-    const data = await prisma.content_sections_lang.findMany({
+    const data = await prisma.content_sections_translations.findMany({
       where, // Apply filters (including auto-filtering 'en')
       orderBy: {
         id: "asc", // Order by parent content ID
@@ -113,14 +113,15 @@ export const createContentSectionLang = async (req, res) => {
     }
 
     // Check if translation already exists
-    const existingTranslation = await prisma.content_sections_lang.findUnique({
-      where: {
-        id_lang_code: {
-          id: parseInt(id),
-          lang_code: lang_code.toLowerCase(),
+    const existingTranslation =
+      await prisma.content_sections_translations.findUnique({
+        where: {
+          id_lang_code: {
+            id: parseInt(id),
+            lang_code: lang_code.toLowerCase(),
+          },
         },
-      },
-    });
+      });
 
     if (existingTranslation) {
       return res.status(409).json({
@@ -129,7 +130,7 @@ export const createContentSectionLang = async (req, res) => {
       });
     }
 
-    const newEntry = await prisma.content_sections_lang.create({
+    const newEntry = await prisma.content_sections_translations.create({
       data: {
         id: parseInt(id), // This is the FK to content_sections.id
         lang_code: lang_code.toLowerCase(),
@@ -184,7 +185,7 @@ export const getContentSectionLangById = async (req, res) => {
       });
     }
 
-    const entry = await prisma.content_sections_lang.findUnique({
+    const entry = await prisma.content_sections_translations.findUnique({
       where: {
         // Use the composite primary key syntax for findUnique
         id_lang_code: {
@@ -259,14 +260,16 @@ export const updateContentSectionLang = async (req, res) => {
       });
     }
 
-    const existingEntry = await prisma.content_sections_lang.findUnique({
-      where: {
-        id_lang_code: {
-          id: parseInt(id),
-          lang_code: lang_code.toLowerCase(),
+    const existingEntry = await prisma.content_sections_translations.findUnique(
+      {
+        where: {
+          id_lang_code: {
+            id: parseInt(id),
+            lang_code: lang_code.toLowerCase(),
+          },
         },
-      },
-    });
+      }
+    );
 
     if (!existingEntry) {
       return res.status(404).json({
@@ -275,7 +278,7 @@ export const updateContentSectionLang = async (req, res) => {
       });
     }
 
-    const updatedEntry = await prisma.content_sections_lang.update({
+    const updatedEntry = await prisma.content_sections_translations.update({
       where: {
         id_lang_code: {
           id: parseInt(id),
@@ -359,14 +362,16 @@ export const deleteContentSectionLang = async (req, res) => {
       });
     }
 
-    const existingEntry = await prisma.content_sections_lang.findUnique({
-      where: {
-        id_lang_code: {
-          id: parseInt(id),
-          lang_code: lang_code.toLowerCase(),
+    const existingEntry = await prisma.content_sections_translations.findUnique(
+      {
+        where: {
+          id_lang_code: {
+            id: parseInt(id),
+            lang_code: lang_code.toLowerCase(),
+          },
         },
-      },
-    });
+      }
+    );
 
     if (!existingEntry) {
       return res.status(404).json({
@@ -375,7 +380,7 @@ export const deleteContentSectionLang = async (req, res) => {
       });
     }
 
-    await prisma.content_sections_lang.delete({
+    await prisma.content_sections_translations.delete({
       where: {
         id_lang_code: {
           id: parseInt(id),

@@ -17,7 +17,7 @@ export async function getBusinesses(req, res) {
       });
     } else {
       // Fetch only requested language translations
-      const businesses = await prisma.business_lang.findMany({
+      const businesses = await prisma.business_translations.findMany({
         where: { lang_code },
         include: {
           business: true,
@@ -65,7 +65,7 @@ export async function createBusiness(req, res) {
 
       // If non-English, create translation
       if (lang_code !== "en") {
-        await prisma.business_lang.create({
+        await prisma.business_translations.create({
           data: {
             id: newBusiness.BUSS_ID,
             BUSS_STREM,
@@ -133,7 +133,7 @@ export async function updateBusiness(req, res) {
       }
 
       try {
-        const translation = await prisma.business_lang.upsert({
+        const translation = await prisma.business_translations.upsert({
           where: {
             id_lang_code: {
               id: Number(BUSS_ID),
@@ -180,7 +180,7 @@ export async function deleteBusiness(req, res) {
 
     if (lang_code && lang_code !== "en") {
       // Delete specific translation
-      await prisma.business_lang.delete({
+      await prisma.business_translations.delete({
         where: {
           id_lang_code: {
             id: Number(BUSS_ID),
@@ -231,7 +231,7 @@ export async function getBusinessTranslations(req, res) {
     }
 
     // Get all translations
-    const translations = await prisma.business_lang.findMany({
+    const translations = await prisma.business_translations.findMany({
       where: { id: Number(BUSS_ID) },
     });
 
@@ -282,7 +282,7 @@ export async function createBusinessTranslation(req, res) {
     }
 
     try {
-      const translation = await prisma.business_lang.create({
+      const translation = await prisma.business_translations.create({
         data: {
           id: Number(BUSS_ID),
           BUSS_STREM: requestData.BUSS_STREM,
@@ -320,7 +320,7 @@ export async function createBusinessTranslation(req, res) {
 export async function getBusinessTranslationByLang(req, res) {
   try {
     const { BUSS_ID, lang_code } = req.params;
-    const translation = await prisma.business_lang.findUnique({
+    const translation = await prisma.business_translations.findUnique({
       where: {
         id_lang_code: {
           id: Number(BUSS_ID),
@@ -359,7 +359,7 @@ export async function updateBusinessTranslation(req, res) {
       delete updateData.BUSS_ACTIVE_YN;
     }
 
-    const existingTranslation = await prisma.business_lang.findUnique({
+    const existingTranslation = await prisma.business_translations.findUnique({
       where: {
         id_lang_code: {
           id: Number(BUSS_ID),
@@ -375,7 +375,7 @@ export async function updateBusinessTranslation(req, res) {
       });
     }
 
-    const updatedTranslation = await prisma.business_lang.update({
+    const updatedTranslation = await prisma.business_translations.update({
       where: {
         id_lang_code: {
           id: Number(BUSS_ID),
@@ -413,7 +413,7 @@ export async function deleteBusinessTranslation(req, res) {
         success: false,
       });
     }
-    const existingTranslation = await prisma.business_lang.findUnique({
+    const existingTranslation = await prisma.business_translations.findUnique({
       where: {
         id_lang_code: {
           id: Number(BUSS_ID),
@@ -427,7 +427,7 @@ export async function deleteBusinessTranslation(req, res) {
         success: false,
       });
     }
-    await prisma.business_lang.delete({
+    await prisma.business_translations.delete({
       where: {
         id_lang_code: {
           id: Number(BUSS_ID),

@@ -14,7 +14,7 @@ export async function getStreams(req, res) {
       });
     } else {
       // Fetch only requested language translations
-      const streams = await prisma.stream_lang.findMany({
+      const streams = await prisma.stream_translations.findMany({
         where: { lang_code },
         include: {
           stream: true,
@@ -110,7 +110,7 @@ export async function updateStream(req, res) {
       }
 
       // Check if translation exists
-      const existingTranslation = await prisma.stream_lang.findUnique({
+      const existingTranslation = await prisma.stream_translations.findUnique({
         where: {
           id_lang_code: {
             id: Number(STREAM_ID),
@@ -122,7 +122,7 @@ export async function updateStream(req, res) {
       let translation;
       if (existingTranslation) {
         // Update existing translation
-        translation = await prisma.stream_lang.update({
+        translation = await prisma.stream_translations.update({
           where: {
             id_lang_code: {
               id: Number(STREAM_ID),
@@ -137,7 +137,7 @@ export async function updateStream(req, res) {
         });
       } else {
         // Create new translation
-        translation = await prisma.stream_lang.create({
+        translation = await prisma.stream_translations.create({
           data: {
             id: Number(STREAM_ID),
             STREAM_NAME,
@@ -175,7 +175,7 @@ export async function deleteStream(req, res) {
 
     if (lang_code && lang_code !== "en") {
       // Delete specific translation
-      await prisma.stream_lang.delete({
+      await prisma.stream_translations.delete({
         where: {
           id_lang_code: {
             id: Number(STREAM_ID),
@@ -198,7 +198,7 @@ export async function deleteStream(req, res) {
       // Delete all translations first, then the main stream
       await prisma.$transaction(async (prisma) => {
         // Delete all translations
-        await prisma.stream_lang.deleteMany({
+        await prisma.stream_translations.deleteMany({
           where: { id: Number(STREAM_ID) },
         });
 
@@ -252,7 +252,7 @@ export async function createStreamTranslation(req, res) {
     }
 
     // Check if translation already exists
-    const existingTranslation = await prisma.stream_lang.findUnique({
+    const existingTranslation = await prisma.stream_translations.findUnique({
       where: {
         id_lang_code: {
           id: Number(STREAM_ID),
@@ -269,7 +269,7 @@ export async function createStreamTranslation(req, res) {
     }
 
     // Create the translation
-    const translation = await prisma.stream_lang.create({
+    const translation = await prisma.stream_translations.create({
       data: {
         id: Number(STREAM_ID),
         STREAM_NAME,
@@ -313,7 +313,7 @@ export async function getStreamTranslations(req, res) {
     }
 
     // Get all translations
-    const translations = await prisma.stream_lang.findMany({
+    const translations = await prisma.stream_translations.findMany({
       where: { id: Number(STREAM_ID) },
     });
 
@@ -339,7 +339,7 @@ export async function updateStreamTranslation(req, res) {
     const { STREAM_NAME, STREAM_UPDATED_BY } = req.body;
 
     // Check if translation exists
-    const existingTranslation = await prisma.stream_lang.findUnique({
+    const existingTranslation = await prisma.stream_translations.findUnique({
       where: {
         id_lang_code: {
           id: Number(STREAM_ID),
@@ -355,7 +355,7 @@ export async function updateStreamTranslation(req, res) {
       });
     }
 
-    const updatedTranslation = await prisma.stream_lang.update({
+    const updatedTranslation = await prisma.stream_translations.update({
       where: {
         id_lang_code: {
           id: Number(STREAM_ID),
@@ -389,7 +389,7 @@ export async function deleteStreamTranslation(req, res) {
     const { STREAM_ID, lang_code } = req.params;
 
     // Check if translation exists
-    const existingTranslation = await prisma.stream_lang.findUnique({
+    const existingTranslation = await prisma.stream_translations.findUnique({
       where: {
         id_lang_code: {
           id: Number(STREAM_ID),
@@ -405,7 +405,7 @@ export async function deleteStreamTranslation(req, res) {
       });
     }
 
-    await prisma.stream_lang.delete({
+    await prisma.stream_translations.delete({
       where: {
         id_lang_code: {
           id: Number(STREAM_ID),
