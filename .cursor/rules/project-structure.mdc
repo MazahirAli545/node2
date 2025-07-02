@@ -1,0 +1,54 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Project Structure Guide
+
+## Main Entry Point
+- The main entry point is [src/index.js](mdc:src/index.js), which likely initializes the server and loads configuration.
+
+## Database Layer
+- Database connection and clients are managed in [src/db/](mdc:src/db/):
+  - [prismaClient.js](mdc:src/db/prismaClient.js): Prisma ORM client setup.
+  - [mysql.pool.js](mdc:src/db/mysql.pool.js): MySQL connection pool (legacy or alternative).
+  - [supabaseClient.js](mdc:src/db/supabaseClient.js): Supabase client setup.
+- Prisma schema and migrations are in [prisma/](mdc:prisma/):
+  - [schema.prisma](mdc:prisma/schema.prisma): Main Prisma schema.
+  - [migrations/](mdc:prisma/migrations/): Auto-generated migration folders, each with a migration.sql.
+
+## Controllers
+- All business logic and route handlers are in [src/controllers/](mdc:src/controllers/):
+  - General controllers for business, user, city, education, profession, hobbies, events, contact, FCM, profile, payment, etc.
+  - [admin/](mdc:src/controllers/admin/): Admin-specific controllers (e.g., contentLang, contentSection, page, fcmAdmin, category, events, getAllUsers, language, adminOTP, adminBusiness).
+  - [utils/](mdc:src/controllers/utils/): Controller utilities (e.g., EventsNotification, familyUtils).
+  - [FCM-Notification/](mdc:src/controllers/FCM-Notification/): FCM notification logic (e.g., sendNotification.js).
+
+## Routes
+- API endpoints are defined in [src/routes/](mdc:src/routes/):
+  - [user.route.js](mdc:src/routes/user.route.js): User-related routes.
+  - [admin.route.js](mdc:src/routes/admin.route.js): Admin-related routes.
+  - [fcm.route.js](mdc:src/routes/fcm.route.js): FCM notification routes.
+
+## Middlewares
+- Middleware logic is in [src/middlewares/](mdc:src/middlewares/):
+  - [jwt.js](mdc:src/middlewares/jwt.js): JWT authentication.
+  - [upload.js](mdc:src/middlewares/upload.js) and [uploadDir.js](mdc:src/middlewares/uploadDir.js): File upload handling.
+
+## Utilities
+- General utilities are in [src/utils/](mdc:src/utils/):
+  - [cloudinary.js](mdc:src/utils/cloudinary.js): Cloudinary integration.
+  - [supabaseHelper.js](mdc:src/utils/supabaseHelper.js): Supabase helper functions.
+
+## Tests
+- Tests are in [src/tests/](mdc:src/tests/):
+  - [supabaseClient.test.js](mdc:src/tests/supabaseClient.test.js)
+  - [supabaseHelper.test.js](mdc:src/tests/supabaseHelper.test.js)
+
+## TypeScript
+- [tsconfig.json](mdc:src/tsconfig.json): TypeScript configuration (even if most files are JS).
+
+## Other
+- [uploads/](mdc:src/uploads/): Likely used for storing uploaded files.
+- [vercel.json](mdc:vercel.json): Vercel deployment configuration.
+- [package.json](mdc:package.json), [yarn.lock](mdc:yarn.lock), [package-lock.json](mdc:package-lock.json): Project dependencies and lock files.
