@@ -486,37 +486,6 @@ model pages_translations {
   @@id([id, lang_code])
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-model businesses {
-  business_id     Int                       @id @default(autoincrement())
-  business_name   String                    @db.VarChar(100)
-  business_stream String                    @db.VarChar(50)
-  business_type   String                    @db.VarChar(50)
-  sub_category    String?                   @db.VarChar(50)
-  business_model  businesses_business_model
-  target_market   String?                   @db.VarChar(100)
-  created_at      DateTime?                 @default(now())
-  is_active       Boolean?                  @default(true)
-  notes           String?                   @db.Text
-  lang_code       String                    @default("en")
-  translations    businesses_translations[]
-}
-
-model businesses_translations {
-  id              Int                       @map("business_id")
-  business_name   String                    @db.VarChar(100)
-  business_stream String                    @db.VarChar(50)
-  business_type   String                    @db.VarChar(50)
-  sub_category    String?                   @db.VarChar(50)
-  business_model  businesses_business_model
-  target_market   String?                   @db.VarChar(100)
-  notes           String?                   @db.Text
-  lang_code    String
-  business        businesses                @relation(fields: [id], references: [business_id], onDelete: Cascade, onUpdate: Restrict)
-
-  @@id([id, lang_code])
-}
-
 enum PR_ROLE {
   Admin    @map("Admin")
   End_User @map("End User")
